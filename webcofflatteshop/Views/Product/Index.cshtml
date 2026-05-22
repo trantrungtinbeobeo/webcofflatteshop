@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Coffee Menu";
     var banners = ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" };
-    string IconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "🫘";
+    string IconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "☕";
 }
 
 <div id="marketingBanner" class="carousel slide mb-4 rounded-banner overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
@@ -36,36 +36,31 @@
     <div class="col-12 col-sm-6 col-lg-4">
         <div class="card coffee-card h-100 shadow-sm product-hover">
             <span class="product-type-icon">@IconOf(product.Name)</span>
-            <img src="@imageUrl" class="card-img-top product-image" alt="@product.Name"
-                 data-bs-toggle="modal" data-bs-target="#productModal"
-                 data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl" />
+            <img src="@imageUrl" class="card-img-top product-image js-open-detail" alt="@product.Name" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl" />
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">@product.Name</h5>
                 <p class="card-text text-muted flex-grow-1">@product.Description</p>
                 <p class="product-price">@product.Price.ToString("C")</p>
-                <button type="button" class="btn btn-soft btn-order w-100" data-bs-toggle="modal" data-bs-target="#productModal" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl">Đặt hàng ngay</button>
+                <button type="button" class="btn btn-soft btn-order w-100 js-open-detail" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl">Đặt hàng ngay</button>
             </div>
         </div>
     </div>
 }
 </div>
 
-<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content coffee-card">
-            <div class="modal-body p-4">
-                <div class="row g-4 align-items-center">
-                    <div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div>
-                    <div class="col-md-7">
-                        <h3 id="modalProductName"></h3>
-                        <p id="modalProductDesc" class="text-muted"></p>
-                        <ul class="small text-muted mb-2"><li>Pha chế từ nguyên liệu tươi mới mỗi ngày.</li><li>Phù hợp dùng tại quán hoặc mang đi.</li><li>Có thể tuỳ chỉnh ít đường/ít đá khi đặt.</li></ul>
-                        <p id="modalProductPrice" class="product-price"></p>
-                        <div class="d-flex align-items-end gap-2 mb-2">
-                            <div><label class="form-label">Số lượng</label><input id="modalQty" type="number" class="form-control" min="1" value="1" /></div>
-                            <button id="addToCartBtn" type="button" class="btn btn-soft px-4">Đặt hàng</button>
-                        </div>
-                    </div>
+<div id="productOverlay" class="custom-overlay" hidden>
+    <div class="custom-modal coffee-card">
+        <button id="closeDetailBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
+        <div class="row g-4 align-items-center mt-1">
+            <div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div>
+            <div class="col-md-7">
+                <h3 id="modalProductName"></h3>
+                <p id="modalProductDesc" class="text-muted"></p>
+                <ul class="small text-muted mb-2"><li>Pha chế từ nguyên liệu tươi mới mỗi ngày.</li><li>Phù hợp dùng tại quán hoặc mang đi.</li><li>Có thể tuỳ chỉnh ít đường/ít đá khi đặt.</li></ul>
+                <p id="modalProductPrice" class="product-price"></p>
+                <div class="d-flex align-items-end gap-2 mb-2">
+                    <div><label class="form-label">Số lượng</label><input id="modalQty" type="number" class="form-control" min="1" value="1" /></div>
+                    <button id="addToCartBtn" type="button" class="btn btn-soft px-4">Đặt hàng</button>
                 </div>
             </div>
         </div>
@@ -82,7 +77,7 @@
 @section Scripts {
 <script>
 (() => {
-  const modal = document.getElementById('productModal');
+  const overlay = document.getElementById('productOverlay');
   const nameEl = document.getElementById('modalProductName');
   const descEl = document.getElementById('modalProductDesc');
   const priceEl = document.getElementById('modalProductPrice');
@@ -103,15 +98,19 @@
     cartItems.innerHTML = cart.length ? cart.map(i => `<div class='border rounded p-2 mb-2 d-flex justify-content-between'><div><strong>${i.name}</strong><div class='small text-muted'>SL: ${i.qty}</div></div><div>$${(i.price*i.qty).toFixed(2)}</div></div>`).join('') : "<p class='text-muted mb-0'>Chưa có sản phẩm nào.</p>";
   };
 
-  modal.addEventListener('show.bs.modal', (event) => {
-    const t = event.relatedTarget;
-    current = { name: t.getAttribute('data-name'), price: parseFloat(t.getAttribute('data-price')) };
-    nameEl.textContent = current.name;
-    descEl.textContent = t.getAttribute('data-description');
-    priceEl.textContent = t.getAttribute('data-display-price');
-    imageEl.src = t.getAttribute('data-image');
+  document.querySelectorAll('.js-open-detail').forEach(el => el.addEventListener('click', () => {
+    current = { name: el.dataset.name, price: parseFloat(el.dataset.price) };
+    nameEl.textContent = el.dataset.name;
+    descEl.textContent = el.dataset.description;
+    priceEl.textContent = el.dataset.displayPrice;
+    imageEl.src = el.dataset.image;
     qtyEl.value = 1;
-  });
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }));
+
+  document.getElementById('closeDetailBtn').addEventListener('click', () => { overlay.hidden = true; document.body.style.overflow = ''; });
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.hidden = true; document.body.style.overflow = ''; }});
 
   addBtn.addEventListener('click', () => {
     if (!current) return;
@@ -121,7 +120,8 @@
     if (idx >= 0) cart[idx].qty += qty; else cart.push({ ...current, qty });
     setCart(cart);
     renderCart();
-    bootstrap.Modal.getInstance(modal)?.hide();
+    overlay.hidden = true;
+    document.body.style.overflow = '';
   });
 
   document.getElementById('openCartBtn').addEventListener('click', () => cartPanel.classList.add('show'));
