@@ -10,20 +10,24 @@ public class ProductController : Controller
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IBannerRepository _bannerRepository;
 
     public ProductController(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        IBannerRepository bannerRepository)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _webHostEnvironment = webHostEnvironment;
+        _bannerRepository = bannerRepository;
     }
 
     public IActionResult Index()
     {
         var products = _productRepository.GetAll();
+        ViewBag.Banners = _bannerRepository.Get().HomeBanners;
         return View(products);
     }
 
@@ -91,7 +95,54 @@ public class ProductController : Controller
     public IActionResult UploadImageList()
     {
         var products = _productRepository.GetAll();
+        ViewBag.UploadBanners = _bannerRepository.Get().UploadBanners;
         return View(products);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadBannerImage(IFormFile bannerFile, string target = "home")
+    {
+        if (bannerFile is null || bannerFile.Length == 0)
+        {
+            TempData["BannerError"] = "Vui lòng chọn file banner.";
+            return RedirectToAction(nameof(UploadImageList));
+        }
+
+        var extension = Path.GetExtension(bannerFile.FileName).ToLowerInvariant();
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".svg" };
+        if (!allowed.Contains(extension))
+        {
+            TempData["BannerError"] = "Banner chỉ hỗ trợ JPG, PNG, WEBP, SVG.";
+            return RedirectToAction(nameof(UploadImageList));
+        }
+
+        var bannerPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "banners");
+        Directory.CreateDirectory(bannerPath);
+
+        var fileName = $"banner-{target}-{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(bannerPath, fileName);
+
+        await using (var stream = System.IO.File.Create(fullPath))
+        {
+            await bannerFile.CopyToAsync(stream);
+        }
+
+        var relative = $"/uploads/banners/{fileName}";
+        var settings = _bannerRepository.Get();
+        if (target == "upload")
+        {
+            settings.UploadBanners.Insert(0, relative);
+            settings.UploadBanners = settings.UploadBanners.Take(5).ToList();
+        }
+        else
+        {
+            settings.HomeBanners.Insert(0, relative);
+            settings.HomeBanners = settings.HomeBanners.Take(5).ToList();
+        }
+
+        _bannerRepository.Save(settings);
+        TempData["BannerSuccess"] = "Upload banner thành công.";
+        return RedirectToAction(nameof(UploadImageList));
     }
 
     public IActionResult UploadImage(int id)
