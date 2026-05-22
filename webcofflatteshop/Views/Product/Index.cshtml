@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Coffee Menu";
     var banners = ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" };
-    string iconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "🫘";
+    string IconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "🫘";
 }
 
 <div id="marketingBanner" class="carousel slide mb-4 rounded-banner overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
@@ -10,7 +10,13 @@
         @{ var i = 0; }
         @foreach (var banner in banners)
         {
-            <div class="carousel-item @(i == 0 ? "active" : "")"><img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" /><div class="carousel-caption text-start"><h3>Coffee Shop</h3><p>Không gian ấm áp, thức uống tuyệt vời mỗi ngày.</p></div></div>
+            <div class="carousel-item @(i == 0 ? "active" : "")">
+                <img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" />
+                <div class="carousel-caption text-start">
+                    <h3>Cozy Coffee Shop</h3>
+                    <p>Hương vị dịu dàng cho một ngày thật chill ☕</p>
+                </div>
+            </div>
             i++;
         }
     </div>
@@ -18,10 +24,109 @@
     <button class="carousel-control-next" type="button" data-bs-target="#marketingBanner" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"><h2 class="m-0 friendly-title">Coffee Shop Menu ☕</h2><a asp-action="UploadImageList" class="btn btn-outline-success">Quản lý Upload ảnh</a></div>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="m-0 friendly-title">Coffee Shop Menu ☕</h2>
+    <button id="openCartBtn" type="button" class="btn btn-soft rounded-pill">🛒 Giỏ hàng <span id="cartCount" class="badge bg-light text-dark ms-1">0</span></button>
+</div>
 
 <div class="row g-4">
-@foreach (var product in Model){<div class="col-12 col-sm-6 col-lg-4"><div class="card coffee-card h-100 shadow-sm product-hover product-clickable" data-bs-toggle="modal" data-bs-target="#productModal" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("C")" data-image="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)"><span class="product-type-icon">@iconOf(product.Name)</span><img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name" /><div class="card-body d-flex flex-column"><h5 class="card-title">@product.Name</h5><p class="card-text text-muted flex-grow-1">@product.Description</p><p class="product-price">@product.Price.ToString("C")</p><button type="button" class="btn btn-coffee w-100">Đặt hàng ngay</button></div></div></div>}
+@foreach (var product in Model)
+{
+    var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl;
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card coffee-card h-100 shadow-sm product-hover">
+            <span class="product-type-icon">@IconOf(product.Name)</span>
+            <img src="@imageUrl" class="card-img-top product-image" alt="@product.Name"
+                 data-bs-toggle="modal" data-bs-target="#productModal"
+                 data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl" />
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">@product.Name</h5>
+                <p class="card-text text-muted flex-grow-1">@product.Description</p>
+                <p class="product-price">@product.Price.ToString("C")</p>
+                <button type="button" class="btn btn-soft btn-order w-100" data-bs-toggle="modal" data-bs-target="#productModal" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl">Đặt hàng ngay</button>
+            </div>
+        </div>
+    </div>
+}
 </div>
-<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content coffee-card"><div class="modal-body p-4"><div class="row g-4 align-items-center"><div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div><div class="col-md-7"><h3 id="modalProductName"></h3><p id="modalProductDesc" class="text-muted"></p><p id="modalProductPrice" class="product-price"></p><form class="d-flex align-items-end gap-2 mb-2"><div><label class="form-label">Số lượng</label><input type="number" class="form-control" min="1" value="1" /></div><button type="button" class="btn btn-coffee">Đặt hàng</button></form></div></div></div></div></div></div>
-@section Scripts {<script>document.getElementById('productModal').addEventListener('show.bs.modal',function(e){const c=e.relatedTarget;modalProductName.textContent=c.dataset.name;modalProductDesc.textContent=c.dataset.description;modalProductPrice.textContent=c.dataset.price;modalProductImage.src=c.dataset.image;});</script>}
+
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content coffee-card">
+            <div class="modal-body p-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div>
+                    <div class="col-md-7">
+                        <h3 id="modalProductName"></h3>
+                        <p id="modalProductDesc" class="text-muted"></p>
+                        <ul class="small text-muted mb-2"><li>Pha chế từ nguyên liệu tươi mới mỗi ngày.</li><li>Phù hợp dùng tại quán hoặc mang đi.</li><li>Có thể tuỳ chỉnh ít đường/ít đá khi đặt.</li></ul>
+                        <p id="modalProductPrice" class="product-price"></p>
+                        <div class="d-flex align-items-end gap-2 mb-2">
+                            <div><label class="form-label">Số lượng</label><input id="modalQty" type="number" class="form-control" min="1" value="1" /></div>
+                            <button id="addToCartBtn" type="button" class="btn btn-soft px-4">Đặt hàng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cartPanel" class="cart-panel">
+    <div class="cart-panel-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0">Giỏ hàng của bạn</h5><button id="closeCartBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
+    </div>
+    <div id="cartItems" class="mt-3"></div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+  const modal = document.getElementById('productModal');
+  const nameEl = document.getElementById('modalProductName');
+  const descEl = document.getElementById('modalProductDesc');
+  const priceEl = document.getElementById('modalProductPrice');
+  const imageEl = document.getElementById('modalProductImage');
+  const qtyEl = document.getElementById('modalQty');
+  const addBtn = document.getElementById('addToCartBtn');
+  const cartCount = document.getElementById('cartCount');
+  const cartPanel = document.getElementById('cartPanel');
+  const cartItems = document.getElementById('cartItems');
+  let current = null;
+
+  const getCart = () => JSON.parse(localStorage.getItem('coffee_cart') || '[]');
+  const setCart = (v) => localStorage.setItem('coffee_cart', JSON.stringify(v));
+
+  const renderCart = () => {
+    const cart = getCart();
+    cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0);
+    cartItems.innerHTML = cart.length ? cart.map(i => `<div class='border rounded p-2 mb-2 d-flex justify-content-between'><div><strong>${i.name}</strong><div class='small text-muted'>SL: ${i.qty}</div></div><div>$${(i.price*i.qty).toFixed(2)}</div></div>`).join('') : "<p class='text-muted mb-0'>Chưa có sản phẩm nào.</p>";
+  };
+
+  modal.addEventListener('show.bs.modal', (event) => {
+    const t = event.relatedTarget;
+    current = { name: t.getAttribute('data-name'), price: parseFloat(t.getAttribute('data-price')) };
+    nameEl.textContent = current.name;
+    descEl.textContent = t.getAttribute('data-description');
+    priceEl.textContent = t.getAttribute('data-display-price');
+    imageEl.src = t.getAttribute('data-image');
+    qtyEl.value = 1;
+  });
+
+  addBtn.addEventListener('click', () => {
+    if (!current) return;
+    const qty = Math.max(1, parseInt(qtyEl.value || '1'));
+    const cart = getCart();
+    const idx = cart.findIndex(x => x.name === current.name);
+    if (idx >= 0) cart[idx].qty += qty; else cart.push({ ...current, qty });
+    setCart(cart);
+    renderCart();
+    bootstrap.Modal.getInstance(modal)?.hide();
+  });
+
+  document.getElementById('openCartBtn').addEventListener('click', () => cartPanel.classList.add('show'));
+  document.getElementById('closeCartBtn').addEventListener('click', () => cartPanel.classList.remove('show'));
+  renderCart();
+})();
+</script>
+}
