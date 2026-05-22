@@ -1,0 +1,18 @@
+@model webcofflatteshop.Models.Product
+@{
+    ViewData["Title"] = "Upload ảnh sản phẩm";
+}
+
+<h2 class="mb-4">Upload ảnh cho: @Model.Name</h2>
+
+<div class="card coffee-card p-4 shadow-sm">
+    <form asp-action="UploadImage" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label class="form-label">Chọn ảnh (JPG, PNG, WEBP)</label>
+            <input type="file" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp" required />
+        </div>
+        <button type="submit" class="btn btn-success">Upload</button>
+        <a asp-action="Display" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Quay lại</a>
+    </form>
+</div>

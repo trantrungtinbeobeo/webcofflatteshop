@@ -1,27 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Web Coffee Latte Shop</title>
+    <title>@ViewData["Title"] - Coffee Latte Shop</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/webcofflatteshop.styles.css" asp-append-version="true" />
 </head>
 <body class="app-shell">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark app-navbar fixed-top">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">☕ Coffee Latte Shop</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand fw-bold" asp-controller="Product" asp-action="Index">☕ Coffee Latte Shop</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Index">Products</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Add">Add Product</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a></li>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Index">Sản phẩm</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Add">Thêm mới</a></li>
                     </ul>
                 </div>
             </div>
@@ -33,15 +31,14 @@
     </main>
 
     <footer class="app-footer text-light">
-        <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 py-3">
-            <span>&copy; 2026 Web Coffee Latte Shop</span>
-            <a class="text-light" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="container py-3 d-flex justify-content-between flex-wrap">
+            <span>&copy; 2026 Coffee Latte Shop</span>
+            <span>Fresh beans • Warm moments</span>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

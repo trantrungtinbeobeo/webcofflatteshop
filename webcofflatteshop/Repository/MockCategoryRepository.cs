@@ -1,22 +1,15 @@
-﻿using webcofflatteshop.Models;
+using webcofflatteshop.Models;
 
-namespace webcofflatteshop.Repository
+namespace webcofflatteshop.Repository;
+
+public class MockCategoryRepository : ICategoryRepository
 {
-    public class MockCategoryRepository : ICategoryRepository
-    {
-        private List<Category> _categoryList;
-        public MockCategoryRepository()
-        {
-            _categoryList = new List<Category>
-{
-new Category { Id = 1, Name = "Laptop" },
-new Category { Id = 2, Name = "Desktop" },
-// Thêm các category khác
-};
-        }
-        public IEnumerable<Category> GetAllCategories()
-        {
-            return _categoryList;
-        }
-    }
+    private readonly List<Category> _categoryList =
+    [
+        new() { Id = 1, Name = "Coffee" },
+        new() { Id = 2, Name = "Non-Coffee" },
+        new() { Id = 3, Name = "Bakery" }
+    ];
+
+    public IEnumerable<Category> GetAllCategories() => _categoryList;
 }

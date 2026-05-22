@@ -1,42 +1,37 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+html { font-size: 15px; }
+@media (min-width: 768px) { html { font-size: 16px; } }
 
 body.app-shell {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8f9fa 0%, #eef2f7 100%);
-  color: #212529;
+  background: #f8f5f2;
+  color: #2f241f;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.app-navbar {
-  background: linear-gradient(90deg, #6f42c1, #8a63d2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+.app-navbar { background: linear-gradient(90deg, #4e342e, #6d4c41); }
+.app-main { padding-top: 95px; padding-bottom: 90px; }
+.app-footer { background: #3e2723; }
+
+.hero-banner {
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(78,52,46,0.95), rgba(141,110,99,0.9)), url('/images/default-coffee.svg') center/cover;
+  color: #fff;
 }
 
-.app-main {
-  padding-top: 100px;
-  padding-bottom: 100px;
-}
+.coffee-card { border: none; border-radius: 16px; }
+.product-image { height: 220px; object-fit: cover; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.detail-image { width: 100%; border-radius: 12px; object-fit: cover; max-height: 320px; }
+.product-price { font-size: 1.2rem; font-weight: 700; color: #5d4037; }
 
-.app-footer {
-  background-color: #3e2a70;
+.btn-coffee {
+  background-color: #6d4c41;
+  border-color: #6d4c41;
+  color: #fff;
 }
-
-.card {
-  border: none;
-  border-radius: 1rem;
-}
+.btn-coffee:hover { background-color: #5d4037; border-color: #5d4037; color: #fff; }
 
 @media (max-width: 576px) {
-  .app-main {
-    padding-top: 88px;
-    padding-bottom: 88px;
-  }
+  .app-main { padding-top: 84px; }
+  .product-image { height: 190px; }
 }

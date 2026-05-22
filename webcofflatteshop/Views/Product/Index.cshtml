@@ -1,38 +1,36 @@
 @model IEnumerable<webcofflatteshop.Models.Product>
-
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Coffee Menu";
 }
 
+<section class="hero-banner mb-4 p-4 p-md-5">
+    <h1 class="display-6 fw-bold mb-2">Coffee Latte Shop</h1>
+    <p class="mb-0">Thực đơn cà phê thủ công, bánh ngọt tươi mỗi ngày và trải nghiệm không gian ấm cúng.</p>
+</section>
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="m-0">Products</h2>
-    <a asp-action="Add" class="btn btn-primary">+ Add Product</a>
+    <h2 class="m-0">Sản phẩm nổi bật</h2>
+    <a asp-action="Add" class="btn btn-coffee">+ Thêm sản phẩm</a>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Description</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var product in Model)
-            {
-                <tr>
-                    <td>@product.Name</td>
-                    <td>@product.Price.ToString("C")</td>
-                    <td>@product.Description</td>
-                    <td class="text-end">
-                        <a asp-action="Display" asp-route-id="@product.Id" class="btn btn-sm btn-outline-info">View</a>
-                        <a asp-action="Update" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="row g-4">
+    @foreach (var product in Model)
+    {
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card coffee-card h-100 shadow-sm">
+                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name" />
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text text-muted flex-grow-1">@product.Description</p>
+                    <p class="product-price">@product.Price.ToString("C")</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a asp-action="Display" asp-route-id="@product.Id" class="btn btn-sm btn-outline-dark">Chi tiết</a>
+                        <a asp-action="Update" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                        <a asp-action="UploadImage" asp-route-id="@product.Id" class="btn btn-sm btn-outline-success">Upload ảnh</a>
+                        <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>

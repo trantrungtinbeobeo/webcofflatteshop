@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
 using webcofflatteshop.Models;
-namespace webcofflatteshop.Repository
+
+namespace webcofflatteshop.Repository;
+
+public interface IProductRepository
 {
-    public interface IProductRepository
-    {
-        IEnumerable<Product> GetAll();
-        Product GetById(int id);
-        void Add(Product product);
-        void Update(Product product);
-        void Delete(int id);
-    }
+    IEnumerable<Product> GetAll();
+    Product? GetById(int id);
+    void Add(Product product);
+    void Update(Product product);
+    void Delete(int id);
 }

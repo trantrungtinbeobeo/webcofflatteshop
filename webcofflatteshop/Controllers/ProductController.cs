@@ -1,93 +1,141 @@
-﻿using webcofflatteshop.Models;
 using Microsoft.AspNetCore.Mvc;
-using webcofflatteshop.Repository;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
+using webcofflatteshop.Models;
+using webcofflatteshop.Repository;
 
+namespace webcofflatteshop.Controllers;
 
-namespace webcofflatteshop.Controllers
-{ 
-    public class ProductController : Controller {
-
+public class ProductController : Controller
+{
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
-    public ProductController(IProductRepository productRepository,
-    ICategoryRepository categoryRepository)
+    private readonly IWebHostEnvironment _webHostEnvironment;
+
+    public ProductController(
+        IProductRepository productRepository,
+        ICategoryRepository categoryRepository,
+        IWebHostEnvironment webHostEnvironment)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
+        _webHostEnvironment = webHostEnvironment;
     }
-    public IActionResult Add()
-    {
-        var categories = _categoryRepository.GetAllCategories();
-        ViewBag.Categories = new SelectList(categories, "Id", "Name");
-        return View();
-    }
-    [
-    HttpPost]
-    public IActionResult Add(Product product)
-    {
-        if (ModelState.IsValid)
-        {
-            _productRepository.Add(product);
-            return RedirectToAction("Index"); // Chuyển hướng tới trang danh sách sản phẩm
-        }
-        return View(product);
-    }
-    // Các actions khác như Display, Update, Delete
-    // Display a list of products
+
     public IActionResult Index()
     {
         var products = _productRepository.GetAll();
         return View(products);
     }
-    // Display a single product
-public IActionResult Display(int id)
+
+    public IActionResult Add()
+    {
+        LoadCategories();
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Add(Product product)
+    {
+        if (!ModelState.IsValid)
+        {
+            LoadCategories();
+            return View(product);
+        }
+
+        _productRepository.Add(product);
+        return RedirectToAction(nameof(Index));
+    }
+
+    public IActionResult Display(int id)
     {
         var product = _productRepository.GetById(id);
-        if (product == null)
-        {
-            return NotFound();
-        }
+        if (product is null) return NotFound();
         return View(product);
     }
-    // Show the product update form
+
     public IActionResult Update(int id)
     {
         var product = _productRepository.GetById(id);
-        if (product == null)
-        {
-            return NotFound();
-        }
+        if (product is null) return NotFound();
+        LoadCategories();
         return View(product);
     }
-    // Process the product update
+
     [HttpPost]
     public IActionResult Update(Product product)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            _productRepository.Update(product);
-            return RedirectToAction("Index");
+            LoadCategories();
+            return View(product);
         }
-        return View(product);
+
+        _productRepository.Update(product);
+        return RedirectToAction(nameof(Index));
     }
-    // Show the product delete confirmation
+
     public IActionResult Delete(int id)
     {
         var product = _productRepository.GetById(id);
-        if (product == null)
-        {
-            return NotFound();
-        }
+        if (product is null) return NotFound();
         return View(product);
     }
-    // Process the product deletion
-    [HttpPost, ActionName("DeleteConfirmed")]
+
+    [HttpPost]
     public IActionResult DeleteConfirmed(int id)
     {
         _productRepository.Delete(id);
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
-} }
 
+    public IActionResult UploadImage(int id)
+    {
+        var product = _productRepository.GetById(id);
+        if (product is null) return NotFound();
+        return View(product);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadImage(int id, IFormFile imageFile)
+    {
+        var product = _productRepository.GetById(id);
+        if (product is null) return NotFound();
+
+        if (imageFile is null || imageFile.Length == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Vui lòng chọn file ảnh.");
+            return View(product);
+        }
+
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        if (!allowed.Contains(extension))
+        {
+            ModelState.AddModelError(string.Empty, "Chỉ hỗ trợ JPG, PNG, WEBP.");
+            return View(product);
+        }
+
+        var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products");
+        Directory.CreateDirectory(uploadsPath);
+
+        var fileName = $"product-{id}-{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(uploadsPath, fileName);
+
+        await using (var stream = System.IO.File.Create(fullPath))
+        {
+            await imageFile.CopyToAsync(stream);
+        }
+
+        product.ImageUrl = $"/uploads/products/{fileName}";
+        _productRepository.Update(product);
+
+        TempData["SuccessMessage"] = "Tải ảnh sản phẩm thành công.";
+        return RedirectToAction(nameof(Display), new { id });
+    }
+
+    private void LoadCategories()
+    {
+        var categories = _categoryRepository.GetAllCategories();
+        ViewBag.Categories = new SelectList(categories, "Id", "Name");
+    }
+}

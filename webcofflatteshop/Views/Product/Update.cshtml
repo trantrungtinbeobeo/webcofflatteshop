@@ -1,13 +1,13 @@
 @model webcofflatteshop.Models.Product
-
 @{
-    ViewData["Title"] = "Edit Product";
+    ViewData["Title"] = "Sửa sản phẩm";
 }
 
-<h2 class="mb-4">Edit Product</h2>
+<h2 class="mb-4">Sửa sản phẩm</h2>
 
-<form asp-action="Update" method="post" class="card p-4 shadow-sm">
+<form asp-action="Update" method="post" class="card p-4 shadow-sm coffee-card">
     <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ImageUrl" />
 
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
@@ -27,7 +27,12 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Update</button>
+    <div class="mb-4">
+        <label asp-for="CategoryId" class="form-label">Category</label>
+        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
+    </div>
+
+    <button type="submit" class="btn btn-coffee">Cập nhật</button>
 </form>
 
 @section Scripts {

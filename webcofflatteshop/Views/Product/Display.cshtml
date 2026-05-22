@@ -1,17 +1,27 @@
 @model webcofflatteshop.Models.Product
-
 @{
-    ViewData["Title"] = "Product Details";
+    ViewData["Title"] = "Chi tiết sản phẩm";
 }
 
-<h2 class="mb-4">Product Details</h2>
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success">@message</div>
+}
 
-<div class="card p-4 shadow-sm">
-    <p><strong>Name:</strong> @Model.Name</p>
-    <p><strong>Price:</strong> @Model.Price.ToString("C")</p>
-    <p><strong>Description:</strong> @Model.Description</p>
-    <div>
-        <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+<div class="card coffee-card p-4 shadow-sm">
+    <div class="row g-4 align-items-center">
+        <div class="col-md-5">
+            <img src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/default-coffee.svg" : Model.ImageUrl)" class="detail-image" alt="@Model.Name" />
+        </div>
+        <div class="col-md-7">
+            <h2>@Model.Name</h2>
+            <p class="lead text-muted">@Model.Description</p>
+            <p class="product-price">@Model.Price.ToString("C")</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="UploadImage" asp-route-id="@Model.Id" class="btn btn-success">Upload ảnh riêng</a>
+                <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">Sửa sản phẩm</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Về danh sách</a>
+            </div>
+        </div>
     </div>
 </div>
