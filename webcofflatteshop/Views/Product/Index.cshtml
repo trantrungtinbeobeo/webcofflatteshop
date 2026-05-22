@@ -1,27 +1,38 @@
-﻿@model IEnumerable<YourNamespace.Models.Product>
-<h2>Products</h2>
-<table class="table">
-<thead>
-<tr>
-<th>Name</th>
-<th>Price</th>
-<th>Description</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody>
-@foreach (var product in Model)
-{
-<tr>
-                <td>@product.Name</td>
-                <td>@product.Price</td>
-                <td>@product.Description</td>
-                <td>
-                    <a asp-action="Display" asp-route-id="@product.Id">View</a> |
-                    <a asp-action="Update" asp-route-id="@product.Id">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@product.Id">Delete</a>
-                </td>
+@model IEnumerable<webcofflatteshop.Models.Product>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="m-0">Products</h2>
+    <a asp-action="Add" class="btn btn-primary">+ Add Product</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th class="text-end">Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var product in Model)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>@product.Description</td>
+                    <td class="text-end">
+                        <a asp-action="Display" asp-route-id="@product.Id" class="btn btn-sm btn-outline-info">View</a>
+                        <a asp-action="Update" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
