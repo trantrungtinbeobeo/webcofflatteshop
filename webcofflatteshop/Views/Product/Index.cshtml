@@ -32,7 +32,6 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h2 class="m-0">Sản phẩm nổi bật</h2>
     <div class="d-flex gap-2">
-        <a asp-action="Add" class="btn btn-coffee">+ Thêm sản phẩm</a>
         <a asp-action="UploadImageList" class="btn btn-outline-success">Quản lý Upload ảnh</a>
     </div>
 </div>
@@ -54,10 +53,7 @@
                     <h5 class="card-title">@product.Name</h5>
                     <p class="card-text text-muted flex-grow-1">@product.Description</p>
                     <p class="product-price">@product.Price.ToString("C")</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a asp-action="Update" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
-                        <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
-                    </div>
+                    <button type="button" class="btn btn-coffee w-100">Đặt hàng ngay</button>
                 </div>
             </div>
         </div>
