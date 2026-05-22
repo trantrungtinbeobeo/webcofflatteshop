@@ -4,31 +4,37 @@ html { font-size: 15px; }
 body.app-shell {
   margin: 0;
   min-height: 100vh;
-  background: #f8f5f2;
+  background: radial-gradient(circle at top, #fff7f0, #f5eee8 55%, #efe6de 100%);
   color: #2f241f;
   font-family: 'Segoe UI', sans-serif;
 }
 
-.app-navbar { background: linear-gradient(90deg, #4e342e, #6d4c41); }
-.app-main { padding-top: 95px; padding-bottom: 90px; }
-.app-footer { background: #3e2723; }
+.app-navbar {
+  background: linear-gradient(90deg, #3e2723, #6d4c41);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+}
+.brand-float { animation: floatBrand 3.2s ease-in-out infinite; }
+@keyframes floatBrand { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 
-.hero-banner {
-  border-radius: 16px;
-  background: linear-gradient(120deg, rgba(78,52,46,0.95), rgba(141,110,99,0.9)), url('/images/default-coffee.svg') center/cover;
-  color: #fff;
+.app-main { padding-top: 95px; padding-bottom: 32px; }
+.app-footer {
+  background: linear-gradient(90deg, #2d1b17, #4e342e);
+  border-top: 1px solid rgba(255,255,255,.15);
 }
 
-.coffee-card { border: none; border-radius: 16px; }
-.product-image { height: 220px; object-fit: cover; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.coffee-card { border: none; border-radius: 16px; overflow: hidden; }
+.product-image { height: 220px; object-fit: cover; transition: transform .35s ease; }
+.product-hover { transition: transform .28s ease, box-shadow .28s ease; }
+.product-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 30px rgba(62,39,35,.25) !important;
+}
+.product-hover:hover .product-image { transform: scale(1.04); }
+
 .detail-image { width: 100%; border-radius: 12px; object-fit: cover; max-height: 320px; }
 .product-price { font-size: 1.2rem; font-weight: 700; color: #5d4037; }
 
-.btn-coffee {
-  background-color: #6d4c41;
-  border-color: #6d4c41;
-  color: #fff;
-}
+.btn-coffee { background-color: #6d4c41; border-color: #6d4c41; color: #fff; }
 .btn-coffee:hover { background-color: #5d4037; border-color: #5d4037; color: #fff; }
 
 @media (max-width: 576px) {

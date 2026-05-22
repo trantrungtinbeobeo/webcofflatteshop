@@ -15,7 +15,7 @@ namespace webcofflatteshop.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "Product");
         }
 
         public IActionResult Privacy()

@@ -88,6 +88,12 @@ public class ProductController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public IActionResult UploadImage()
+    {
+        var products = _productRepository.GetAll();
+        return View("UploadImageList", products);
+    }
+
     public IActionResult UploadImage(int id)
     {
         var product = _productRepository.GetById(id);
