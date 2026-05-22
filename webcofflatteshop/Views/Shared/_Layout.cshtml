@@ -3,29 +3,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Coffee Latte Shop</title>
+    <title>@ViewData["Title"] - Cozy Coffee Shop</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="app-shell d-flex flex-column">
-    <div class="coffee-particles" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="coffee-particles" aria-hidden="true"><span>☕</span><span>🫘</span><span>☕</span><span>🫘</span><span>☕</span><span>🫘</span></div>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark app-navbar fixed-top">
             <div class="container">
-                <a class="navbar-brand fw-bold brand-float" asp-controller="Product" asp-action="Index">☕ Coffee Latte Shop</a>
+                <a class="navbar-brand fw-bold brand-float" asp-controller="Product" asp-action="Index">☕ Cozy Coffee Shop</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Index">Trang chủ</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="UploadImageList">Upload ảnh</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Add">Thêm sản phẩm</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Index">Coffee Shop</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Add">Thêm sản phẩm & danh mục</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="UploadImageList">Media Upload</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
     <main class="app-main container flex-grow-1">@RenderBody()</main>
-    <footer class="app-footer text-light mt-auto"><div class="container py-3 d-flex justify-content-between align-items-center flex-wrap gap-2"><span>&copy; 2026 Coffee Latte Shop</span><span>Rất vui được phục vụ bạn • Chúc bạn một ngày thật thơm mùi cà phê!</span></div></footer>
+    <footer class="app-footer text-light mt-auto"><div class="container py-4 d-flex justify-content-between align-items-center flex-wrap gap-2"><div><strong>Cozy Coffee Shop</strong><div class="small">Handcrafted drinks • Friendly smiles • Every day</div></div><span class="small">&copy; 2026 Cozy Coffee Shop. Brewed with love.</span></div></footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script><script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -50,6 +50,21 @@ public class ProductController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+
+    [HttpPost]
+    public IActionResult AddCategory(string categoryName)
+    {
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            TempData["CategoryError"] = "Tên danh mục không được để trống.";
+            return RedirectToAction(nameof(Add));
+        }
+
+        _categoryRepository.AddCategory(new Category { Name = categoryName.Trim() });
+        TempData["CategorySuccess"] = "Đã thêm danh mục mới.";
+        return RedirectToAction(nameof(Add));
+    }
+
     public IActionResult Display(int id)
     {
         var product = _productRepository.GetById(id);
@@ -95,7 +110,9 @@ public class ProductController : Controller
     public IActionResult UploadImageList()
     {
         var products = _productRepository.GetAll();
-        ViewBag.UploadBanners = _bannerRepository.Get().UploadBanners;
+        var bannerSettings = _bannerRepository.Get();
+        ViewBag.UploadBanners = bannerSettings.UploadBanners;
+        ViewBag.HomeBanners = bannerSettings.HomeBanners;
         return View(products);
     }
 
@@ -145,11 +162,34 @@ public class ProductController : Controller
         return RedirectToAction(nameof(UploadImageList));
     }
 
+    [HttpPost]
+    public IActionResult DeleteBanner(string bannerUrl, string target = "home")
+    {
+        var settings = _bannerRepository.Get();
+        if (target == "upload") settings.UploadBanners.Remove(bannerUrl);
+        else settings.HomeBanners.Remove(bannerUrl);
+        _bannerRepository.Save(settings);
+        TempData["BannerSuccess"] = "Đã xóa banner.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
     public IActionResult UploadImage(int id)
     {
         var product = _productRepository.GetById(id);
         if (product is null) return NotFound();
         return View(product);
+    }
+
+
+    [HttpPost]
+    public IActionResult RemoveProductImage(int id)
+    {
+        var product = _productRepository.GetById(id);
+        if (product is null) return NotFound();
+        product.ImageUrl = null;
+        _productRepository.Update(product);
+        TempData["SuccessMessage"] = "Đã xóa ảnh sản phẩm.";
+        return RedirectToAction(nameof(UploadImage), new { id });
     }
 
     [HttpPost]

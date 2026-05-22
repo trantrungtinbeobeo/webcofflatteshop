@@ -1,10 +1,9 @@
-﻿using webcofflatteshop.Models;
+using webcofflatteshop.Models;
 
-namespace webcofflatteshop.Repository
+namespace webcofflatteshop.Repository;
+
+public interface ICategoryRepository
 {
-    public interface ICategoryRepository
-    {
-        IEnumerable<Category> GetAllCategories();
-
-    }
+    IEnumerable<Category> GetAllCategories();
+    void AddCategory(Category category);
 }

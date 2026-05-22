@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Coffee Menu";
     var banners = ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" };
+    string iconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "🫘";
 }
 
 <div id="marketingBanner" class="carousel slide mb-4 rounded-banner overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
@@ -9,40 +10,18 @@
         @{ var i = 0; }
         @foreach (var banner in banners)
         {
-            <div class="carousel-item @(i == 0 ? "active" : "")">
-                <img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" />
-                <div class="carousel-caption text-start">
-                    <h3>Coffee Latte Shop</h3>
-                    <p>Nơi mỗi tách cà phê là một niềm vui nhỏ mỗi ngày.</p>
-                </div>
-            </div>
+            <div class="carousel-item @(i == 0 ? "active" : "")"><img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" /><div class="carousel-caption text-start"><h3>Coffee Shop</h3><p>Không gian ấm áp, thức uống tuyệt vời mỗi ngày.</p></div></div>
             i++;
         }
     </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#marketingBanner" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" type="button" data-bs-target="#marketingBanner" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="m-0 friendly-title">Menu thân thiện cho mọi khoảnh khắc ☕</h2>
-    <a asp-action="UploadImageList" class="btn btn-outline-success">Quản lý Upload ảnh</a>
-</div>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"><h2 class="m-0 friendly-title">Coffee Shop Menu ☕</h2><a asp-action="UploadImageList" class="btn btn-outline-success">Quản lý Upload ảnh</a></div>
 
 <div class="row g-4">
-    @foreach (var product in Model)
-    {
-        <div class="col-12 col-sm-6 col-lg-4">
-            <div class="card coffee-card h-100 shadow-sm product-hover product-clickable" data-bs-toggle="modal" data-bs-target="#productModal" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("C")" data-image="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)">
-                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name" />
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">@product.Name</h5>
-                    <p class="card-text text-muted flex-grow-1">@product.Description</p>
-                    <p class="product-price">@product.Price.ToString("C")</p>
-                    <button type="button" class="btn btn-coffee w-100">Đặt hàng ngay</button>
-                </div>
-            </div>
-        </div>
-    }
+@foreach (var product in Model){<div class="col-12 col-sm-6 col-lg-4"><div class="card coffee-card h-100 shadow-sm product-hover product-clickable" data-bs-toggle="modal" data-bs-target="#productModal" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("C")" data-image="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)"><span class="product-type-icon">@iconOf(product.Name)</span><img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name" /><div class="card-body d-flex flex-column"><h5 class="card-title">@product.Name</h5><p class="card-text text-muted flex-grow-1">@product.Description</p><p class="product-price">@product.Price.ToString("C")</p><button type="button" class="btn btn-coffee w-100">Đặt hàng ngay</button></div></div></div>}
 </div>
-
 <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content coffee-card"><div class="modal-body p-4"><div class="row g-4 align-items-center"><div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div><div class="col-md-7"><h3 id="modalProductName"></h3><p id="modalProductDesc" class="text-muted"></p><p id="modalProductPrice" class="product-price"></p><form class="d-flex align-items-end gap-2 mb-2"><div><label class="form-label">Số lượng</label><input type="number" class="form-control" min="1" value="1" /></div><button type="button" class="btn btn-coffee">Đặt hàng</button></form></div></div></div></div></div></div>
-
-@section Scripts {<script>document.getElementById('productModal').addEventListener('show.bs.modal',function(e){const c=e.relatedTarget;document.getElementById('modalProductName').textContent=c.getAttribute('data-name');document.getElementById('modalProductDesc').textContent=c.getAttribute('data-description');document.getElementById('modalProductPrice').textContent=c.getAttribute('data-price');document.getElementById('modalProductImage').src=c.getAttribute('data-image');});</script>}
+@section Scripts {<script>document.getElementById('productModal').addEventListener('show.bs.modal',function(e){const c=e.relatedTarget;modalProductName.textContent=c.dataset.name;modalProductDesc.textContent=c.dataset.description;modalProductPrice.textContent=c.dataset.price;modalProductImage.src=c.dataset.image;});</script>}

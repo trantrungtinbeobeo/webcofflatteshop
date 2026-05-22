@@ -3,40 +3,31 @@
     ViewData["Title"] = "Thêm sản phẩm";
 }
 
-<h1 class="mb-4">Thêm sản phẩm mới</h1>
+@if (TempData["CategorySuccess"] is string cOk) { <div class="alert alert-success">@cOk</div> }
+@if (TempData["CategoryError"] is string cErr) { <div class="alert alert-danger">@cErr</div> }
 
-<form asp-action="Add" method="post" class="card p-4 shadow-sm coffee-card">
-    <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h1 class="mb-4">Thêm sản phẩm mới</h1>
+        <form asp-action="Add" method="post" class="card p-4 shadow-sm coffee-card">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+            <div class="mb-3"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" /><span asp-validation-for="Price" class="text-danger"></span></div>
+            <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+            <div class="mb-4"><label asp-for="CategoryId" class="form-label">Category</label><select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select></div>
+            <div class="d-flex gap-2"><button type="submit" class="btn btn-coffee">Tạo sản phẩm</button><a asp-action="Index" class="btn btn-outline-secondary">Back to list</a></div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Price" class="form-label"></label>
-        <input asp-for="Price" class="form-control" />
-        <span asp-validation-for="Price" class="text-danger"></span>
+    <div class="col-lg-5">
+        <div class="card p-4 shadow-sm coffee-card">
+            <h4>Thêm danh mục mới</h4>
+            <p class="text-muted">Thêm nhanh danh mục để quản lý menu linh hoạt hơn.</p>
+            <form asp-action="AddCategory" method="post" class="d-flex gap-2">
+                <input name="categoryName" class="form-control" placeholder="Ví dụ: Seasonal Drinks" />
+                <button type="submit" class="btn btn-outline-dark">Thêm</button>
+            </form>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <div class="mb-4">
-        <label asp-for="CategoryId" class="form-label">Category</label>
-        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
-    </div>
-
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-coffee">Tạo sản phẩm</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Back to list</a>
-    </div>
-</form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
