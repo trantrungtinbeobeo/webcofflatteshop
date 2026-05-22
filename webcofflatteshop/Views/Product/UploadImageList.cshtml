@@ -1,19 +1,26 @@
 @model IEnumerable<webcofflatteshop.Models.Product>
 @{
-    ViewData["Title"] = "Quản lý upload ảnh";
+    ViewData["Title"] = "Quản lý ảnh sản phẩm";
 }
 
-<h2 class="mb-4">Chọn sản phẩm để upload ảnh</h2>
+<section class="upload-hero mb-4 p-4 p-md-5">
+    <h2 class="mb-2">Upload ảnh sản phẩm</h2>
+    <p class="mb-0">Chọn đúng sản phẩm bên dưới để cập nhật ảnh riêng cho từng món.</p>
+</section>
+
 <div class="row g-4">
     @foreach (var product in Model)
     {
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card coffee-card h-100 shadow-sm product-hover">
-                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name"/>
-                <div class="card-body">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card coffee-card h-100 shadow-sm product-hover upload-card">
+                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl)" class="card-img-top product-image" alt="@product.Name" />
+                <div class="card-body d-flex flex-column">
                     <h5>@product.Name</h5>
-                    <p class="text-muted">@product.Description</p>
-                    <a asp-action="UploadImage" asp-route-id="@product.Id" class="btn btn-success">Upload ảnh cho sản phẩm này</a>
+                    <p class="text-muted flex-grow-1">@product.Description</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="fw-semibold product-price">@product.Price.ToString("C")</span>
+                        <a asp-action="UploadImage" asp-route-id="@product.Id" class="btn btn-success btn-sm">Chọn & Upload</a>
+                    </div>
                 </div>
             </div>
         </div>
