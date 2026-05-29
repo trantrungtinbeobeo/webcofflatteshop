@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Cherry Blossom Coffee Logo">
+  <rect width="96" height="96" rx="28" fill="#fff7f5"/>
+  <circle cx="48" cy="51" r="24" fill="#ffdad4"/>
+  <path d="M29 50c8-7 30-7 38 0v11c0 9-8 17-19 17S29 70 29 61V50Z" fill="#3e2723"/>
+  <path d="M35 52h26v8c0 6-6 11-13 11s-13-5-13-11v-8Z" fill="#745853"/>
+  <path d="M64 56h6c5 0 8 3 8 7s-3 7-8 7h-6v-6h5c2 0 3-1 3-2s-1-2-3-2h-5v-4Z" fill="#3e2723"/>
+  <path d="M34 30c5-7 12-7 14 1 2-8 10-8 14-1 7-2 12 3 9 10 6 4 4 12-3 13-2 7-10 8-14 2-5 6-13 5-15-2-8-1-10-9-3-13-4-7 1-12 8-10Z" fill="#f48fb1" opacity=".9"/>
+  <circle cx="48" cy="43" r="7" fill="#fffbff"/>
+  <path d="M48 36v14M41 43h14" stroke="#81c784" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -2,10 +2,10 @@
 @using System.Globalization
 @{
     ViewData["Title"] = "Admin - Thêm sản phẩm";
-    ViewData["UseStitcheditLayout"] = true;
+    ViewData["UseAdminStitcheditLayout"] = true;
     var recentProducts = (ViewBag.RecentProducts as IEnumerable<webcofflatteshop.Models.Product>)?.Take(4).ToList() ?? new List<webcofflatteshop.Models.Product>();
     string FormatPrice(decimal price) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}₫", price);
-    string ImageOf(webcofflatteshop.Models.Product p) => string.IsNullOrWhiteSpace(p.ImageUrl) ? "/images/default-coffee.svg" : p.ImageUrl;
+    string ImageOf(webcofflatteshop.Models.Product p) => string.IsNullOrWhiteSpace(p.ImageUrl) ? "/images/logo.svg" : p.ImageUrl;
 }
 
 <div class="min-h-screen bg-background text-on-surface">
@@ -13,7 +13,7 @@
     <aside class="fixed left-0 top-0 h-screen w-[280px] bg-surface-container-lowest border-r border-outline-variant/30 p-gutter flex-col hidden md:flex z-40">
         <div class="mb-section-gap">
             <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3 text-decoration-none">
-                <img src="/images/default-coffee.svg" alt="Cherry Blossom Logo" class="w-10 h-10 object-contain rounded-full bg-primary-fixed p-1">
+                <img src="/images/logo.svg" alt="Cherry Blossom Logo" class="w-10 h-10 object-contain rounded-full bg-primary-fixed p-1">
                 <h1 class="font-headline-md text-primary m-0">Coffe-latteKawaii</h1>
             </a>
             <p class="text-secondary font-label-md mt-1 ml-[52px] mb-0">Admin Dashboard</p>
@@ -213,7 +213,7 @@
     <footer class="md:ml-[280px] bg-surface-container py-section-gap px-margin-desktop mt-section-gap flex flex-col items-center gap-gutter">
         <h2 class="font-display-lg text-display-lg text-primary m-0">
             <div class="flex flex-col items-center gap-4">
-                <img src="/images/default-coffee.svg" alt="Cherry Blossom Logo" class="w-20 h-20 object-contain">
+                <img src="/images/logo.svg" alt="Cherry Blossom Logo" class="w-20 h-20 object-contain">
                 <span class="font-display-lg text-4xl font-bold tracking-tight">
                     <span style="color: rgb(62, 39, 35);">Coffe</span><span style="color: rgb(129, 199, 132);">-latte</span><span style="color: rgb(244, 143, 177);">Kawaii</span>
                 </span>
