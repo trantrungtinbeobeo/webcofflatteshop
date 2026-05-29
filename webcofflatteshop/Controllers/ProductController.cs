@@ -34,6 +34,7 @@ public class ProductController : Controller
     public IActionResult Add()
     {
         LoadCategories();
+        LoadRecentProducts();
         return View();
     }
 
@@ -43,6 +44,7 @@ public class ProductController : Controller
         if (!ModelState.IsValid)
         {
             LoadCategories();
+            LoadRecentProducts();
             return View(product);
         }
 
@@ -234,5 +236,13 @@ public class ProductController : Controller
     {
         var categories = _categoryRepository.GetAllCategories();
         ViewBag.Categories = new SelectList(categories, "Id", "Name");
+    }
+
+    private void LoadRecentProducts()
+    {
+        ViewBag.RecentProducts = _productRepository.GetAll()
+            .OrderByDescending(product => product.Id)
+            .Take(4)
+            .ToList();
     }
 }

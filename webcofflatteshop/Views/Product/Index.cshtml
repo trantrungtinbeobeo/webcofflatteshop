@@ -1,132 +1,234 @@
 @model IEnumerable<webcofflatteshop.Models.Product>
+@using System.Globalization
 @{
-    ViewData["Title"] = "Coffee Menu";
-    var banners = ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" };
-    string IconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "☕";
+    ViewData["Title"] = "Trang chủ";
+    var products = Model?.ToList() ?? new List<webcofflatteshop.Models.Product>();
+    var banners = (ViewBag.Banners as IEnumerable<string>)?.Where(b => !string.IsNullOrWhiteSpace(b)).ToList() ?? new List<string>();
+    if (!banners.Any()) banners.Add("/images/default-coffee.svg");
+    var categories = products
+        .Select(p => p.Category?.Name)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Distinct()
+        .ToList();
+    string FormatPrice(decimal price) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0} ₫", price);
+    string ImageOf(webcofflatteshop.Models.Product p) => string.IsNullOrWhiteSpace(p.ImageUrl) ? "/images/default-coffee.svg" : p.ImageUrl;
 }
 
-<div id="marketingBanner" class="carousel slide mb-4 rounded-banner overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
-    <div class="carousel-inner banner-inner">
-        @{ var i = 0; }
-        @foreach (var banner in banners)
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex max-w-container-max items-center justify-between px-margin-mobile py-4 md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3 text-primary text-decoration-none">
+            <span class="material-symbols-outlined rounded-full bg-primary-fixed p-2 text-primary">local_cafe</span>
+            <div>
+                <p class="font-headline-md text-[22px] leading-7">Komorebi Brews</p>
+                <p class="text-caption text-secondary">Coffee • Tea • Pastry</p>
+            </div>
+        </a>
+        <div class="hidden items-center gap-8 md:flex">
+            <a class="font-label-md text-primary text-decoration-none" href="#menu">Menu</a>
+            <a class="font-label-md text-secondary text-decoration-none" asp-controller="Product" asp-action="Add">Admin</a>
+            <a class="font-label-md text-secondary text-decoration-none" asp-controller="Product" asp-action="UploadImageList">Media</a>
+        </div>
+        <button id="openCartBtn" type="button" class="flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-label-md text-on-primary transition-soft hover:bg-primary-container">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Giỏ hàng
+            <span id="cartCount" class="rounded-full bg-primary-fixed px-2 py-0.5 text-caption text-primary">0</span>
+        </button>
+    </div>
+</nav>
+
+<div id="cartScrim" class="cart-scrim fixed inset-0 z-[55] bg-primary/35" hidden></div>
+<aside id="cartDrawer" class="cart-drawer fixed right-0 top-0 z-[60] flex h-full w-full max-w-[420px] flex-col bg-surface-container-lowest shadow-[-20px_0_60px_rgba(39,19,16,0.2)] transition-soft">
+    <div class="flex items-center justify-between border-b border-outline-variant p-gutter">
+        <div>
+            <p class="font-headline-md text-primary">Giỏ hàng</p>
+            <p class="text-caption text-secondary">Đơn pha chế của bạn</p>
+        </div>
+        <button id="closeCartBtn" type="button" class="rounded-full bg-surface-container p-2 text-primary"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="cartItems" class="flex-1 space-y-4 overflow-y-auto p-gutter"></div>
+    <div class="border-t border-outline-variant p-gutter">
+        <div class="mb-4 flex justify-between font-label-md text-primary"><span>Tạm tính</span><span id="cartTotal">0 ₫</span></div>
+        <button type="button" class="w-full rounded-full bg-primary py-4 font-label-md text-on-primary">Tiến hành thanh toán</button>
+    </div>
+</aside>
+
+<div class="mx-auto max-w-container-max px-margin-mobile py-gutter md:px-margin-desktop">
+    <section class="group relative mb-section-gap h-[420px] overflow-hidden rounded-xl bg-primary-container">
+        @foreach (var banner in banners.Select((url, index) => new { url, index }))
         {
-            <div class="carousel-item @(i == 0 ? "active" : "")">
-                <img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" />
-                <div class="carousel-caption text-start">
-                    <h3>Cozy Coffee Shop</h3>
-                    <p>Hương vị dịu dàng cho một ngày thật chill ☕</p>
-                </div>
-            </div>
-            i++;
+            <img class="hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-700 @(banner.index == 0 ? "opacity-100" : "opacity-0")" src="@banner.url" alt="Banner cà phê @(banner.index + 1)" />
         }
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#marketingBanner" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-    <button class="carousel-control-next" type="button" data-bs-target="#marketingBanner" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
-</div>
-
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="m-0 friendly-title">Coffee Shop Menu ☕</h2>
-    <button id="openCartBtn" type="button" class="btn btn-soft rounded-pill">🛒 Giỏ hàng <span id="cartCount" class="badge bg-light text-dark ms-1">0</span></button>
-</div>
-
-<div class="row g-4">
-@foreach (var product in Model)
-{
-    var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl;
-    <div class="col-12 col-sm-6 col-lg-4">
-        <div class="card coffee-card h-100 shadow-sm product-hover">
-            <span class="product-type-icon">@IconOf(product.Name)</span>
-            <img src="@imageUrl" class="card-img-top product-image js-open-detail" alt="@product.Name" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl" />
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title">@product.Name</h5>
-                <p class="card-text text-muted flex-grow-1">@product.Description</p>
-                <p class="product-price">@product.Price.ToString("C")</p>
-                <button type="button" class="btn btn-soft btn-order w-100 js-open-detail" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl">Đặt hàng ngay</button>
-            </div>
+        <div class="hero-gradient absolute inset-0"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+            <span class="mb-4 inline-flex rounded-full bg-primary-fixed px-4 py-2 font-label-md text-primary">Seasonal Specialty</span>
+            <h1 class="max-w-2xl font-display-lg text-[40px] leading-[48px] text-white md:text-display-lg">Thức uống thủ công cho những buổi sáng thật dịu.</h1>
+            <p class="mt-4 max-w-xl text-body-lg text-white/90">Khám phá menu mới lấy cảm hứng từ bản thiết kế StitcheditWeb: tinh gọn, ấm áp và tập trung vào trải nghiệm đặt hàng.</p>
         </div>
-    </div>
-}
+    </section>
+
+    <section class="mb-gutter flex gap-4 overflow-x-auto py-2 hide-scrollbar" aria-label="Danh mục sản phẩm">
+        <a href="#menu" class="shrink-0 rounded-full bg-primary px-6 py-3 font-label-md text-on-primary text-decoration-none">Tất cả</a>
+        @foreach (var category in categories)
+        {
+            <a href="#menu" class="shrink-0 rounded-full bg-secondary-container px-6 py-3 font-label-md text-on-secondary-container text-decoration-none">@category</a>
+        }
+        @if (!categories.Any())
+        {
+            <span class="shrink-0 rounded-full bg-secondary-container px-6 py-3 font-label-md text-on-secondary-container">Signature Coffee</span>
+            <span class="shrink-0 rounded-full bg-secondary-container px-6 py-3 font-label-md text-on-secondary-container">Tea & Cake</span>
+        }
+    </section>
+
+    <section id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
+        @foreach (var product in products)
+        {
+            var imageUrl = ImageOf(product);
+            <article class="product-card overflow-hidden rounded-xl bg-surface-container-lowest custom-shadow transition-soft hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(62,39,35,0.14)]">
+                <button type="button" class="js-open-detail block w-full text-left" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price" data-display-price="@FormatPrice(product.Price)" data-image="@imageUrl">
+                    <div class="relative h-[260px] overflow-hidden bg-surface-container">
+                        <img src="@imageUrl" alt="@product.Name" class="h-full w-full object-cover" />
+                        <span class="absolute right-4 top-4 rounded-full bg-surface/90 px-3 py-1 text-caption text-primary">@FormatPrice(product.Price)</span>
+                    </div>
+                </button>
+                <div class="p-gutter">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-caption font-semibold uppercase tracking-[0.2em] text-secondary">@(product.Category?.Name ?? "Komorebi Choice")</p>
+                            <h2 class="mt-1 font-headline-md text-primary">@product.Name</h2>
+                        </div>
+                        <span class="material-symbols-outlined rounded-full bg-primary-fixed p-2 text-primary">favorite</span>
+                    </div>
+                    <p class="mb-6 line-clamp-3 text-body-md text-on-surface-variant">@product.Description</p>
+                    <button type="button" class="js-open-detail flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 font-label-md text-on-primary transition-soft hover:bg-primary-container" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price" data-display-price="@FormatPrice(product.Price)" data-image="@imageUrl">
+                        Đặt hàng ngay
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                    </button>
+                </div>
+            </article>
+        }
+    </section>
+
+    @if (!products.Any())
+    {
+        <div class="rounded-xl bg-surface-container-lowest p-gutter text-center custom-shadow">
+            <p class="font-headline-md text-primary">Chưa có sản phẩm nào</p>
+            <p class="mt-2 text-secondary">Vào trang Admin để thêm món đầu tiên cho menu.</p>
+            <a asp-action="Add" class="mt-5 inline-flex rounded-full bg-primary px-6 py-3 font-label-md text-on-primary text-decoration-none">Thêm sản phẩm</a>
+        </div>
+    }
 </div>
 
-<div id="productOverlay" class="custom-overlay" hidden>
-    <div class="custom-modal coffee-card">
-        <button id="closeDetailBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
-        <div class="row g-4 align-items-center mt-1">
-            <div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div>
-            <div class="col-md-7">
-                <h3 id="modalProductName"></h3>
-                <p id="modalProductDesc" class="text-muted"></p>
-                <ul class="small text-muted mb-2"><li>Pha chế từ nguyên liệu tươi mới mỗi ngày.</li><li>Phù hợp dùng tại quán hoặc mang đi.</li><li>Có thể tuỳ chỉnh ít đường/ít đá khi đặt.</li></ul>
-                <p id="modalProductPrice" class="product-price"></p>
-                <div class="d-flex align-items-end gap-2 mb-2">
-                    <div><label class="form-label">Số lượng</label><input id="modalQty" type="number" class="form-control" min="1" value="1" /></div>
-                    <button id="addToCartBtn" type="button" class="btn btn-soft px-4">Đặt hàng</button>
+<div id="productOverlay" class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-primary/50 p-margin-mobile" hidden>
+    <div class="w-full max-w-[920px] overflow-hidden rounded-xl bg-surface-container-lowest custom-shadow">
+        <div class="grid grid-cols-1 md:grid-cols-2">
+            <img id="modalProductImage" src="/images/default-coffee.svg" alt="Sản phẩm" class="h-[320px] w-full object-cover md:h-full" />
+            <div class="p-gutter md:p-margin-desktop">
+                <div class="mb-6 flex items-start justify-between gap-4">
+                    <div>
+                        <p class="font-label-md text-secondary">Chi tiết món</p>
+                        <h3 id="modalProductName" class="mt-2 font-headline-lg text-primary"></h3>
+                    </div>
+                    <button id="closeDetailBtn" type="button" class="rounded-full bg-surface-container p-2 text-primary"><span class="material-symbols-outlined">close</span></button>
+                </div>
+                <p id="modalProductDesc" class="mb-5 text-body-md text-on-surface-variant"></p>
+                <ul class="mb-6 space-y-2 text-body-md text-secondary">
+                    <li class="flex gap-2"><span class="material-symbols-outlined text-[20px] text-primary">check_circle</span>Nguyên liệu tươi mới mỗi ngày.</li>
+                    <li class="flex gap-2"><span class="material-symbols-outlined text-[20px] text-primary">check_circle</span>Tùy chỉnh ít đường/ít đá khi đặt.</li>
+                </ul>
+                <p id="modalProductPrice" class="mb-5 font-headline-md text-primary"></p>
+                <div class="flex items-end gap-3">
+                    <label class="flex-1 font-label-md text-secondary">Số lượng
+                        <input id="modalQty" type="number" min="1" value="1" class="mt-2 w-full rounded-lg border-outline-variant bg-white px-4 py-3 text-body-md focus:border-primary focus:ring-primary" />
+                    </label>
+                    <button id="addToCartBtn" type="button" class="rounded-full bg-primary px-6 py-4 font-label-md text-on-primary">Thêm</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="cartPanel" class="cart-panel">
-    <div class="cart-panel-header d-flex justify-content-between align-items-center">
-        <h5 class="m-0">Giỏ hàng của bạn</h5><button id="closeCartBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
+<footer class="mt-section-gap bg-primary px-margin-mobile py-10 text-on-primary md:px-margin-desktop">
+    <div class="mx-auto flex max-w-container-max flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div><p class="font-headline-md">Komorebi Brews</p><p class="text-body-md text-on-primary/80">Brewed with love • Every day</p></div>
+        <p class="text-caption text-on-primary/70">© 2026 Komorebi Brews. Inspired by StitcheditWeb.</p>
     </div>
-    <div id="cartItems" class="mt-3"></div>
-</div>
+</footer>
 
 @section Scripts {
 <script>
 (() => {
-  const overlay = document.getElementById('productOverlay');
-  const nameEl = document.getElementById('modalProductName');
-  const descEl = document.getElementById('modalProductDesc');
-  const priceEl = document.getElementById('modalProductPrice');
-  const imageEl = document.getElementById('modalProductImage');
-  const qtyEl = document.getElementById('modalQty');
-  const addBtn = document.getElementById('addToCartBtn');
-  const cartCount = document.getElementById('cartCount');
-  const cartPanel = document.getElementById('cartPanel');
-  const cartItems = document.getElementById('cartItems');
-  let current = null;
+    const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+    const slides = Array.from(document.querySelectorAll('.hero-slide'));
+    let activeSlide = 0;
+    if (slides.length > 1) {
+        setInterval(() => {
+            slides[activeSlide].classList.replace('opacity-100', 'opacity-0');
+            activeSlide = (activeSlide + 1) % slides.length;
+            slides[activeSlide].classList.replace('opacity-0', 'opacity-100');
+        }, 4500);
+    }
 
-  const getCart = () => JSON.parse(localStorage.getItem('coffee_cart') || '[]');
-  const setCart = (v) => localStorage.setItem('coffee_cart', JSON.stringify(v));
+    const overlay = document.getElementById('productOverlay');
+    const nameEl = document.getElementById('modalProductName');
+    const descEl = document.getElementById('modalProductDesc');
+    const priceEl = document.getElementById('modalProductPrice');
+    const imageEl = document.getElementById('modalProductImage');
+    const qtyEl = document.getElementById('modalQty');
+    const addBtn = document.getElementById('addToCartBtn');
+    const cartCount = document.getElementById('cartCount');
+    const cartDrawer = document.getElementById('cartDrawer');
+    const cartScrim = document.getElementById('cartScrim');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    let current = null;
 
-  const renderCart = () => {
-    const cart = getCart();
-    cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0);
-    cartItems.innerHTML = cart.length ? cart.map(i => `<div class='border rounded p-2 mb-2 d-flex justify-content-between'><div><strong>${i.name}</strong><div class='small text-muted'>SL: ${i.qty}</div></div><div>$${(i.price*i.qty).toFixed(2)}</div></div>`).join('') : "<p class='text-muted mb-0'>Chưa có sản phẩm nào.</p>";
-  };
+    const getCart = () => JSON.parse(localStorage.getItem('komorebi_cart') || '[]');
+    const setCart = (value) => localStorage.setItem('komorebi_cart', JSON.stringify(value));
+    const renderCart = () => {
+        const cart = getCart();
+        cartCount.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+        cartTotal.textContent = currency.format(cart.reduce((sum, item) => sum + (item.price * item.qty), 0));
+        cartItems.innerHTML = cart.length
+            ? cart.map(item => `<div class="rounded-xl border border-outline-variant bg-surface p-4"><div class="flex justify-between gap-3"><div><p class="font-label-md text-primary">${item.name}</p><p class="text-caption text-secondary">Số lượng: ${item.qty}</p></div><p class="font-label-md text-primary">${currency.format(item.price * item.qty)}</p></div></div>`).join('')
+            : '<p class="rounded-xl bg-surface-container p-4 text-body-md text-secondary">Chưa có sản phẩm nào trong giỏ.</p>';
+    };
 
-  document.querySelectorAll('.js-open-detail').forEach(el => el.addEventListener('click', () => {
-    current = { name: el.dataset.name, price: parseFloat(el.dataset.price) };
-    nameEl.textContent = el.dataset.name;
-    descEl.textContent = el.dataset.description;
-    priceEl.textContent = el.dataset.displayPrice;
-    imageEl.src = el.dataset.image;
-    qtyEl.value = 1;
-    overlay.hidden = false;
-    document.body.style.overflow = 'hidden';
-  }));
+    document.querySelectorAll('.js-open-detail').forEach((button) => {
+        button.addEventListener('click', () => {
+            current = { name: button.dataset.name, price: Number(button.dataset.price) };
+            nameEl.textContent = button.dataset.name;
+            descEl.textContent = button.dataset.description || 'Món ngon đang chờ bạn khám phá.';
+            priceEl.textContent = button.dataset.displayPrice;
+            imageEl.src = button.dataset.image;
+            qtyEl.value = 1;
+            overlay.hidden = false;
+            document.body.style.overflow = 'hidden';
+        });
+    });
 
-  document.getElementById('closeDetailBtn').addEventListener('click', () => { overlay.hidden = true; document.body.style.overflow = ''; });
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.hidden = true; document.body.style.overflow = ''; }});
+    const closeModal = () => { overlay.hidden = true; document.body.style.overflow = ''; };
+    document.getElementById('closeDetailBtn').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) closeModal(); });
 
-  addBtn.addEventListener('click', () => {
-    if (!current) return;
-    const qty = Math.max(1, parseInt(qtyEl.value || '1'));
-    const cart = getCart();
-    const idx = cart.findIndex(x => x.name === current.name);
-    if (idx >= 0) cart[idx].qty += qty; else cart.push({ ...current, qty });
-    setCart(cart);
+    addBtn.addEventListener('click', () => {
+        if (!current) return;
+        const qty = Math.max(1, Number.parseInt(qtyEl.value || '1', 10));
+        const cart = getCart();
+        const existing = cart.find(item => item.name === current.name);
+        if (existing) existing.qty += qty;
+        else cart.push({ ...current, qty });
+        setCart(cart);
+        renderCart();
+        closeModal();
+        cartDrawer.classList.add('is-open');
+        cartScrim.hidden = false;
+    });
+
+    const closeCart = () => { cartDrawer.classList.remove('is-open'); cartScrim.hidden = true; };
+    document.getElementById('openCartBtn').addEventListener('click', () => { cartDrawer.classList.add('is-open'); cartScrim.hidden = false; });
+    document.getElementById('closeCartBtn').addEventListener('click', closeCart);
+    cartScrim.addEventListener('click', closeCart);
     renderCart();
-    overlay.hidden = true;
-    document.body.style.overflow = '';
-  });
-
-  document.getElementById('openCartBtn').addEventListener('click', () => cartPanel.classList.add('show'));
-  document.getElementById('closeCartBtn').addEventListener('click', () => cartPanel.classList.remove('show'));
-  renderCart();
 })();
 </script>
 }

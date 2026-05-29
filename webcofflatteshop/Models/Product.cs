@@ -9,7 +9,7 @@ public class Product
     [Required, StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    [Range(0.01, 10000.00)]
+    [Range(0.01, 10000000.00)]
     public decimal Price { get; set; }
 
     public string Description { get; set; } = string.Empty;
