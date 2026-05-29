@@ -8,52 +8,60 @@
     string ImageOf(webcofflatteshop.Models.Product p) => string.IsNullOrWhiteSpace(p.ImageUrl) ? "/images/logo.svg" : p.ImageUrl;
 }
 
-<div class="min-h-screen bg-background text-on-surface">
-    <!-- Admin Side Navigation: bám sát StitcheditWeb/filechinhsuacuaadmin.html -->
-    <aside class="fixed left-0 top-0 h-screen w-[280px] bg-surface-container-lowest border-r border-outline-variant/30 p-gutter flex-col hidden md:flex z-40">
+    <!-- Admin Side Navigation -->
+    <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col p-gutter custom-shadow hidden md:flex" style="transform: translateY(0px); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; box-shadow: rgba(62, 39, 35, 0.05) 0px 10px 30px;">
         <div class="mb-section-gap">
-            <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3 text-decoration-none">
-                <img src="/images/logo.svg" alt="Cherry Blossom Logo" class="w-10 h-10 object-contain rounded-full bg-primary-fixed p-1">
-                <h1 class="font-headline-md text-primary m-0">Coffe-latteKawaii</h1>
-            </a>
-            <p class="text-secondary font-label-md mt-1 ml-[52px] mb-0">Admin Dashboard</p>
+            <div class="flex items-center gap-3">
+                <img src="/images/logo.svg" alt="Cherry Blossom Logo" class="w-10 h-10 object-contain">
+                <h1 class="font-display-lg text-2xl font-bold tracking-tight">
+                    <span style="color: rgb(62, 39, 35);" class="">Coffe</span><span style="color: rgb(129, 199, 132);" class="">-latte</span><span style="color: rgb(244, 143, 177);" class="">Kawaii</span>
+                </h1>
+            </div>
+            <p class="text-secondary font-label-md mt-1 ml-[52px]">Admin Dashboard</p>
         </div>
         <nav class="flex-grow space-y-4">
-            <a asp-action="Add" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary text-on-primary transition-soft text-decoration-none">
-                <span class="material-symbols-outlined">inventory_2</span>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-container text-on-primary-container transition-all" href="#">
+                <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
                 <span class="font-label-md">Sản phẩm</span>
             </a>
-            <a asp-action="UploadImageList" class="flex items-center gap-4 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container transition-soft text-decoration-none">
-                <span class="material-symbols-outlined">image</span>
-                <span class="font-label-md">Hình ảnh</span>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-all" href="#">
+                <span class="material-symbols-outlined" data-icon="category">category</span>
+                <span class="font-label-md">Danh mục</span>
             </a>
-            <a asp-action="Index" class="flex items-center gap-4 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container transition-soft text-decoration-none">
-                <span class="material-symbols-outlined">storefront</span>
-                <span class="font-label-md">Xem menu</span>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-all" href="#">
+                <span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                <span class="font-label-md">Đơn hàng</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-all" href="#">
+                <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                <span class="font-label-md">Thống kê</span>
             </a>
         </nav>
-        <div class="p-4 bg-surface-container rounded-xl flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined">person</span>
+        <div class="pt-gutter border-t border-outline-variant">
+            <div class="flex items-center gap-3 mb-6">
+                <img alt="Admin Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary-fixed" data-alt="A professional headshot of a smiling Vietnamese man in a minimalist cafe setting. The lighting is warm and natural, filtering through large windows. The overall aesthetic is clean and modern, following the Komorebi Brews brand identity with soft shadows and high-key brightness." src="/images/logo.svg">
+                <div>
+                    <p class="font-label-md text-primary">Admin</p>
+                    <p class="text-caption text-secondary">Quản trị viên</p>
+                </div>
             </div>
-            <div>
-                <p class="font-label-md text-primary mb-0">Admin</p>
-                <p class="text-caption text-secondary mb-0">Quản lý sản phẩm</p>
-            </div>
+            <button class="w-full flex items-center justify-center gap-2 px-4 py-2 text-error border border-error rounded-lg hover:bg-error-container transition-colors font-label-md">
+                <span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
+                Đăng xuất
+            </button>
         </div>
     </aside>
-
     <!-- Main Content Area -->
     <main class="md:ml-[280px] min-h-screen p-margin-mobile md:p-margin-desktop">
         <!-- Header -->
         <header class="max-w-container-max mx-auto mb-gutter flex justify-between items-end">
             <div>
                 <nav class="text-caption text-secondary mb-2 flex items-center gap-2">
-                    <span>Admin</span>
-                    <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                    <span class="">Admin</span>
+                    <span class="material-symbols-outlined text-[12px]" data-icon="chevron_right">chevron_right</span>
                     <span class="text-primary font-semibold">Sản phẩm</span>
                 </nav>
-                <h2 class="font-headline-md text-primary m-0">Thêm sản phẩm mới</h2>
+                <h2 class="font-headline-md text-primary">Thêm sản phẩm mới</h2>
             </div>
             <div class="hidden md:block">
                 <span class="text-caption text-secondary font-medium uppercase tracking-widest" id="current-date">Thứ Sáu, 29 tháng 5, 2026</span>
@@ -68,108 +76,121 @@
         {
             <div class="max-w-container-max mx-auto mb-gutter bg-error-container text-on-error-container rounded-xl p-4 border border-error">@cErr</div>
         }
-
         <div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter">
             <!-- Left Column: Main Form -->
             <section class="lg:col-span-8 space-y-gutter">
-                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-outline-variant/20">
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-outline-variant/20" style="transform: translateY(0px); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; box-shadow: rgba(62, 39, 35, 0.05) 0px 10px 30px;">
                     <h3 class="font-label-md text-primary mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[20px]">info</span>
+                        <span class="material-symbols-outlined text-[20px]" data-icon="info">info</span>
                         Thông tin cơ bản
                     </h3>
                     <form asp-action="Add" method="post" class="space-y-6" id="product-form">
                         <div asp-validation-summary="All" class="validation-summary-errors rounded-lg bg-error-container/60 p-3"></div>
                         <div>
-                            <label asp-for="Name" class="block font-label-md text-secondary mb-2">Tên sản phẩm</label>
-                            <input asp-for="Name" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md" placeholder="Ví dụ: Cà phê Muối Sài Gòn">
+                            <label asp-for="Name" class="block font-label-md text-secondary mb-2" for="product-name">Tên sản phẩm</label>
+                            <input asp-for="Name" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md" id="product-name" placeholder="Ví dụ: Cà phê Muối Sài Gòn" type="text">
                             <span asp-validation-for="Name" class="field-validation-error"></span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
                             <div>
-                                <label asp-for="Price" class="block font-label-md text-secondary mb-2">Giá bán (VND)</label>
+                                <label asp-for="Price" class="block font-label-md text-secondary mb-2" for="product-price">Giá bán (VND)</label>
                                 <div class="relative">
-                                    <input asp-for="Price" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md pr-12" placeholder="45.000" type="number">
+                                    <input asp-for="Price" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md pr-12" id="product-price" placeholder="45.000" type="number">
                                     <span class="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-secondary">₫</span>
                                 </div>
                                 <span asp-validation-for="Price" class="field-validation-error"></span>
                             </div>
                             <div>
-                                <label asp-for="CategoryId" class="block font-label-md text-secondary mb-2">Danh mục</label>
-                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md appearance-none"></select>
+                                <label asp-for="CategoryId" class="block font-label-md text-secondary mb-2" for="product-category">Danh mục</label>
+                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md appearance-none" id="product-category"></select>
                                 <span asp-validation-for="CategoryId" class="field-validation-error"></span>
                             </div>
                         </div>
                         <div>
-                            <label asp-for="Description" class="block font-label-md text-secondary mb-2">Mô tả sản phẩm</label>
-                            <textarea asp-for="Description" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md resize-none" placeholder="Nhập câu chuyện về hương vị hoặc thành phần..." rows="4"></textarea>
+                            <label asp-for="Description" class="block font-label-md text-secondary mb-2" for="product-desc">Mô tả sản phẩm</label>
+<textarea asp-for="Description" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md resize-none" id="product-desc" placeholder="Nhập câu chuyện về hương vị hoặc thành phần..." rows="4"></textarea>
                             <span asp-validation-for="Description" class="field-validation-error"></span>
                         </div>
                     </form>
                 </div>
-
                 <!-- Product Status Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
                     <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 flex items-center justify-between">
                         <div>
-                            <p class="font-label-md text-primary mb-0">Trạng thái sản phẩm</p>
-                            <p class="text-caption text-secondary mb-0">Hiển thị trên menu khách hàng</p>
+                            <p class="font-label-md text-primary">Trạng thái sản phẩm</p>
+                            <p class="text-caption text-secondary">Hiện thị trên menu khách hàng</p>
                         </div>
-                        <span class="material-symbols-outlined text-primary text-[42px]">toggle_on</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input checked="" class="sr-only peer" type="checkbox" value="">
+                            <div class="w-11 h-6 bg-secondary-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
                     </div>
                     <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 flex items-center justify-between">
                         <div>
-                            <p class="font-label-md text-primary mb-0">Món nổi bật</p>
-                            <p class="text-caption text-secondary mb-0">Gắn tag “Komorebi Choice”</p>
+                            <p class="font-label-md text-primary">Món nổi bật</p>
+                            <p class="text-caption text-secondary">Gắn tag "Komorebi Choice"</p>
                         </div>
-                        <span class="material-symbols-outlined text-secondary text-[32px]">kid_star</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input class="sr-only peer" type="checkbox" value="">
+                            <div class="w-11 h-6 bg-secondary-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
                     </div>
                 </div>
             </section>
-
             <!-- Right Column: Sidebar Actions -->
             <section class="lg:col-span-4 space-y-gutter">
                 <!-- Image Upload Section -->
-                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-dashed border-outline-variant text-center">
-                    <div id="upload-container" class="relative h-48 rounded-xl bg-surface-container-low flex flex-col items-center justify-center mb-4 overflow-hidden border-2 border-dashed border-outline-variant">
-                        <span class="material-symbols-outlined text-[48px] text-secondary mb-2">add_photo_alternate</span>
-                        <p class="font-label-md text-primary mb-1">Ảnh sản phẩm</p>
-                        <p class="text-caption text-secondary mb-0">Sau khi tạo sản phẩm, vào Media để upload ảnh.</p>
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-outline-variant/20" style="transform: translateY(0px); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; box-shadow: rgba(62, 39, 35, 0.05) 0px 10px 30px;">
+                    <h3 class="font-label-md text-primary mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]" data-icon="image">image</span>
+                        Hình ảnh sản phẩm
+                    </h3>
+                    <div class="relative group cursor-pointer border-2 border-dashed border-outline-variant/50 rounded-xl aspect-square flex flex-col items-center justify-center gap-4 hover:bg-surface-container transition-colors" id="upload-container">
+                        <span class="material-symbols-outlined text-outline text-[48px]" data-icon="add_photo_alternate">add_photo_alternate</span>
+                        <div class="text-center">
+                            <p class="font-label-md text-secondary">Nhấp để tải ảnh lên</p>
+                            <p class="text-caption text-outline-variant px-4">Định dạng JPG, PNG (Tỉ lệ 1:1, Tối thiểu 800x800px)</p>
+                        </div>
+                        <input class="absolute inset-0 opacity-0 cursor-pointer" id="image-upload" type="file">
                     </div>
-                    <a asp-action="UploadImageList" class="inline-flex justify-center w-full py-3 px-4 rounded-full border border-primary text-primary font-label-md hover:bg-primary-fixed transition-colors text-decoration-none">Mở Media</a>
                 </div>
-
                 <!-- Category Add Quick Form -->
-                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow">
-                    <h3 class="font-label-md text-primary mb-3">Thêm danh mục nhanh</h3>
-                    <form asp-action="AddCategory" method="post" class="space-y-3">
-                        <input name="categoryName" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white text-body-md" placeholder="Ví dụ: Seasonal Drinks">
-                        <button type="submit" class="w-full py-3 bg-secondary-container text-on-secondary-container rounded-full font-label-md hover:bg-secondary-fixed transition-colors">Thêm danh mục</button>
-                    </form>
-                </div>
-
-                <!-- Final Actions -->
-                <div class="bg-primary text-on-primary p-gutter rounded-xl custom-shadow">
-                    <h3 class="font-headline-md mb-4">Hoàn tất</h3>
-                    <div class="space-y-3">
-                        <button type="submit" form="product-form" class="w-full py-4 bg-primary-fixed text-primary rounded-full font-label-md hover:bg-primary-fixed-dim transition-colors">Lưu sản phẩm</button>
-                        <a asp-action="Index" class="block w-full py-4 border border-white/30 text-center rounded-full font-label-md hover:bg-white/10 transition-colors text-on-primary text-decoration-none">Hủy bỏ</a>
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-outline-variant/20" style="transform: translateY(0px); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; box-shadow: rgba(62, 39, 35, 0.05) 0px 10px 30px;">
+                    <h3 class="font-label-md text-primary mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]" data-icon="add_circle">add_circle</span>
+                        Thêm danh mục nhanh
+                    </h3>
+                    <div class="space-y-4">
+                        <input class="w-full px-4 py-2 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-label-md" placeholder="Tên danh mục mới" type="text">
+                        <button class="w-full py-2 bg-secondary-container text-on-secondary-container font-label-md rounded-lg hover:bg-secondary transition-colors hover:text-white">
+                            Thêm danh mục
+                        </button>
                     </div>
+                </div>
+                <!-- Final Actions -->
+                <div class="space-y-3">
+                    <button class="w-full py-4 bg-primary text-white font-label-md rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]" data-icon="save">save</span>
+                        Lưu sản phẩm
+                    </button>
+                    <button class="w-full py-4 bg-transparent text-secondary font-label-md rounded-xl hover:bg-surface-container-high transition-all">
+                        Hủy bỏ
+                    </button>
                 </div>
             </section>
         </div>
-
         <!-- Recent Activity Table (Bento Style) -->
         <section class="max-w-container-max mx-auto mt-section-gap">
             <h3 class="font-headline-md text-primary mb-6">Sản phẩm vừa cập nhật</h3>
-            <div class="bg-surface-container-lowest rounded-xl custom-shadow overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-surface-container-low border-b border-outline-variant/10">
+            <div class="bg-white rounded-2xl overflow-hidden custom-shadow border border-outline-variant/20" style="transform: translateY(0px); transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; box-shadow: rgba(62, 39, 35, 0.05) 0px 10px 30px;">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low">
                         <tr>
                             <th class="px-gutter py-4 font-label-md text-secondary">Sản phẩm</th>
-                            <th class="px-gutter py-4 font-label-md text-secondary hidden md:table-cell">Danh mục</th>
+                            <th class="px-gutter py-4 font-label-md text-secondary">Danh mục</th>
                             <th class="px-gutter py-4 font-label-md text-secondary">Giá</th>
                             <th class="px-gutter py-4 font-label-md text-secondary">Trạng thái</th>
-                            <th class="px-gutter py-4"></th>
+                            <th class="px-gutter py-4 font-label-md text-secondary text-right">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant/10">
@@ -182,17 +203,23 @@
                                             <img class="w-full h-full object-cover" alt="@product.Name" src="@ImageOf(product)">
                                         </div>
                                         <div>
-                                            <p class="font-label-md text-primary mb-0">@product.Name</p>
-                                            <p class="text-caption text-secondary mb-0">ID: PRD-@product.Id.ToString("000")</p>
+                                            <p class="font-label-md text-primary">@product.Name</p>
+                                            <p class="text-caption text-secondary">ID: PRD-@product.Id.ToString("000")</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-gutter py-4 text-body-md text-secondary hidden md:table-cell">@(product.Category?.Name ?? "Chưa phân loại")</td>
+                                <td class="px-gutter py-4 text-body-md text-secondary">@(product.Category?.Name ?? "Chưa phân loại")</td>
                                 <td class="px-gutter py-4 text-body-md font-medium text-primary">@FormatPrice(product.Price)</td>
-                                <td class="px-gutter py-4"><span class="px-3 py-1 bg-green-100 text-green-700 text-caption font-bold rounded-full">Đang bán</span></td>
+                                <td class="px-gutter py-4">
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 text-caption font-bold rounded-full">Đang bán</span>
+                                </td>
                                 <td class="px-gutter py-4 text-right">
-                                    <a asp-action="Update" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-primary transition-colors text-decoration-none"><span class="material-symbols-outlined">edit</span></a>
-                                    <a asp-action="Delete" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-error transition-colors text-decoration-none"><span class="material-symbols-outlined">delete</span></a>
+                                    <a asp-action="Update" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-primary transition-colors text-decoration-none">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-error transition-colors text-decoration-none">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </a>
                                 </td>
                             </tr>
                         }
@@ -203,42 +230,61 @@
                     </tbody>
                 </table>
                 <div class="p-4 bg-surface-container-low border-t border-outline-variant/10 text-center">
-                    <a asp-action="UploadImageList" class="text-label-md text-secondary hover:text-primary transition-all underline underline-offset-4 text-decoration-none">Xem tất cả sản phẩm</a>
+                    <button class="text-label-md text-secondary hover:text-primary transition-all underline underline-offset-4">Xem tất cả sản phẩm</button>
                 </div>
             </div>
         </section>
     </main>
-
     <!-- Footer -->
     <footer class="md:ml-[280px] bg-surface-container py-section-gap px-margin-desktop mt-section-gap flex flex-col items-center gap-gutter">
-        <h2 class="font-display-lg text-display-lg text-primary m-0">
+        <h2 class="font-display-lg text-display-lg text-primary">
             <div class="flex flex-col items-center gap-4">
                 <img src="/images/logo.svg" alt="Cherry Blossom Logo" class="w-20 h-20 object-contain">
                 <span class="font-display-lg text-4xl font-bold tracking-tight">
-                    <span style="color: rgb(62, 39, 35);">Coffe</span><span style="color: rgb(129, 199, 132);">-latte</span><span style="color: rgb(244, 143, 177);">Kawaii</span>
+                    <span style="color: rgb(62, 39, 35);" class="">Coffe</span><span style="color: rgb(129, 199, 132);" class="">-latte</span><span style="color: rgb(244, 143, 177);" class="">Kawaii</span>
                 </span>
             </div>
         </h2>
         <div class="flex flex-wrap justify-center gap-gutter">
-            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Trung tâm trợ giúp</a>
-            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Điều khoản dịch vụ</a>
-            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Chính sách bảo mật</a>
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors" href="#">Trung tâm trợ giúp</a>
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors" href="#">Điều khoản dịch vụ</a>
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors" href="#">Chính sách bảo mật</a>
         </div>
         <p class="text-caption text-secondary">© 2024 Coffetinbeo. A Saigon-Kyoto Fusion.</p>
     </footer>
-</div>
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        // Update date display
         const dateEl = document.getElementById('current-date');
-        if (dateEl) {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            dateEl.innerText = now.toLocaleDateString('vi-VN', options);
-        }
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateEl.innerText = now.toLocaleDateString('vi-VN', options);
 
-        document.querySelectorAll('.custom-shadow').forEach(card => {
+        // Simple preview logic for image upload
+        const uploadInput = document.getElementById('image-upload');
+        const uploadContainer = document.getElementById('upload-container');
+
+        if (uploadInput && uploadContainer) uploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadContainer.innerHTML = `
+                        <img src="${event.target.result}" class="w-full h-full object-cover rounded-xl" />
+                        <button onclick="window.location.reload()" class="absolute top-2 right-2 bg-white/80 p-1 rounded-full shadow-md text-error hover:bg-white">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    `;
+                    uploadContainer.classList.remove('border-dashed');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Hover animations for cards
+        const cards = document.querySelectorAll('.custom-shadow');
+        cards.forEach(card => {
             card.addEventListener('mouseenter', () => {
                 card.style.transform = 'translateY(-4px)';
                 card.style.transition = 'transform 0.2s ease-out, box-shadow 0.2s ease-out';
