@@ -7,8 +7,9 @@ public class MockCategoryRepository : ICategoryRepository
     private readonly List<Category> _categoryList =
     [
         new() { Id = 1, Name = "Coffee" },
-        new() { Id = 2, Name = "Non-Coffee" },
-        new() { Id = 3, Name = "Bakery" }
+        new() { Id = 2, Name = "Matcha" },
+        new() { Id = 3, Name = "Chocolate" },
+        new() { Id = 4, Name = "Bakery" }
     ];
 
     public IEnumerable<Category> GetAllCategories() => _categoryList.OrderBy(c => c.Id);

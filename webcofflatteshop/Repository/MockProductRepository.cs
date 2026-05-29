@@ -84,9 +84,9 @@ public class MockProductRepository : IProductRepository
         new() { Id = 7, Name = "Cold Brew", Price = 4.30m, Description = "Ủ lạnh 18 tiếng, mượt và ít chua.", CategoryId = 1 },
         new() { Id = 8, Name = "Vietnamese Iced Coffee", Price = 3.70m, Description = "Cà phê sữa đá đậm vị Việt Nam.", CategoryId = 1 },
         new() { Id = 9, Name = "Matcha Latte", Price = 4.60m, Description = "Trà xanh Nhật kết hợp sữa thanh dịu.", CategoryId = 2 },
-        new() { Id = 10, Name = "Chocolate Frappe", Price = 5.20m, Description = "Đá xay chocolate mát lạnh cho ngày hè.", CategoryId = 2 },
-        new() { Id = 11, Name = "Croissant Butter", Price = 2.90m, Description = "Bánh sừng bò bơ giòn tan mỗi sáng.", CategoryId = 3 },
-        new() { Id = 12, Name = "Tiramisu", Price = 4.10m, Description = "Bánh tiramisu mềm mịn thơm cà phê.", CategoryId = 3 },
-        new() { Id = 13, Name = "Blueberry Cheesecake", Price = 4.80m, Description = "Cheesecake béo nhẹ phủ mứt việt quất.", CategoryId = 3 }
+        new() { Id = 10, Name = "Chocolate Frappe", Price = 5.20m, Description = "Đá xay chocolate mát lạnh cho ngày hè.", CategoryId = 3 },
+        new() { Id = 11, Name = "Croissant Butter", Price = 2.90m, Description = "Bánh sừng bò bơ giòn tan mỗi sáng.", CategoryId = 4 },
+        new() { Id = 12, Name = "Tiramisu", Price = 4.10m, Description = "Bánh tiramisu mềm mịn thơm cà phê.", CategoryId = 4 },
+        new() { Id = 13, Name = "Blueberry Cheesecake", Price = 4.80m, Description = "Cheesecake béo nhẹ phủ mứt việt quất.", CategoryId = 4 }
     ];
 }
