@@ -230,9 +230,45 @@ public class ProductController : Controller
         return RedirectToAction(nameof(Display), new { id });
     }
 
+    [HttpPost]
+    public IActionResult Checkout([FromBody] CheckoutRequest request)
+    {
+        if (request == null || request.Items == null || !request.Items.Any())
+        {
+            return BadRequest(new { success = false, message = "Giỏ hàng của bạn đang trống." });
+        }
+
+        foreach (var item in request.Items)
+        {
+            var product = _productRepository.GetAll().FirstOrDefault(p => p.Name == item.Name);
+            if (product != null)
+            {
+                if (product.Stock < item.Qty)
+                {
+                    return BadRequest(new { success = false, message = $"Sản phẩm '{item.Name}' chỉ còn {product.Stock} ly trong kho." });
+                }
+                product.Stock -= item.Qty;
+                _productRepository.Update(product);
+            }
+        }
+
+        return Ok(new { success = true, message = "Đặt hàng thành công! Số lượng sản phẩm tồn kho đã được cập nhật." });
+    }
+
     private void LoadCategories()
     {
         var categories = _categoryRepository.GetAllCategories();
         ViewBag.Categories = new SelectList(categories, "Id", "Name");
     }
+}
+
+public class CheckoutRequest
+{
+    public List<CartItemDto> Items { get; set; } = [];
+}
+
+public class CartItemDto
+{
+    public string Name { get; set; } = string.Empty;
+    public int Qty { get; set; }
 }

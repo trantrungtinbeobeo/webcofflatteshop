@@ -36,9 +36,7 @@
         </a>
         <div class="hidden items-center gap-gutter md:flex">
             <a class="font-body-md border-b-2 border-primary pb-1 text-primary" href="#menu">Menu</a>
-            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" href="#story">Our Story</a>
-            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" href="#">Locations</a>
-            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" asp-controller="Product" asp-action="Add">Rewards</a>
+            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" asp-controller="Product" asp-action="Add">Manager</a>
         </div>
         <div class="flex items-center gap-unit">
             <button class="relative rounded-full p-2 text-primary transition-colors hover:bg-secondary-container" onclick="toggleCart()" aria-label="Mở giỏ hàng">
@@ -68,7 +66,7 @@
             <span>Subtotal</span>
             <span id="cartSubtotal">0 VNĐ</span>
         </div>
-        <button class="flex w-full items-center justify-between rounded-lg bg-primary px-6 py-4 font-label-md text-on-primary transition-soft hover:brightness-110">
+        <button id="checkoutBtn" class="flex w-full items-center justify-between rounded-lg bg-primary px-6 py-4 font-label-md text-on-primary transition-soft hover:brightness-110">
             <span>Proceed to Checkout</span>
             <span class="material-symbols-outlined">arrow_forward</span>
         </button>
@@ -89,10 +87,10 @@
     </section>
 
     <section class="hide-scrollbar mb-gutter flex gap-4 overflow-x-auto py-2">
-        <button class="whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft">Coffee (Cà Phê)</button>
-        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Matcha (Trà Xanh)</button>
-        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Chocolate (Sô-cô-la)</button>
-        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Bakery (Bánh Ngọt)</button>
+        <button class="category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container" data-category-id="1">Coffee (Cà Phê)</button>
+        <button class="category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container" data-category-id="2">Matcha (Trà Xanh)</button>
+        <button class="category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container" data-category-id="3">Chocolate (Sô-cô-la)</button>
+        <button class="category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container" data-category-id="4">Bakery (Bánh Ngọt)</button>
     </section>
 
     <section id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
@@ -100,7 +98,7 @@
         {
             var product = products[index];
             var imageUrl = ImageOf(product, index);
-            <article class="group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl">
+            <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
                 <button type="button" class="js-open-detail block w-full text-left" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
                     <div class="relative aspect-square cursor-pointer overflow-hidden">
                         <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
@@ -141,17 +139,17 @@
                     <div>
                         <span class="mb-2 block font-label-md text-primary">Tùy chọn đường</span>
                         <div class="flex gap-2">
-                            <button class="rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary">100%</button>
-                            <button class="rounded-full border border-outline px-4 py-1 font-caption">50%</button>
-                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Không đường</button>
+                            <button class="sugar-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary" data-sugar="100%">100%</button>
+                            <button class="sugar-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary" data-sugar="50%">50%</button>
+                            <button class="sugar-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary" data-sugar="Không đường">Không đường</button>
                         </div>
                     </div>
                     <div>
                         <span class="mb-2 block font-label-md text-primary">Kích cỡ</span>
                         <div class="flex gap-2">
-                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Nhỏ</button>
-                            <button class="rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary">Vừa</button>
-                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Lớn</button>
+                            <button class="size-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary" data-size="Nhỏ">Nhỏ</button>
+                            <button class="size-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary" data-size="Vừa">Vừa</button>
+                            <button class="size-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary" data-size="Lớn">Lớn</button>
                         </div>
                     </div>
                 </div>
@@ -191,6 +189,8 @@
     const cartItems = document.getElementById('cartItems');
     const cartSubtotal = document.getElementById('cartSubtotal');
     let current = null;
+    let selectedSugar = "100%";
+    let selectedSize = "Vừa";
 
     window.toggleCart = () => cartDrawer.classList.toggle('translate-x-full');
     window.closeDetail = () => {
@@ -204,15 +204,16 @@
         cartSubtotal.textContent = formatCurrency(cart.reduce((sum, item) => sum + item.price * item.qty, 0));
         cartItems.innerHTML = cart.length
             ? cart.map(item => `
-                <div class="flex gap-4">
+                <div class="flex gap-4 border-b border-outline-variant/10 pb-3">
                     <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                         <img class="h-full w-full object-cover" src="${item.image}" alt="${item.name}">
                     </div>
                     <div class="flex-grow">
-                        <p class="font-label-md text-label-md text-primary">${item.name}</p>
+                        <p class="font-label-md text-label-md text-primary font-semibold">${item.name}</p>
+                        <p class="text-[12px] text-secondary mt-0.5">Size: ${item.size} | Đường: ${item.sugar}</p>
                         <p class="font-caption text-caption text-secondary">Số lượng: ${item.qty}</p>
-                        <div class="mt-2 flex items-center justify-between">
-                            <span class="font-body-md text-primary">${formatCurrency(item.price * item.qty)}</span>
+                        <div class="mt-1 flex items-center justify-between">
+                            <span class="font-body-md text-primary font-medium">${formatCurrency(item.price * item.qty)}</span>
                         </div>
                     </div>
                 </div>`).join('')
@@ -221,28 +222,178 @@
 
     const addToCart = item => {
         const cart = getCart();
-        const index = cart.findIndex(entry => entry.name === item.name);
+        const index = cart.findIndex(entry => entry.name === item.name && entry.sugar === item.sugar && entry.size === item.size);
         if (index >= 0) cart[index].qty += 1;
         else cart.push({ ...item, qty: 1 });
         setCart(cart);
         renderCart();
     };
 
+    // Chi tiết sản phẩm & Lựa chọn thuộc tính
     document.querySelectorAll('.js-open-detail').forEach(button => {
         button.addEventListener('click', () => {
-            current = { name: button.dataset.name, price: Number(button.dataset.price), image: button.dataset.image };
+            const basePrice = Number(button.dataset.price) * 10000; // Đưa về đơn vị VNĐ chính xác (ví dụ 2.50m tương đương 25.000 VNĐ)
+            current = { 
+                name: button.dataset.name, 
+                basePrice: basePrice,
+                price: basePrice, 
+                image: button.dataset.image 
+            };
+
             document.getElementById('detailTitle').textContent = button.dataset.name;
             document.getElementById('detailDesc').textContent = button.dataset.description || 'Món quà từ thiên nhiên với quy trình chế biến thủ công.';
-            document.getElementById('detailPrice').textContent = button.dataset.displayPrice;
+            
+            // Khởi tạo trạng thái mặc định
+            selectedSugar = "100%";
+            selectedSize = "Vừa";
+            updateDetailPrice();
+
+            // Reset classes cho Đường
+            document.querySelectorAll('.sugar-option-btn').forEach(btn => {
+                if (btn.dataset.sugar === "100%") {
+                    btn.className = "sugar-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary";
+                } else {
+                    btn.className = "sugar-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary";
+                }
+            });
+
+            // Reset classes cho Size
+            document.querySelectorAll('.size-option-btn').forEach(btn => {
+                if (btn.dataset.size === "Vừa") {
+                    btn.className = "size-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary";
+                } else {
+                    btn.className = "size-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary";
+                }
+            });
+
             document.getElementById('detailImg').src = button.dataset.image;
             document.getElementById('detailModal').classList.remove('hidden');
             document.getElementById('detailModal').classList.add('flex');
         });
     });
 
+    const updateDetailPrice = () => {
+        if (!current) return;
+        let finalPrice = current.basePrice;
+        if (selectedSize === "Nhỏ") finalPrice -= 5000;
+        else if (selectedSize === "Lớn") finalPrice += 10000;
+        
+        current.price = finalPrice;
+        document.getElementById('detailPrice').textContent = formatCurrency(finalPrice);
+    };
+
+    // Click chọn Đường
+    document.querySelectorAll('.sugar-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedSugar = btn.dataset.sugar;
+            document.querySelectorAll('.sugar-option-btn').forEach(b => {
+                if (b === btn) {
+                    b.className = "sugar-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary";
+                } else {
+                    b.className = "sugar-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary";
+                }
+            });
+        });
+    });
+
+    // Click chọn Size
+    document.querySelectorAll('.size-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedSize = btn.dataset.size;
+            document.querySelectorAll('.size-option-btn').forEach(b => {
+                if (b === btn) {
+                    b.className = "size-option-btn rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary";
+                } else {
+                    b.className = "size-option-btn rounded-full border border-outline px-4 py-1 font-caption text-secondary";
+                }
+            });
+            updateDetailPrice();
+        });
+    });
+
     document.getElementById('detailAddBtn').addEventListener('click', () => {
-        if (current) addToCart(current);
+        if (current) {
+            addToCart({
+                name: current.name,
+                price: current.price,
+                image: current.image,
+                sugar: selectedSugar,
+                size: selectedSize
+            });
+        }
         closeDetail();
+    });
+
+    // Lọc danh mục Client-side
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const productCards = document.querySelectorAll('.product-card');
+    let activeCategoryId = null;
+
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const categoryId = btn.dataset.categoryId;
+            if (activeCategoryId === categoryId) {
+                // Hủy chọn, hiện lại tất cả
+                activeCategoryId = null;
+                categoryBtns.forEach(b => {
+                    b.className = "category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container";
+                });
+                productCards.forEach(c => c.classList.remove('hidden'));
+            } else {
+                activeCategoryId = categoryId;
+                categoryBtns.forEach(b => {
+                    if (b === btn) {
+                        b.className = "category-btn whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft";
+                    } else {
+                        b.className = "category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container";
+                    }
+                });
+                productCards.forEach(c => {
+                    if (c.dataset.categoryId === categoryId) {
+                        c.classList.remove('hidden');
+                    } else {
+                        c.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    });
+
+    // Xử lý sự kiện Checkout (đặt hàng) giảm Stock ở database
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+        const cart = getCart();
+        if (!cart.length) {
+            alert("Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/Product/Checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    items: cart.map(item => ({
+                        name: item.name,
+                        qty: item.qty
+                    }))
+                })
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                alert(result.message);
+                localStorage.removeItem('coffee_cart');
+                renderCart();
+                toggleCart();
+            } else {
+                alert(result.message || "Đặt hàng thất bại. Vui lòng thử lại!");
+            }
+        } catch (error) {
+            console.error("Lỗi đặt hàng:", error);
+            alert("Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại!");
+        }
     });
 
     renderCart();

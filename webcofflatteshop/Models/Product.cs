@@ -22,6 +22,9 @@ public class Product
 
     public bool IsFeatured { get; set; }
 
+    [Range(0, 100000)]
+    public int Stock { get; set; } = 100;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
