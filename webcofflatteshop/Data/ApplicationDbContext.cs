@@ -43,6 +43,18 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
             entity.Property(product => product.ImageUrl)
                 .HasMaxLength(300);
+            entity.Property(product => product.IsAvailable)
+                .HasDefaultValue(true)
+                .IsRequired();
+            entity.Property(product => product.IsFeatured)
+                .HasDefaultValue(false)
+                .IsRequired();
+            entity.Property(product => product.CreatedAt)
+                .HasColumnType("datetime2")
+                .IsRequired();
+            entity.Property(product => product.UpdatedAt)
+                .HasColumnType("datetime2")
+                .IsRequired();
             entity.HasOne(product => product.Category)
                 .WithMany(category => category.Products)
                 .HasForeignKey(product => product.CategoryId)

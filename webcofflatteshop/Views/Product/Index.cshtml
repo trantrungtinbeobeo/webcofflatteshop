@@ -1,132 +1,251 @@
 @model IEnumerable<webcofflatteshop.Models.Product>
 @{
-    ViewData["Title"] = "Coffee Menu";
-    var banners = ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" };
-    string IconOf(string n) => n.ToLower().Contains("matcha") ? "🍃" : n.ToLower().Contains("chocolate") ? "🍫" : n.ToLower().Contains("croissant") || n.ToLower().Contains("cake") || n.ToLower().Contains("tiramisu") ? "🥐" : "☕";
+    ViewData["Title"] = "Menu";
+    var banners = (ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
+    var products = Model.ToList();
+    var fallbackImages = new[]
+    {
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuABrBSS4LFPWVxIKu6AbEOBxgmUwSbQskURn4aCXn9wvyYRgRi0pnxTtP-LHTYrgu1yclJXfBa3zIb0vsbsBhlIfRaaqMhCwzQrAcRjKji5bp9ZzzXZoNjDNXhXDm5SixoY_llnZyqHmXEsGE0JDLyqGPwlAbLiDEGIIzdsRPuaX7nAgUkQe1vdiIzmUYlUf0Mku2urg6oHg2juQMP1nvU0fvrVPgR-WKWZlurqxB10q5yY04_MRfSMBajShMrmrH6vNtKAFL-kYUk",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDfC_nzNV1-ZM1aHD8AB1rjfrg6EhRRYzOY6arpCXxg_cZa5DdjUXvEHapT46470LUotoYI-OSCnseRNYL4jTATChWORaE_X7_LNE9fMaLBRUJWNQc7ZXJqafa8qJtfucZf-g1Mxe7_7-r6Jv91RoSPSmz_9TCG4VAVIhF1ToyAwVMkWft9OaJhDKCvXVpOgrxC1r8cUd3gMYRSqpb8Z6yZ6-4sDwkMYCPqeHDnU4DaH1xGJeCkGwNbnwR1bwC2NbejEfjH8cTmPcg",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAINg-ls3ZDrKgyaDMRS7y3KrN5DGcDciI0RcvH0KDvuOry5tqEIG7YIHOsGayPH88201m72NZS5aMJn2Xz1lPICoZLmreKNBPlHx8eaBINCdJNGkkjVKPL0NlrEooBT1JqvgKDiyf-ynRhpJ7v_21sw5sBGGaF54lmNS6JmAw6noQ1SnSvDDx20LZRSY_4P47bGpqkmlPOnbCZutWzT1jMoq5Zq6SOck9uv37qG7KOyAsjooGx7SmYMZE-2E0hwEKAKjJhKO9j5iA",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAQkTjxfYtLnMkmlZMN1d00wzY_aLhnazb3iKo-li-RFLJogThnAJknp8ufGSR8V4L1nuH9xfVlrFSMmxmvKFRtcUDvifYeAlQCWzXIC6E5oobxZ26ze1FooJrEHWIj1vc2oUzvY56OLrw84VhGWKUWHmpGSQMk1tBrYJVlwK61Ys5JP0sUmc5xpxNIl3_RqCYtVeKCX-bXLihg_uUByx_p1QBLbIt25QNqMUPAlUUsSzEQc1YZVz9w96lSLV-CJlc8cV1GS2CRnEA",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDsQnyD3MI4XU1J1XLR0ru5Hchbpf9MSdmqBFR03mb2YYCugbScIuXnVfvDp_q55hoQa1qpeJfPOIDpnyxp7mB9uWGalzUCA_rIbY4gcPBj9HRt4wt0nYAmUFo7th4eVcdmUcgJaTrapesRYILeBdMXaGot0pNMRaWE0YZ8xg2NBdsTepWryRM2apVdX-a91KES4tBe_RbuN3JNEdfzwTP7AV-x8dpY5kmvKlzOdJPBiRzi8EdXEH-Ioy6LUCZcxkaAXY8yBvRaTHE",
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAhafbIE7r_VkZsiBATwLEjPJslmtyfCByAAIF_DV9r2so2ctxZYzfqXw0TBVfOnm01TPKLiTe3Qz7N1qSDwh4pFDBRpfgxbfrG-mMQ6GDOv7LVw0svi29iiyP81sRFZ9ZimA053h2PLktOF4H1f8-8rAXb5XO812r3MsiJ46bzm6w0RndiMjlb_Hzy_917eZWbTzZgpupMcrje2jPSvWbAHU6JmYRS1bj1oR2m0S13O_R4_nc6neqTjsaqEsBE3KlmK-v_JPcsOPs"
+    };
+    var heroImage = banners.FirstOrDefault(b => !string.IsNullOrWhiteSpace(b)) ?? "https://lh3.googleusercontent.com/aida-public/AB6AXuCYz6au7BPWgtSSBFiSZJVjAly8L00XGdg-tPC4829OE-DiHnKyKeSY6Mpr26uJoVFOx85UdexJd1d_f9NDIDLMgzO7koTOcWG6FRVJ-OVuTowfYg8k3u2Tp_uyWppOLMczAyclalIUQtggbC15NjCar30VXcyHovsL6YnJSPZIwk2FyHa5CzvUX4qe5cxy2HOC6SWqB7Oys46JRkS7e_o2dt8jPgAGTcwq3ONsQVlR-2338Ikw0xTyKzPDMKNG7dl33GDc4iNo8SE";
+    string ImageOf(webcofflatteshop.Models.Product product, int index) => string.IsNullOrWhiteSpace(product.ImageUrl) ? fallbackImages[index % fallbackImages.Length] : product.ImageUrl;
+    string IconOf(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        if (lower.Contains("matcha") || lower.Contains("trà") || lower.Contains("tea")) return "energy_savings_leaf";
+        if (lower.Contains("bánh") || lower.Contains("cake")) return "cake";
+        if (lower.Contains("croissant")) return "bakery_dining";
+        if (lower.Contains("espresso")) return "bolt";
+        if (lower.Contains("atiso") || lower.Contains("ice")) return "icecream";
+        return "coffee";
+    }
 }
 
-<div id="marketingBanner" class="carousel slide mb-4 rounded-banner overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
-    <div class="carousel-inner banner-inner">
-        @{ var i = 0; }
-        @foreach (var banner in banners)
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a class="font-body-md border-b-2 border-primary pb-1 text-primary" href="#menu">Menu</a>
+            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" href="#story">Our Story</a>
+            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" href="#">Locations</a>
+            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" asp-controller="Product" asp-action="Add">Rewards</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <button class="relative rounded-full p-2 text-primary transition-colors hover:bg-secondary-container" onclick="toggleCart()" aria-label="Mở giỏ hàng">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                <span id="cartCount" class="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">0</span>
+            </button>
+            <button class="p-2 text-primary md:hidden" aria-label="Menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div id="cartDrawer" class="fixed right-0 top-0 z-[60] flex h-full w-full translate-x-full flex-col bg-surface-container-lowest shadow-2xl transition-transform duration-300 lg:w-[400px] lg:translate-x-0">
+    <div class="flex items-center justify-between border-b border-outline-variant p-gutter">
+        <div>
+            <h2 class="font-headline-md text-headline-md text-primary">Your Selection</h2>
+            <p class="font-caption text-caption text-secondary">Carefully crafted for you</p>
+        </div>
+        <button class="rounded-full p-2 hover:bg-surface-container" onclick="toggleCart()" aria-label="Đóng giỏ hàng">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <div id="cartItems" class="flex-grow space-y-gutter overflow-y-auto p-gutter"></div>
+    <div class="space-y-4 border-t border-outline-variant bg-surface-container p-gutter">
+        <div class="flex justify-between font-label-md text-label-md text-primary">
+            <span>Subtotal</span>
+            <span id="cartSubtotal">0 VNĐ</span>
+        </div>
+        <button class="flex w-full items-center justify-between rounded-lg bg-primary px-6 py-4 font-label-md text-on-primary transition-soft hover:brightness-110">
+            <span>Proceed to Checkout</span>
+            <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+    </div>
+</div>
+
+<main class="mx-auto max-w-container-max px-margin-mobile py-gutter md:px-margin-desktop lg:mr-[400px]">
+    <section class="group relative mb-section-gap h-[400px] overflow-hidden rounded-xl">
+        <div class="relative h-full overflow-hidden">
+            <img class="h-full w-full object-cover" src="@heroImage" alt="Coffee hero" />
+            <div class="hero-gradient absolute inset-0 flex items-end p-gutter">
+                <div class="max-w-xl text-white">
+                    <h1 class="mb-4 font-display-lg text-display-lg">Hương Vị Nghệ Thuật</h1>
+                    <p class="font-body-lg text-body-lg opacity-90">Sự kết hợp hoàn hảo giữa tâm hồn Sài Gòn và hơi thở cố đô Kyoto.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="hide-scrollbar mb-gutter flex gap-4 overflow-x-auto py-2">
+        <button class="whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft">Coffee (Cà Phê)</button>
+        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Matcha (Trà Xanh)</button>
+        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Chocolate (Sô-cô-la)</button>
+        <button class="whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container">Bakery (Bánh Ngọt)</button>
+    </section>
+
+    <section id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
+        @for (var index = 0; index < products.Count; index++)
         {
-            <div class="carousel-item @(i == 0 ? "active" : "")">
-                <img src="@banner" class="d-block w-100 banner-image" alt="Banner @(i+1)" />
-                <div class="carousel-caption text-start">
-                    <h3>Cozy Coffee Shop</h3>
-                    <p>Hương vị dịu dàng cho một ngày thật chill ☕</p>
-                </div>
-            </div>
-            i++;
+            var product = products[index];
+            var imageUrl = ImageOf(product, index);
+            <article class="group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl">
+                <button type="button" class="js-open-detail block w-full text-left" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
+                    <div class="relative aspect-square cursor-pointer overflow-hidden">
+                        <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
+                        <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
+                            <span class="material-symbols-outlined text-primary">@IconOf(product.Name)</span>
+                        </div>
+                    </div>
+                    <div class="p-gutter">
+                        <h3 class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
+                        <p class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-label-md text-lg text-on-tertiary-container">@product.Price.ToString("N0") VNĐ</span>
+                            <span class="rounded-lg bg-primary px-4 py-2 font-label-md text-on-primary transition-soft hover:brightness-125">Thêm vào giỏ</span>
+                        </div>
+                    </div>
+                </button>
+            </article>
         }
-    </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#marketingBanner" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-    <button class="carousel-control-next" type="button" data-bs-target="#marketingBanner" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
-</div>
+    </section>
+</main>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="m-0 friendly-title">Coffee Shop Menu ☕</h2>
-    <button id="openCartBtn" type="button" class="btn btn-soft rounded-pill">🛒 Giỏ hàng <span id="cartCount" class="badge bg-light text-dark ms-1">0</span></button>
-</div>
-
-<div class="row g-4">
-@foreach (var product in Model)
-{
-    var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl;
-    <div class="col-12 col-sm-6 col-lg-4">
-        <div class="card coffee-card h-100 shadow-sm product-hover">
-            <span class="product-type-icon">@IconOf(product.Name)</span>
-            <img src="@imageUrl" class="card-img-top product-image js-open-detail" alt="@product.Name" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl" />
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title">@product.Name</h5>
-                <p class="card-text text-muted flex-grow-1">@product.Description</p>
-                <p class="product-price">@product.Price.ToString("C")</p>
-                <button type="button" class="btn btn-soft btn-order w-100 js-open-detail" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString("0.00")" data-display-price="@product.Price.ToString("C")" data-image="@imageUrl">Đặt hàng ngay</button>
-            </div>
+<div id="detailModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-margin-mobile">
+    <div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="closeDetail()"></div>
+    <div id="modalContent" class="relative flex w-full max-w-4xl scale-95 flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl transition-transform duration-300 md:flex-row">
+        <div class="h-64 overflow-hidden md:h-auto md:w-1/2">
+            <img id="detailImg" class="h-full w-full object-cover" src="/images/default-coffee.svg" alt="Product detail" />
         </div>
-    </div>
-}
-</div>
-
-<div id="productOverlay" class="custom-overlay" hidden>
-    <div class="custom-modal coffee-card">
-        <button id="closeDetailBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
-        <div class="row g-4 align-items-center mt-1">
-            <div class="col-md-5"><img id="modalProductImage" src="/images/default-coffee.svg" class="detail-image" alt="Product" /></div>
-            <div class="col-md-7">
-                <h3 id="modalProductName"></h3>
-                <p id="modalProductDesc" class="text-muted"></p>
-                <ul class="small text-muted mb-2"><li>Pha chế từ nguyên liệu tươi mới mỗi ngày.</li><li>Phù hợp dùng tại quán hoặc mang đi.</li><li>Có thể tuỳ chỉnh ít đường/ít đá khi đặt.</li></ul>
-                <p id="modalProductPrice" class="product-price"></p>
-                <div class="d-flex align-items-end gap-2 mb-2">
-                    <div><label class="form-label">Số lượng</label><input id="modalQty" type="number" class="form-control" min="1" value="1" /></div>
-                    <button id="addToCartBtn" type="button" class="btn btn-soft px-4">Đặt hàng</button>
+        <div class="flex flex-col justify-between p-gutter md:w-1/2">
+            <div>
+                <div class="mb-4 flex items-start justify-between">
+                    <h2 id="detailTitle" class="font-display-lg text-headline-lg text-primary">Product Name</h2>
+                    <button class="rounded-full p-2 hover:bg-surface-container" onclick="closeDetail()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <p id="detailDesc" class="mb-6 font-body-lg text-secondary">Món quà từ thiên nhiên với quy trình chế biến thủ công.</p>
+                <div class="mb-8 space-y-4">
+                    <div>
+                        <span class="mb-2 block font-label-md text-primary">Tùy chọn đường</span>
+                        <div class="flex gap-2">
+                            <button class="rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary">100%</button>
+                            <button class="rounded-full border border-outline px-4 py-1 font-caption">50%</button>
+                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Không đường</button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="mb-2 block font-label-md text-primary">Kích cỡ</span>
+                        <div class="flex gap-2">
+                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Nhỏ</button>
+                            <button class="rounded-full border border-primary bg-primary px-4 py-1 font-caption text-on-primary">Vừa</button>
+                            <button class="rounded-full border border-outline px-4 py-1 font-caption">Lớn</button>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div class="flex items-center gap-4">
+                <div id="detailPrice" class="font-headline-md text-primary">45.000 VNĐ</div>
+                <button id="detailAddBtn" class="flex-grow rounded-xl bg-primary py-4 font-label-md text-on-primary transition-soft hover:shadow-lg">Thêm vào giỏ hàng</button>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="cartPanel" class="cart-panel">
-    <div class="cart-panel-header d-flex justify-content-between align-items-center">
-        <h5 class="m-0">Giỏ hàng của bạn</h5><button id="closeCartBtn" class="btn btn-sm btn-outline-secondary rounded-pill">Đóng</button>
+<footer id="story" class="mt-section-gap flex w-full flex-col items-center gap-gutter bg-surface-container px-margin-mobile py-section-gap md:px-margin-desktop lg:mr-[400px]">
+    <div class="flex items-center gap-3">
+        <span class="brand-blossom" aria-hidden="true">✼</span>
+        <span class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+            <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+        </span>
     </div>
-    <div id="cartItems" class="mt-3"></div>
-</div>
+    <div class="flex flex-wrap justify-center gap-gutter text-secondary">
+        <a class="transition-colors hover:text-on-tertiary-container" href="#">Privacy Policy</a>
+        <a class="transition-colors hover:text-on-tertiary-container" href="#">Terms of Service</a>
+        <a class="transition-colors hover:text-on-tertiary-container" href="#">Shipping Info</a>
+        <a class="transition-colors hover:text-on-tertiary-container" href="#">Contact Us</a>
+    </div>
+    <p class="font-body-md text-body-md text-secondary opacity-70">© 2024 Komorebi Brews. A Saigon-Kyoto Fusion.</p>
+</footer>
 
 @section Scripts {
 <script>
 (() => {
-  const overlay = document.getElementById('productOverlay');
-  const nameEl = document.getElementById('modalProductName');
-  const descEl = document.getElementById('modalProductDesc');
-  const priceEl = document.getElementById('modalProductPrice');
-  const imageEl = document.getElementById('modalProductImage');
-  const qtyEl = document.getElementById('modalQty');
-  const addBtn = document.getElementById('addToCartBtn');
-  const cartCount = document.getElementById('cartCount');
-  const cartPanel = document.getElementById('cartPanel');
-  const cartItems = document.getElementById('cartItems');
-  let current = null;
+    const formatCurrency = value => `${Number(value || 0).toLocaleString('vi-VN')} VNĐ`;
+    const getCart = () => JSON.parse(localStorage.getItem('coffee_cart') || '[]');
+    const setCart = value => localStorage.setItem('coffee_cart', JSON.stringify(value));
+    const cartDrawer = document.getElementById('cartDrawer');
+    const cartCount = document.getElementById('cartCount');
+    const cartItems = document.getElementById('cartItems');
+    const cartSubtotal = document.getElementById('cartSubtotal');
+    let current = null;
 
-  const getCart = () => JSON.parse(localStorage.getItem('coffee_cart') || '[]');
-  const setCart = (v) => localStorage.setItem('coffee_cart', JSON.stringify(v));
+    window.toggleCart = () => cartDrawer.classList.toggle('translate-x-full');
+    window.closeDetail = () => {
+        document.getElementById('detailModal').classList.add('hidden');
+        document.getElementById('detailModal').classList.remove('flex');
+    };
 
-  const renderCart = () => {
-    const cart = getCart();
-    cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0);
-    cartItems.innerHTML = cart.length ? cart.map(i => `<div class='border rounded p-2 mb-2 d-flex justify-content-between'><div><strong>${i.name}</strong><div class='small text-muted'>SL: ${i.qty}</div></div><div>$${(i.price*i.qty).toFixed(2)}</div></div>`).join('') : "<p class='text-muted mb-0'>Chưa có sản phẩm nào.</p>";
-  };
+    const renderCart = () => {
+        const cart = getCart();
+        cartCount.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+        cartSubtotal.textContent = formatCurrency(cart.reduce((sum, item) => sum + item.price * item.qty, 0));
+        cartItems.innerHTML = cart.length
+            ? cart.map(item => `
+                <div class="flex gap-4">
+                    <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
+                        <img class="h-full w-full object-cover" src="${item.image}" alt="${item.name}">
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-label-md text-label-md text-primary">${item.name}</p>
+                        <p class="font-caption text-caption text-secondary">Số lượng: ${item.qty}</p>
+                        <div class="mt-2 flex items-center justify-between">
+                            <span class="font-body-md text-primary">${formatCurrency(item.price * item.qty)}</span>
+                        </div>
+                    </div>
+                </div>`).join('')
+            : '<p class="font-body-md text-secondary">Chưa có sản phẩm nào.</p>';
+    };
 
-  document.querySelectorAll('.js-open-detail').forEach(el => el.addEventListener('click', () => {
-    current = { name: el.dataset.name, price: parseFloat(el.dataset.price) };
-    nameEl.textContent = el.dataset.name;
-    descEl.textContent = el.dataset.description;
-    priceEl.textContent = el.dataset.displayPrice;
-    imageEl.src = el.dataset.image;
-    qtyEl.value = 1;
-    overlay.hidden = false;
-    document.body.style.overflow = 'hidden';
-  }));
+    const addToCart = item => {
+        const cart = getCart();
+        const index = cart.findIndex(entry => entry.name === item.name);
+        if (index >= 0) cart[index].qty += 1;
+        else cart.push({ ...item, qty: 1 });
+        setCart(cart);
+        renderCart();
+    };
 
-  document.getElementById('closeDetailBtn').addEventListener('click', () => { overlay.hidden = true; document.body.style.overflow = ''; });
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.hidden = true; document.body.style.overflow = ''; }});
+    document.querySelectorAll('.js-open-detail').forEach(button => {
+        button.addEventListener('click', () => {
+            current = { name: button.dataset.name, price: Number(button.dataset.price), image: button.dataset.image };
+            document.getElementById('detailTitle').textContent = button.dataset.name;
+            document.getElementById('detailDesc').textContent = button.dataset.description || 'Món quà từ thiên nhiên với quy trình chế biến thủ công.';
+            document.getElementById('detailPrice').textContent = button.dataset.displayPrice;
+            document.getElementById('detailImg').src = button.dataset.image;
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.add('flex');
+        });
+    });
 
-  addBtn.addEventListener('click', () => {
-    if (!current) return;
-    const qty = Math.max(1, parseInt(qtyEl.value || '1'));
-    const cart = getCart();
-    const idx = cart.findIndex(x => x.name === current.name);
-    if (idx >= 0) cart[idx].qty += qty; else cart.push({ ...current, qty });
-    setCart(cart);
+    document.getElementById('detailAddBtn').addEventListener('click', () => {
+        if (current) addToCart(current);
+        closeDetail();
+    });
+
     renderCart();
-    overlay.hidden = true;
-    document.body.style.overflow = '';
-  });
-
-  document.getElementById('openCartBtn').addEventListener('click', () => cartPanel.classList.add('show'));
-  document.getElementById('closeCartBtn').addEventListener('click', () => cartPanel.classList.remove('show'));
-  renderCart();
 })();
 </script>
 }

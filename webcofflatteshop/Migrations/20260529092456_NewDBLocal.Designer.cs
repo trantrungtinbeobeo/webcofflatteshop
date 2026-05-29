@@ -11,8 +11,8 @@ using webcofflatteshop.Data;
 namespace webcofflatteshop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260529020310_UpdateCategory2")]
-    partial class UpdateCategory2
+    [Migration("20260529092456_NewDBLocal")]
+    partial class NewDBLocal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

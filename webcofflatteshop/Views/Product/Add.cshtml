@@ -1,33 +1,255 @@
 @model webcofflatteshop.Models.Product
 @{
     ViewData["Title"] = "Thêm sản phẩm";
+    var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
 }
 
-@if (TempData["CategorySuccess"] is string cOk) { <div class="alert alert-success">@cOk</div> }
-@if (TempData["CategoryError"] is string cErr) { <div class="alert alert-danger">@cErr</div> }
-
-<div class="row g-4">
-    <div class="col-lg-7">
-        <h1 class="mb-4">Thêm sản phẩm mới</h1>
-        <form asp-action="Add" method="post" class="card p-4 shadow-sm coffee-card">
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
-            <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
-            <div class="mb-3"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" /><span asp-validation-for="Price" class="text-danger"></span></div>
-            <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
-            <div class="mb-4"><label asp-for="CategoryId" class="form-label">Category</label><select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select></div>
-            <div class="d-flex gap-2"><button type="submit" class="btn btn-coffee">Tạo sản phẩm</button><a asp-action="Index" class="btn btn-outline-secondary">Back to list</a></div>
-        </form>
-    </div>
-    <div class="col-lg-5">
-        <div class="card p-4 shadow-sm coffee-card">
-            <h4>Thêm danh mục mới</h4>
-            <p class="text-muted">Thêm nhanh danh mục để quản lý menu linh hoạt hơn.</p>
-            <form asp-action="AddCategory" method="post" class="d-flex gap-2">
-                <input name="categoryName" class="form-control" placeholder="Ví dụ: Seasonal Drinks" />
-                <button type="submit" class="btn btn-outline-dark">Thêm</button>
-            </form>
+<aside class="fixed left-0 top-0 z-50 hidden h-full w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
+    <div class="mb-section-gap">
+        <div class="mb-10 flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <div>
+                <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
+                    <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+                </p>
+                <p class="text-caption text-secondary">Admin Dashboard</p>
+            </div>
         </div>
+        <nav class="space-y-3">
+            <a asp-action="Add" class="flex items-center gap-3 rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">
+                <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                Sản phẩm
+            </a>
+            <a asp-action="Index" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">storefront</span>
+                Danh mục
+            </a>
+            <a asp-action="UploadImageList" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                Đơn hàng
+            </a>
+            <a asp-action="UploadImageList" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+                Thống kê
+            </a>
+        </nav>
     </div>
-</div>
+    <div class="mt-auto border-t border-outline-variant pt-5">
+        <div class="mb-4 flex items-center gap-3">
+            <span class="brand-blossom text-[24px]" aria-hidden="true">✼</span>
+            <div>
+                <p class="font-label-md text-primary">Admin</p>
+                <p class="text-caption text-secondary">Quản trị viên</p>
+            </div>
+        </div>
+        <button class="flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-error transition-colors hover:bg-error-container">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+            Đăng xuất
+        </button>
+    </div>
+</aside>
+
+<main class="min-h-screen p-margin-mobile md:ml-[280px] md:p-margin-desktop">
+    <header class="mx-auto mb-gutter flex max-w-container-max items-end justify-between">
+        <div>
+            <nav class="mb-2 flex items-center gap-2 text-caption text-secondary">
+                <span>Admin</span>
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <span class="font-semibold text-primary">Sản phẩm</span>
+            </nav>
+            <h1 class="font-headline-md text-primary">Thêm sản phẩm mới</h1>
+        </div>
+        <div class="hidden md:block">
+            <span class="text-caption font-medium uppercase tracking-widest text-secondary">@today</span>
+        </div>
+    </header>
+
+    <div class="mx-auto grid max-w-container-max grid-cols-1 gap-gutter lg:grid-cols-12">
+        <section class="space-y-gutter lg:col-span-8">
+            @if (TempData["CategorySuccess"] is string cOk)
+            {
+                <div class="rounded-lg border border-[#81c784] bg-[#eef8ef] px-4 py-3 text-sm text-primary">@cOk</div>
+            }
+            @if (TempData["CategoryError"] is string cErr)
+            {
+                <div class="rounded-lg border border-error bg-error-container px-4 py-3 text-sm text-on-error-container">@cErr</div>
+            }
+
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-6 flex items-center gap-2 font-label-md text-primary">
+                    <span class="material-symbols-outlined text-[20px]">info</span>
+                    Thông tin cơ bản
+                </h2>
+                <form asp-action="Add" method="post" class="space-y-6" id="product-form">
+                    <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+                    <div>
+                        <label asp-for="Name" class="mb-2 block font-label-md text-secondary">Tên sản phẩm</label>
+                        <input asp-for="Name" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Ví dụ: Cà phê Muối Sài Gòn" />
+                        <span asp-validation-for="Name" class="mt-1 block text-sm text-error"></span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+                        <div>
+                            <label asp-for="Price" class="mb-2 block font-label-md text-secondary">Giá bán (VND)</label>
+                            <div class="relative">
+                                <input asp-for="Price" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 pr-12 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="45.000" />
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-secondary">₫</span>
+                            </div>
+                            <span asp-validation-for="Price" class="mt-1 block text-sm text-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="CategoryId" class="mb-2 block font-label-md text-secondary">Danh mục</label>
+                            <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"></select>
+                        </div>
+                    </div>
+                    <div>
+                        <label asp-for="Description" class="mb-2 block font-label-md text-secondary">Mô tả sản phẩm</label>
+                        <textarea asp-for="Description" rows="4" class="w-full resize-none rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Nhập câu chuyện về hương vị hoặc thành phần..."></textarea>
+                        <span asp-validation-for="Description" class="mt-1 block text-sm text-error"></span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+                <div class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-6">
+                    <div>
+                        <p class="font-label-md text-primary">Trạng thái sản phẩm</p>
+                        <p class="text-caption text-secondary">Hiển thị trên menu khách hàng</p>
+                    </div>
+                    <label class="relative inline-flex cursor-pointer items-center">
+                        <input checked class="peer sr-only" type="checkbox" />
+                        <div class="h-6 w-11 rounded-full bg-secondary-container after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                    </label>
+                </div>
+                <div class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-6">
+                    <div>
+                        <p class="font-label-md text-primary">Món nổi bật</p>
+                        <p class="text-caption text-secondary">Gắn tag "Komorebi Choice"</p>
+                    </div>
+                    <label class="relative inline-flex cursor-pointer items-center">
+                        <input class="peer sr-only" type="checkbox" />
+                        <div class="h-6 w-11 rounded-full bg-secondary-container after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-gutter lg:col-span-4">
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-6 flex items-center gap-2 font-label-md text-primary">
+                    <span class="material-symbols-outlined text-[20px]">image</span>
+                    Hình ảnh sản phẩm
+                </h2>
+                <div class="relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-outline-variant/50 transition-colors hover:bg-surface-container">
+                    <span class="material-symbols-outlined text-[48px] text-outline">add_photo_alternate</span>
+                    <div class="text-center">
+                        <p class="font-label-md text-secondary">Nhấp để tải ảnh lên</p>
+                        <p class="px-4 text-caption text-outline">Định dạng JPG, PNG (Tỉ lệ 1:1, Tối thiểu 800x800px)</p>
+                    </div>
+                    <input class="absolute inset-0 cursor-pointer opacity-0" type="file" />
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-4 flex items-center gap-2 font-label-md text-primary">
+                    <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    Thêm danh mục nhanh
+                </h2>
+                <form asp-action="AddCategory" method="post" class="space-y-4">
+                    <input name="categoryName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-2 text-label-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Tên danh mục mới" />
+                    <button type="submit" class="w-full rounded-lg bg-secondary-container py-2 font-label-md text-on-secondary-container transition-colors hover:bg-secondary hover:text-white">
+                        Thêm danh mục
+                    </button>
+                </form>
+            </div>
+
+            <div class="space-y-3">
+                <button type="submit" form="product-form" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label-md text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <span class="material-symbols-outlined text-[20px]">save</span>
+                    Lưu sản phẩm
+                </button>
+                <a asp-action="Index" class="block w-full rounded-xl bg-transparent py-4 text-center font-label-md text-secondary transition-all hover:bg-surface-container-high">
+                    Hủy bỏ
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <section class="mx-auto mt-section-gap max-w-container-max">
+        <h2 class="mb-6 font-headline-md text-primary">Sản phẩm vừa cập nhật</h2>
+        <div class="overflow-hidden rounded-2xl border border-outline-variant/20 bg-white custom-shadow">
+            <table class="w-full border-collapse text-left">
+                <thead class="bg-surface-container-low">
+                    <tr>
+                        <th class="px-gutter py-4 font-label-md text-secondary">Sản phẩm</th>
+                        <th class="px-gutter py-4 font-label-md text-secondary">Danh mục</th>
+                        <th class="px-gutter py-4 font-label-md text-secondary">Giá</th>
+                        <th class="px-gutter py-4 font-label-md text-secondary">Trạng thái</th>
+                        <th class="px-gutter py-4 text-right font-label-md text-secondary">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/10">
+                    <tr class="transition-colors hover:bg-surface-container-lowest">
+                        <td class="px-gutter py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="h-12 w-12 overflow-hidden rounded-lg bg-secondary-container">
+                                    <img class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBPm-lcdna-StmAUVvhCrT1D1kfo1ysKVK6lGHwNgBBZcsUrXRqu8kZt731qCaSPJOO8--Dm8kV9qoYw--HAP8_aMvQAjgcCdBDxBhNCO2LUsrwZy5zMtpGYjElDv5dsuYRkX5rtb4lUiZlrG8SQFdRjQmEj6Q-IFbDtILi9LxczKccnKVwrsKv_gvKsdIloqFsj3BF1cYKTVttTIpR_oHKDdubwum76hML7yndAjLVzi9-KsA0Fq-uA13gE_-_9prUi_Ek8lp_9M" alt="Cà phê sữa đá" />
+                                </div>
+                                <div>
+                                    <p class="font-label-md text-primary">Cà phê Sữa Đá</p>
+                                    <p class="text-caption text-secondary">ID: PRD-001</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-gutter py-4 text-body-md text-secondary">Cà phê Việt Nam</td>
+                        <td class="px-gutter py-4 text-body-md font-medium text-primary">29.000₫</td>
+                        <td class="px-gutter py-4"><span class="rounded-full bg-green-100 px-3 py-1 text-caption font-bold text-green-700">Đang bán</span></td>
+                        <td class="px-gutter py-4 text-right">
+                            <button class="p-2 text-secondary transition-colors hover:text-primary"><span class="material-symbols-outlined">edit</span></button>
+                            <button class="p-2 text-secondary transition-colors hover:text-error"><span class="material-symbols-outlined">delete</span></button>
+                        </td>
+                    </tr>
+                    <tr class="transition-colors hover:bg-surface-container-lowest">
+                        <td class="px-gutter py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="h-12 w-12 overflow-hidden rounded-lg bg-secondary-container">
+                                    <img class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsviJwWpgkKHp8G6jUaowl4Nck1uoHndZ1bS-U1yXYNv0XGQ2krpM-vmpWO9dvhZfTZPhxNC2EWaqbCgOWk0S51S60tJKqleL94wkUEn7f3-B3KNUE38qJdCaoJ-gMMthixleWzQXGM8cRagpSPbJWHkSN56aac0POC3bT9rlB6qk-d__FvbjX1Ygix0xDQK6MBWbknowsLZu_m6oBkkLqmRacB4JpK6NWXMogHTOd7eNKwnwxwhnTvkc3coHFa3yGN8D2Adw4a1I" alt="Matcha latte" />
+                                </div>
+                                <div>
+                                    <p class="font-label-md text-primary">Matcha Latte Iced</p>
+                                    <p class="text-caption text-secondary">ID: PRD-002</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-gutter py-4 text-body-md text-secondary">Trà & Matcha</td>
+                        <td class="px-gutter py-4 text-body-md font-medium text-primary">55.000₫</td>
+                        <td class="px-gutter py-4"><span class="rounded-full bg-orange-100 px-3 py-1 text-caption font-bold text-orange-700">Hết hàng</span></td>
+                        <td class="px-gutter py-4 text-right">
+                            <button class="p-2 text-secondary transition-colors hover:text-primary"><span class="material-symbols-outlined">edit</span></button>
+                            <button class="p-2 text-secondary transition-colors hover:text-error"><span class="material-symbols-outlined">delete</span></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="border-t border-outline-variant/10 bg-surface-container-low p-4 text-center">
+                <button class="text-label-md text-secondary underline underline-offset-4 transition-all hover:text-primary">Xem tất cả sản phẩm</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="mt-section-gap flex flex-col items-center gap-gutter bg-surface-container px-margin-desktop py-section-gap md:ml-[280px]">
+    <div class="flex flex-col items-center gap-4">
+        <span class="brand-blossom text-[56px]" aria-hidden="true">✼</span>
+        <span class="font-display-lg text-4xl font-bold tracking-tight">
+            <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+        </span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-gutter">
+        <a class="font-body-md text-secondary transition-colors hover:text-on-tertiary-container" href="#">Trung tâm trợ giúp</a>
+        <a class="font-body-md text-secondary transition-colors hover:text-on-tertiary-container" href="#">Điều khoản dịch vụ</a>
+        <a class="font-body-md text-secondary transition-colors hover:text-on-tertiary-container" href="#">Chính sách bảo mật</a>
+    </div>
+    <p class="text-caption text-secondary">© 2024 Coffetinbeo. A Saigon-Kyoto Fusion.</p>
+</footer>
 
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

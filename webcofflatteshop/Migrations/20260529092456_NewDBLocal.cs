@@ -7,7 +7,7 @@
 namespace webcofflatteshop.Migrations
 {
     /// <inheritdoc />
-    public partial class Coffeshop : Migration
+    public partial class NewDBLocal : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,8 +54,9 @@ namespace webcofflatteshop.Migrations
                 values: new object[,]
                 {
                     { 1, "Coffee" },
-                    { 2, "Non-Coffee" },
-                    { 3, "Bakery" }
+                    { 2, "Matcha" },
+                    { 3, "Chocolate" },
+                    { 4, "Bakery" }
                 });
 
             migrationBuilder.InsertData(
@@ -72,10 +73,10 @@ namespace webcofflatteshop.Migrations
                     { 7, 1, "Ủ lạnh 18 tiếng, mượt và ít chua.", null, "Cold Brew", 4.30m },
                     { 8, 1, "Cà phê sữa đá đậm vị Việt Nam.", null, "Vietnamese Iced Coffee", 3.70m },
                     { 9, 2, "Trà xanh Nhật kết hợp sữa thanh dịu.", null, "Matcha Latte", 4.60m },
-                    { 10, 2, "Đá xay chocolate mát lạnh cho ngày hè.", null, "Chocolate Frappe", 5.20m },
-                    { 11, 3, "Bánh sừng bò bơ giòn tan mỗi sáng.", null, "Croissant Butter", 2.90m },
-                    { 12, 3, "Bánh tiramisu mềm mịn thơm cà phê.", null, "Tiramisu", 4.10m },
-                    { 13, 3, "Cheesecake béo nhẹ phủ mứt việt quất.", null, "Blueberry Cheesecake", 4.80m }
+                    { 10, 3, "Đá xay chocolate mát lạnh cho ngày hè.", null, "Chocolate Frappe", 5.20m },
+                    { 11, 4, "Bánh sừng bò bơ giòn tan mỗi sáng.", null, "Croissant Butter", 2.90m },
+                    { 12, 4, "Bánh tiramisu mềm mịn thơm cà phê.", null, "Tiramisu", 4.10m },
+                    { 13, 4, "Cheesecake béo nhẹ phủ mứt việt quất.", null, "Blueberry Cheesecake", 4.80m }
                 });
 
             migrationBuilder.CreateIndex(
