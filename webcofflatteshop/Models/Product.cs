@@ -17,6 +17,8 @@ public class Product
     public int CategoryId { get; set; }
 
     public string? ImageUrl { get; set; }
+
+    public Category? Category { get; set; }
 }
 
 public class Category
@@ -25,4 +27,6 @@ public class Category
 
     [Required, StringLength(50)]
     public string Name { get; set; } = string.Empty;
+
+    public ICollection<Product> Products { get; set; } = [];
 }
