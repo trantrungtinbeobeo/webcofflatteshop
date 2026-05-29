@@ -2,158 +2,252 @@
 @using System.Globalization
 @{
     ViewData["Title"] = "Admin - Thêm sản phẩm";
+    ViewData["UseStitcheditLayout"] = true;
     var recentProducts = (ViewBag.RecentProducts as IEnumerable<webcofflatteshop.Models.Product>)?.Take(4).ToList() ?? new List<webcofflatteshop.Models.Product>();
-    string FormatPrice(decimal price) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0} ₫", price);
+    string FormatPrice(decimal price) => string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}₫", price);
+    string ImageOf(webcofflatteshop.Models.Product p) => string.IsNullOrWhiteSpace(p.ImageUrl) ? "/images/default-coffee.svg" : p.ImageUrl;
 }
 
-<aside class="fixed left-0 top-0 z-40 hidden h-screen w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter md:flex">
-    <a asp-controller="Product" asp-action="Index" class="mb-section-gap flex items-center gap-3 text-primary text-decoration-none">
-        <span class="material-symbols-outlined rounded-full bg-primary-fixed p-3 text-primary">local_cafe</span>
-        <div>
-            <h1 class="font-headline-md text-primary">Komorebi</h1>
-            <p class="font-label-md text-secondary">Admin Dashboard</p>
+<div class="min-h-screen bg-background text-on-surface">
+    <!-- Admin Side Navigation: bám sát StitcheditWeb/filechinhsuacuaadmin.html -->
+    <aside class="fixed left-0 top-0 h-screen w-[280px] bg-surface-container-lowest border-r border-outline-variant/30 p-gutter flex-col hidden md:flex z-40">
+        <div class="mb-section-gap">
+            <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3 text-decoration-none">
+                <img src="/images/default-coffee.svg" alt="Cherry Blossom Logo" class="w-10 h-10 object-contain rounded-full bg-primary-fixed p-1">
+                <h1 class="font-headline-md text-primary m-0">Coffe-latteKawaii</h1>
+            </a>
+            <p class="text-secondary font-label-md mt-1 ml-[52px] mb-0">Admin Dashboard</p>
         </div>
-    </a>
-    <nav class="flex-grow space-y-3">
-        <a asp-action="Add" class="flex items-center gap-3 rounded-xl bg-primary px-4 py-3 font-label-md text-on-primary text-decoration-none"><span class="material-symbols-outlined">inventory_2</span>Sản phẩm</a>
-        <a asp-action="UploadImageList" class="flex items-center gap-3 rounded-xl px-4 py-3 font-label-md text-secondary text-decoration-none transition-soft hover:bg-surface-container"><span class="material-symbols-outlined">image</span>Media</a>
-        <a asp-action="Index" class="flex items-center gap-3 rounded-xl px-4 py-3 font-label-md text-secondary text-decoration-none transition-soft hover:bg-surface-container"><span class="material-symbols-outlined">storefront</span>Xem shop</a>
-    </nav>
-    <div class="rounded-xl bg-surface-container p-4">
-        <p class="font-label-md text-primary">Admin</p>
-        <p class="text-caption text-secondary">Quản lý menu và danh mục</p>
-    </div>
-</aside>
-
-<div class="min-h-screen p-margin-mobile md:ml-[280px] md:p-margin-desktop">
-    <header class="mx-auto mb-gutter flex max-w-container-max items-end justify-between">
-        <div>
-            <nav class="mb-2 flex items-center gap-2 text-caption text-secondary">
-                <span>Admin</span>
-                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
-                <span class="font-semibold text-primary">Sản phẩm</span>
-            </nav>
-            <h2 class="font-headline-md text-primary">Thêm sản phẩm mới</h2>
+        <nav class="flex-grow space-y-4">
+            <a asp-action="Add" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary text-on-primary transition-soft text-decoration-none">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span class="font-label-md">Sản phẩm</span>
+            </a>
+            <a asp-action="UploadImageList" class="flex items-center gap-4 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container transition-soft text-decoration-none">
+                <span class="material-symbols-outlined">image</span>
+                <span class="font-label-md">Hình ảnh</span>
+            </a>
+            <a asp-action="Index" class="flex items-center gap-4 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container transition-soft text-decoration-none">
+                <span class="material-symbols-outlined">storefront</span>
+                <span class="font-label-md">Xem menu</span>
+            </a>
+        </nav>
+        <div class="p-4 bg-surface-container rounded-xl flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined">person</span>
+            </div>
+            <div>
+                <p class="font-label-md text-primary mb-0">Admin</p>
+                <p class="text-caption text-secondary mb-0">Quản lý sản phẩm</p>
+            </div>
         </div>
-        <div class="hidden md:block">
-            <span class="text-caption font-medium uppercase tracking-widest text-secondary">Thứ Sáu, 29 tháng 5, 2026</span>
-        </div>
-    </header>
+    </aside>
 
-    @if (TempData["CategorySuccess"] is string cOk)
-    {
-        <div class="mx-auto mb-gutter max-w-container-max rounded-xl border border-primary-fixed bg-primary-fixed/50 p-4 text-primary">@cOk</div>
-    }
-    @if (TempData["CategoryError"] is string cErr)
-    {
-        <div class="mx-auto mb-gutter max-w-container-max rounded-xl border border-error bg-error-container p-4 text-on-error-container">@cErr</div>
-    }
+    <!-- Main Content Area -->
+    <main class="md:ml-[280px] min-h-screen p-margin-mobile md:p-margin-desktop">
+        <!-- Header -->
+        <header class="max-w-container-max mx-auto mb-gutter flex justify-between items-end">
+            <div>
+                <nav class="text-caption text-secondary mb-2 flex items-center gap-2">
+                    <span>Admin</span>
+                    <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                    <span class="text-primary font-semibold">Sản phẩm</span>
+                </nav>
+                <h2 class="font-headline-md text-primary m-0">Thêm sản phẩm mới</h2>
+            </div>
+            <div class="hidden md:block">
+                <span class="text-caption text-secondary font-medium uppercase tracking-widest" id="current-date">Thứ Sáu, 29 tháng 5, 2026</span>
+            </div>
+        </header>
 
-    <div class="mx-auto grid max-w-container-max grid-cols-1 gap-gutter lg:grid-cols-12">
-        <section class="space-y-gutter lg:col-span-8">
-            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
-                <h3 class="mb-6 flex items-center gap-2 font-label-md text-primary">
-                    <span class="material-symbols-outlined text-[20px]">info</span>
-                    Thông tin cơ bản
-                </h3>
-                <form asp-action="Add" method="post" id="product-form" class="space-y-6">
-                    <div asp-validation-summary="All" class="validation-summary-errors rounded-lg bg-error-container/60 p-3"></div>
-                    <div>
-                        <label asp-for="Name" class="mb-2 block font-label-md text-secondary">Tên sản phẩm</label>
-                        <input asp-for="Name" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Ví dụ: Cà phê Muối Sài Gòn" />
-                        <span asp-validation-for="Name" class="field-validation-error"></span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+        @if (TempData["CategorySuccess"] is string cOk)
+        {
+            <div class="max-w-container-max mx-auto mb-gutter bg-primary-fixed text-primary rounded-xl p-4 border border-primary-fixed-dim">@cOk</div>
+        }
+        @if (TempData["CategoryError"] is string cErr)
+        {
+            <div class="max-w-container-max mx-auto mb-gutter bg-error-container text-on-error-container rounded-xl p-4 border border-error">@cErr</div>
+        }
+
+        <div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+            <!-- Left Column: Main Form -->
+            <section class="lg:col-span-8 space-y-gutter">
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-outline-variant/20">
+                    <h3 class="font-label-md text-primary mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">info</span>
+                        Thông tin cơ bản
+                    </h3>
+                    <form asp-action="Add" method="post" class="space-y-6" id="product-form">
+                        <div asp-validation-summary="All" class="validation-summary-errors rounded-lg bg-error-container/60 p-3"></div>
                         <div>
-                            <label asp-for="Price" class="mb-2 block font-label-md text-secondary">Giá bán (VND)</label>
-                            <div class="relative">
-                                <input asp-for="Price" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 pr-12 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="45000" />
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-secondary">₫</span>
+                            <label asp-for="Name" class="block font-label-md text-secondary mb-2">Tên sản phẩm</label>
+                            <input asp-for="Name" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md" placeholder="Ví dụ: Cà phê Muối Sài Gòn">
+                            <span asp-validation-for="Name" class="field-validation-error"></span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                            <div>
+                                <label asp-for="Price" class="block font-label-md text-secondary mb-2">Giá bán (VND)</label>
+                                <div class="relative">
+                                    <input asp-for="Price" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md pr-12" placeholder="45.000" type="number">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-secondary">₫</span>
+                                </div>
+                                <span asp-validation-for="Price" class="field-validation-error"></span>
                             </div>
-                            <span asp-validation-for="Price" class="field-validation-error"></span>
+                            <div>
+                                <label asp-for="CategoryId" class="block font-label-md text-secondary mb-2">Danh mục</label>
+                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md appearance-none"></select>
+                                <span asp-validation-for="CategoryId" class="field-validation-error"></span>
+                            </div>
                         </div>
                         <div>
-                            <label asp-for="CategoryId" class="mb-2 block font-label-md text-secondary">Danh mục</label>
-                            <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full appearance-none rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"></select>
-                            <span asp-validation-for="CategoryId" class="field-validation-error"></span>
+                            <label asp-for="Description" class="block font-label-md text-secondary mb-2">Mô tả sản phẩm</label>
+                            <textarea asp-for="Description" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all bg-white text-body-md resize-none" placeholder="Nhập câu chuyện về hương vị hoặc thành phần..." rows="4"></textarea>
+                            <span asp-validation-for="Description" class="field-validation-error"></span>
                         </div>
-                    </div>
-                    <div>
-                        <label asp-for="Description" class="mb-2 block font-label-md text-secondary">Mô tả sản phẩm</label>
-                        <textarea asp-for="Description" rows="4" class="w-full resize-none rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Nhập câu chuyện về hương vị hoặc thành phần..."></textarea>
-                        <span asp-validation-for="Description" class="field-validation-error"></span>
-                    </div>
-                    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
-                        <div class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-6">
-                            <div><p class="font-label-md text-primary">Trạng thái sản phẩm</p><p class="text-caption text-secondary">Hiển thị trên menu khách hàng</p></div>
-                            <span class="material-symbols-outlined text-primary">toggle_on</span>
+                    </form>
+                </div>
+
+                <!-- Product Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                    <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                        <div>
+                            <p class="font-label-md text-primary mb-0">Trạng thái sản phẩm</p>
+                            <p class="text-caption text-secondary mb-0">Hiển thị trên menu khách hàng</p>
                         </div>
-                        <div class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-6">
-                            <div><p class="font-label-md text-primary">Món nổi bật</p><p class="text-caption text-secondary">Gắn tag Komorebi Choice</p></div>
-                            <span class="material-symbols-outlined text-secondary">kid_star</span>
-                        </div>
+                        <span class="material-symbols-outlined text-primary text-[42px]">toggle_on</span>
                     </div>
-                </form>
-            </div>
-        </section>
+                    <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 flex items-center justify-between">
+                        <div>
+                            <p class="font-label-md text-primary mb-0">Món nổi bật</p>
+                            <p class="text-caption text-secondary mb-0">Gắn tag “Komorebi Choice”</p>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary text-[32px]">kid_star</span>
+                    </div>
+                </div>
+            </section>
 
-        <section class="space-y-gutter lg:col-span-4">
-            <div class="rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest p-gutter text-center custom-shadow">
-                <span class="material-symbols-outlined mx-auto mb-4 rounded-full bg-primary-fixed p-4 text-[34px] text-primary">add_photo_alternate</span>
-                <h3 class="font-label-md text-primary">Ảnh sản phẩm</h3>
-                <p class="mt-2 text-caption text-secondary">Sau khi tạo sản phẩm, vào Media để upload ảnh cho món này.</p>
-                <a asp-action="UploadImageList" class="mt-5 inline-flex rounded-full border border-outline px-5 py-3 font-label-md text-primary text-decoration-none">Mở Media</a>
-            </div>
+            <!-- Right Column: Sidebar Actions -->
+            <section class="lg:col-span-4 space-y-gutter">
+                <!-- Image Upload Section -->
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow border border-dashed border-outline-variant text-center">
+                    <div id="upload-container" class="relative h-48 rounded-xl bg-surface-container-low flex flex-col items-center justify-center mb-4 overflow-hidden border-2 border-dashed border-outline-variant">
+                        <span class="material-symbols-outlined text-[48px] text-secondary mb-2">add_photo_alternate</span>
+                        <p class="font-label-md text-primary mb-1">Ảnh sản phẩm</p>
+                        <p class="text-caption text-secondary mb-0">Sau khi tạo sản phẩm, vào Media để upload ảnh.</p>
+                    </div>
+                    <a asp-action="UploadImageList" class="inline-flex justify-center w-full py-3 px-4 rounded-full border border-primary text-primary font-label-md hover:bg-primary-fixed transition-colors text-decoration-none">Mở Media</a>
+                </div>
 
-            <div class="rounded-xl bg-surface-container-lowest p-gutter custom-shadow">
-                <h3 class="mb-3 font-label-md text-primary">Thêm danh mục nhanh</h3>
-                <p class="mb-4 text-caption text-secondary">Tạo danh mục mới để quản lý menu linh hoạt hơn.</p>
-                <form asp-action="AddCategory" method="post" class="space-y-3">
-                    <input name="categoryName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md focus:border-primary focus:ring-primary" placeholder="Ví dụ: Seasonal Drinks" />
-                    <button type="submit" class="w-full rounded-full bg-secondary-container py-3 font-label-md text-on-secondary-container">Thêm danh mục</button>
-                </form>
-            </div>
+                <!-- Category Add Quick Form -->
+                <div class="bg-surface-container-lowest p-gutter rounded-xl custom-shadow">
+                    <h3 class="font-label-md text-primary mb-3">Thêm danh mục nhanh</h3>
+                    <form asp-action="AddCategory" method="post" class="space-y-3">
+                        <input name="categoryName" class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white text-body-md" placeholder="Ví dụ: Seasonal Drinks">
+                        <button type="submit" class="w-full py-3 bg-secondary-container text-on-secondary-container rounded-full font-label-md hover:bg-secondary-fixed transition-colors">Thêm danh mục</button>
+                    </form>
+                </div>
 
-            <div class="rounded-xl bg-primary p-gutter text-on-primary custom-shadow">
-                <h3 class="mb-4 font-headline-md">Hoàn tất</h3>
-                <div class="space-y-3">
-                    <button type="submit" form="product-form" class="w-full rounded-full bg-primary-fixed py-4 font-label-md text-primary">Lưu sản phẩm</button>
-                    <a asp-action="Index" class="block w-full rounded-full border border-on-primary/30 py-4 text-center font-label-md text-on-primary text-decoration-none">Hủy và về menu</a>
+                <!-- Final Actions -->
+                <div class="bg-primary text-on-primary p-gutter rounded-xl custom-shadow">
+                    <h3 class="font-headline-md mb-4">Hoàn tất</h3>
+                    <div class="space-y-3">
+                        <button type="submit" form="product-form" class="w-full py-4 bg-primary-fixed text-primary rounded-full font-label-md hover:bg-primary-fixed-dim transition-colors">Lưu sản phẩm</button>
+                        <a asp-action="Index" class="block w-full py-4 border border-white/30 text-center rounded-full font-label-md hover:bg-white/10 transition-colors text-on-primary text-decoration-none">Hủy bỏ</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Recent Activity Table (Bento Style) -->
+        <section class="max-w-container-max mx-auto mt-section-gap">
+            <h3 class="font-headline-md text-primary mb-6">Sản phẩm vừa cập nhật</h3>
+            <div class="bg-surface-container-lowest rounded-xl custom-shadow overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-surface-container-low border-b border-outline-variant/10">
+                        <tr>
+                            <th class="px-gutter py-4 font-label-md text-secondary">Sản phẩm</th>
+                            <th class="px-gutter py-4 font-label-md text-secondary hidden md:table-cell">Danh mục</th>
+                            <th class="px-gutter py-4 font-label-md text-secondary">Giá</th>
+                            <th class="px-gutter py-4 font-label-md text-secondary">Trạng thái</th>
+                            <th class="px-gutter py-4"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10">
+                        @foreach (var product in recentProducts)
+                        {
+                            <tr>
+                                <td class="px-gutter py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-lg bg-secondary-container overflow-hidden">
+                                            <img class="w-full h-full object-cover" alt="@product.Name" src="@ImageOf(product)">
+                                        </div>
+                                        <div>
+                                            <p class="font-label-md text-primary mb-0">@product.Name</p>
+                                            <p class="text-caption text-secondary mb-0">ID: PRD-@product.Id.ToString("000")</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-gutter py-4 text-body-md text-secondary hidden md:table-cell">@(product.Category?.Name ?? "Chưa phân loại")</td>
+                                <td class="px-gutter py-4 text-body-md font-medium text-primary">@FormatPrice(product.Price)</td>
+                                <td class="px-gutter py-4"><span class="px-3 py-1 bg-green-100 text-green-700 text-caption font-bold rounded-full">Đang bán</span></td>
+                                <td class="px-gutter py-4 text-right">
+                                    <a asp-action="Update" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-primary transition-colors text-decoration-none"><span class="material-symbols-outlined">edit</span></a>
+                                    <a asp-action="Delete" asp-route-id="@product.Id" class="p-2 text-secondary hover:text-error transition-colors text-decoration-none"><span class="material-symbols-outlined">delete</span></a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!recentProducts.Any())
+                        {
+                            <tr><td colspan="5" class="px-gutter py-8 text-center text-secondary">Chưa có sản phẩm nào.</td></tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="p-4 bg-surface-container-low border-t border-outline-variant/10 text-center">
+                    <a asp-action="UploadImageList" class="text-label-md text-secondary hover:text-primary transition-all underline underline-offset-4 text-decoration-none">Xem tất cả sản phẩm</a>
                 </div>
             </div>
         </section>
-    </div>
+    </main>
 
-    <section class="mx-auto mt-section-gap max-w-container-max">
-        <h3 class="mb-6 font-headline-md text-primary">Sản phẩm vừa cập nhật</h3>
-        <div class="overflow-hidden rounded-xl bg-surface-container-lowest custom-shadow">
-            <table class="w-full text-left">
-                <thead class="border-b border-outline-variant bg-surface-container-low">
-                    <tr>
-                        <th class="px-gutter py-4 font-label-md text-secondary">Sản phẩm</th>
-                        <th class="hidden px-gutter py-4 font-label-md text-secondary md:table-cell">Danh mục</th>
-                        <th class="px-gutter py-4 font-label-md text-secondary">Giá</th>
-                        <th class="px-gutter py-4 font-label-md text-secondary">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-outline-variant/50">
-                    @foreach (var product in recentProducts)
-                    {
-                        <tr>
-                            <td class="px-gutter py-4 font-label-md text-primary">@product.Name</td>
-                            <td class="hidden px-gutter py-4 text-body-md text-secondary md:table-cell">@(product.Category?.Name ?? "Chưa phân loại")</td>
-                            <td class="px-gutter py-4 text-body-md text-primary">@FormatPrice(product.Price)</td>
-                            <td class="px-gutter py-4"><span class="rounded-full bg-primary-fixed px-3 py-1 text-caption text-primary">Đang bán</span></td>
-                        </tr>
-                    }
-                    @if (!recentProducts.Any())
-                    {
-                        <tr><td colspan="4" class="px-gutter py-8 text-center text-secondary">Chưa có sản phẩm nào.</td></tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Footer -->
+    <footer class="md:ml-[280px] bg-surface-container py-section-gap px-margin-desktop mt-section-gap flex flex-col items-center gap-gutter">
+        <h2 class="font-display-lg text-display-lg text-primary m-0">
+            <div class="flex flex-col items-center gap-4">
+                <img src="/images/default-coffee.svg" alt="Cherry Blossom Logo" class="w-20 h-20 object-contain">
+                <span class="font-display-lg text-4xl font-bold tracking-tight">
+                    <span style="color: rgb(62, 39, 35);">Coffe</span><span style="color: rgb(129, 199, 132);">-latte</span><span style="color: rgb(244, 143, 177);">Kawaii</span>
+                </span>
+            </div>
+        </h2>
+        <div class="flex flex-wrap justify-center gap-gutter">
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Trung tâm trợ giúp</a>
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Điều khoản dịch vụ</a>
+            <a class="text-secondary font-body-md hover:text-on-tertiary-container transition-colors text-decoration-none" href="#">Chính sách bảo mật</a>
         </div>
-    </section>
+        <p class="text-caption text-secondary">© 2024 Coffetinbeo. A Saigon-Kyoto Fusion.</p>
+    </footer>
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const dateEl = document.getElementById('current-date');
+        if (dateEl) {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.innerText = now.toLocaleDateString('vi-VN', options);
+        }
+
+        document.querySelectorAll('.custom-shadow').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.transition = 'transform 0.2s ease-out, box-shadow 0.2s ease-out';
+                card.style.boxShadow = '0 15px 40px rgba(62, 39, 35, 0.1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = '0 10px 30px rgba(62, 39, 35, 0.05)';
+            });
+        });
+    </script>
+}
