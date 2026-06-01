@@ -130,7 +130,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Espresso",
-                            Price = 2.50m,
+                            Price = 25000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -143,7 +143,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Americano",
-                            Price = 3.00m,
+                            Price = 30000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -156,7 +156,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Cappuccino",
-                            Price = 3.80m,
+                            Price = 38000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -169,7 +169,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Latte",
-                            Price = 4.20m,
+                            Price = 42000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -182,7 +182,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Mocha",
-                            Price = 4.50m,
+                            Price = 45000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -195,7 +195,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Caramel Macchiato",
-                            Price = 4.90m,
+                            Price = 49000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -208,7 +208,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Cold Brew",
-                            Price = 4.30m,
+                            Price = 43000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -221,7 +221,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Vietnamese Iced Coffee",
-                            Price = 3.70m,
+                            Price = 37000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -234,7 +234,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Matcha Latte",
-                            Price = 4.60m,
+                            Price = 46000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -247,7 +247,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Chocolate Frappe",
-                            Price = 5.20m,
+                            Price = 52000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -260,7 +260,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Croissant Butter",
-                            Price = 2.90m,
+                            Price = 29000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -273,7 +273,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Tiramisu",
-                            Price = 4.10m,
+                            Price = 41000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -286,7 +286,7 @@ namespace webcofflatteshop.Migrations
                             IsAvailable = true,
                             IsFeatured = false,
                             Name = "Blueberry Cheesecake",
-                            Price = 4.80m,
+                            Price = 48000m,
                             Stock = 100,
                             UpdatedAt = new DateTime(2026, 5, 29, 0, 0, 0, 0, DateTimeKind.Utc)
                         });

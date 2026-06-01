@@ -91,7 +91,7 @@
                         <div>
                             <label asp-for="Price" class="mb-2 block font-label-md text-secondary">Giá bán (VND)</label>
                             <div class="relative">
-                                <input asp-for="Price" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 pr-12 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="45.000" />
+                                <input asp-for="Price" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 pr-12 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" type="number" min="1000" step="1000" placeholder="45000" />
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-secondary">₫</span>
                             </div>
                             <span asp-validation-for="Price" class="mt-1 block text-sm text-error"></span>
