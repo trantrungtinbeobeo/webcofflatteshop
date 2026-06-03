@@ -13,6 +13,12 @@ public class CategoryController : Controller
         _categoryRepository = categoryRepository;
     }
 
+    public IActionResult Index()
+    {
+        var categories = _categoryRepository.GetAllCategories();
+        return View(categories);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Add(string categoryName)
@@ -24,10 +30,7 @@ public class CategoryController : Controller
             return RedirectToProductAdd();
         }
 
-        var alreadyExists = _categoryRepository.GetAllCategories()
-            .Any(category => string.Equals(category.Name, name, StringComparison.OrdinalIgnoreCase));
-
-        if (alreadyExists)
+        if (CategoryNameExists(name))
         {
             TempData["CategoryError"] = "Danh mục này đã tồn tại.";
             return RedirectToProductAdd();
@@ -36,6 +39,75 @@ public class CategoryController : Controller
         _categoryRepository.AddCategory(new Category { Name = name });
         TempData["CategorySuccess"] = "Đã thêm danh mục mới.";
         return RedirectToProductAdd();
+    }
+
+    public IActionResult Update(int id)
+    {
+        var category = _categoryRepository.GetById(id);
+        if (category is null) return NotFound();
+
+        return View(category);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Update(Category category)
+    {
+        category.Name = category.Name?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(category.Name))
+        {
+            ModelState.AddModelError(nameof(Category.Name), "Tên danh mục không được để trống.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(category);
+        }
+
+        if (CategoryNameExists(category.Name, category.Id))
+        {
+            ModelState.AddModelError(nameof(Category.Name), "Danh mục này đã tồn tại.");
+            return View(category);
+        }
+
+        _categoryRepository.UpdateCategory(category);
+        TempData["CategorySuccess"] = "Đã cập nhật danh mục.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    public IActionResult Delete(int id)
+    {
+        var category = _categoryRepository.GetById(id);
+        if (category is null) return NotFound();
+
+        return View(category);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteConfirmed(int id)
+    {
+        var category = _categoryRepository.GetById(id);
+        if (category is null) return NotFound();
+
+        if (category.Products.Any())
+        {
+            TempData["CategoryError"] = "Không thể xóa danh mục đang có sản phẩm.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _categoryRepository.DeleteCategory(id);
+        TempData["CategorySuccess"] = "Đã xóa danh mục.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private bool CategoryNameExists(string name, int? currentCategoryId = null)
+    {
+        return _categoryRepository.GetAllCategories()
+            .Any(category =>
+                category.Id != currentCategoryId &&
+                string.Equals(category.Name, name, StringComparison.OrdinalIgnoreCase));
     }
 
     private RedirectToActionResult RedirectToProductAdd()

@@ -1,0 +1,47 @@
+@model IEnumerable<webcofflatteshop.Models.Category>
+@{
+    ViewData["Title"] = "Danh mục";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Danh mục</h1>
+        <a asp-controller="Product" asp-action="Add" class="btn btn-primary">Thêm danh mục nhanh</a>
+    </div>
+
+    @if (TempData["CategorySuccess"] is string successMessage)
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+    @if (TempData["CategoryError"] is string errorMessage)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên danh mục</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model)
+                    {
+                        <tr>
+                            <td>@category.Id</td>
+                            <td>@category.Name</td>
+                            <td class="text-end">
+                                <a asp-action="Update" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
