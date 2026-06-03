@@ -154,7 +154,7 @@
                     <span class="material-symbols-outlined text-[20px]">add_circle</span>
                     Thêm danh mục nhanh
                 </h2>
-                <form asp-action="AddCategory" method="post" class="space-y-4">
+                <form asp-controller="Category" asp-action="Add" method="post" class="space-y-4">
                     <input name="categoryName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-2 text-label-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Tên danh mục mới" />
                     <button type="submit" class="w-full rounded-lg bg-secondary-container py-2 font-label-md text-on-secondary-container transition-colors hover:bg-secondary hover:text-white">
                         Thêm danh mục

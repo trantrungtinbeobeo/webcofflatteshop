@@ -51,20 +51,6 @@ public class ProductController : Controller
     }
 
 
-    [HttpPost]
-    public IActionResult AddCategory(string categoryName)
-    {
-        if (string.IsNullOrWhiteSpace(categoryName))
-        {
-            TempData["CategoryError"] = "Tên danh mục không được để trống.";
-            return RedirectToAction(nameof(Add));
-        }
-
-        _categoryRepository.AddCategory(new Category { Name = categoryName.Trim() });
-        TempData["CategorySuccess"] = "Đã thêm danh mục mới.";
-        return RedirectToAction(nameof(Add));
-    }
-
     public IActionResult Display(int id)
     {
         var product = _productRepository.GetById(id);
