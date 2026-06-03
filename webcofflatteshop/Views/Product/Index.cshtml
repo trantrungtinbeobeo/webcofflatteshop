@@ -11,6 +11,7 @@
         .OrderBy(category => category.CategoryId)
         .ToList();
     var productPrices = products.ToDictionary(product => product.Name, product => product.Price);
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var fallbackImages = new[]
     {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuABrBSS4LFPWVxIKu6AbEOBxgmUwSbQskURn4aCXn9wvyYRgRi0pnxTtP-LHTYrgu1yclJXfBa3zIb0vsbsBhlIfRaaqMhCwzQrAcRjKji5bp9ZzzXZoNjDNXhXDm5SixoY_llnZyqHmXEsGE0JDLyqGPwlAbLiDEGIIzdsRPuaX7nAgUkQe1vdiIzmUYlUf0Mku2urg6oHg2juQMP1nvU0fvrVPgR-WKWZlurqxB10q5yY04_MRfSMBajShMrmrH6vNtKAFL-kYUk",
@@ -34,6 +35,29 @@
     }
 }
 
+<style>
+    @@keyframes checkout-pop {
+        0% { opacity: 0; transform: translateY(18px) scale(0.92); }
+        70% { opacity: 1; transform: translateY(0) scale(1.04); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @@keyframes checkout-check {
+        0% { stroke-dashoffset: 48; }
+        100% { stroke-dashoffset: 0; }
+    }
+
+    .checkout-notice-show {
+        animation: checkout-pop 360ms ease-out both;
+    }
+
+    .checkout-check-path {
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: checkout-check 520ms ease-out 160ms forwards;
+    }
+</style>
+
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <div class="mx-auto flex w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
@@ -44,9 +68,23 @@
         </a>
         <div class="hidden items-center gap-gutter md:flex">
             <a class="font-body-md border-b-2 border-primary pb-1 text-primary" href="#menu">Menu</a>
-            <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" asp-controller="Product" asp-action="Add">Manager</a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a class="font-body-md text-secondary transition-colors duration-200 hover:text-primary" asp-controller="Product" asp-action="Add">Manager</a>
+            }
         </div>
         <div class="flex items-center gap-unit">
+            @if (isAuthenticated)
+            {
+                <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng nhập</a>
+            }
             <button class="relative rounded-full p-2 text-primary transition-colors hover:bg-secondary-container" onclick="toggleCart()" aria-label="Mở giỏ hàng">
                 <span class="material-symbols-outlined">shopping_cart</span>
                 <span id="cartCount" class="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">0</span>
@@ -58,30 +96,50 @@
     </div>
 </nav>
 
-<div id="cartDrawer" class="fixed right-0 top-0 z-[60] flex h-full w-full translate-x-full flex-col bg-surface-container-lowest shadow-2xl transition-transform duration-300 lg:w-[400px] lg:translate-x-0">
+<div id="cartBackdrop" class="fixed inset-0 z-[55] hidden bg-primary/30 backdrop-blur-sm" onclick="closeCart()"></div>
+
+<div id="cartDrawer" class="fixed right-0 top-0 z-[60] flex h-full w-full translate-x-full flex-col bg-surface-container-lowest shadow-2xl transition-transform duration-300 lg:w-[400px]">
     <div class="flex items-center justify-between border-b border-outline-variant p-gutter">
         <div>
-            <h2 class="font-headline-md text-headline-md text-primary">Your Selection</h2>
-            <p class="font-caption text-caption text-secondary">Carefully crafted for you</p>
+            <h2 class="font-headline-md text-headline-md text-primary">Giỏ hàng của bạn</h2>
+            <p class="font-caption text-caption text-secondary">Những món Coffe đã chọn</p>
         </div>
-        <button class="rounded-full p-2 hover:bg-surface-container" onclick="toggleCart()" aria-label="Đóng giỏ hàng">
+        <button class="rounded-full p-2 hover:bg-surface-container" onclick="closeCart()" aria-label="Đóng giỏ hàng">
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
     <div id="cartItems" class="flex-grow space-y-gutter overflow-y-auto p-gutter"></div>
     <div class="space-y-4 border-t border-outline-variant bg-surface-container p-gutter">
         <div class="flex justify-between font-label-md text-label-md text-primary">
-            <span>Subtotal</span>
+            <span>Tạm tính</span>
             <span id="cartSubtotal">0 VNĐ</span>
         </div>
         <button id="checkoutBtn" class="flex w-full items-center justify-between rounded-lg bg-primary px-6 py-4 font-label-md text-on-primary transition-soft hover:brightness-110">
-            <span>Proceed to Checkout</span>
+            <span>Mua hàng</span>
             <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+        <button id="clearCartBtn" class="flex w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-6 py-3 font-label-md text-secondary transition-soft hover:bg-surface-container-high hover:text-error">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            <span>Xóa hết giỏ hàng</span>
         </button>
     </div>
 </div>
 
-<main class="mx-auto max-w-container-max px-margin-mobile py-gutter md:px-margin-desktop lg:mr-[400px]">
+<div id="checkoutNotice" class="fixed inset-0 z-[90] hidden items-center justify-center bg-primary/35 px-margin-mobile backdrop-blur-sm">
+    <div id="checkoutNoticeCard" class="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-gutter text-center shadow-2xl">
+        <div id="checkoutNoticeIconWrap" class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f5e9] text-[#2e7d32]">
+            <svg class="h-12 w-12" viewBox="0 0 52 52" aria-hidden="true">
+                <circle cx="26" cy="26" r="23" fill="none" stroke="currentColor" stroke-width="3" opacity=".22"></circle>
+                <path class="checkout-check-path" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M15 27.5 22.5 35 38 18"></path>
+            </svg>
+        </div>
+        <h2 id="checkoutNoticeTitle" class="mb-2 font-headline-md text-headline-md text-primary">Đã mua sản phẩm Coffe</h2>
+        <p id="checkoutNoticeMessage" class="font-body-md text-secondary">Cảm ơn bạn đã mua hàng tại Coffe Latte Kawaii.</p>
+        <button id="checkoutNoticeClose" type="button" class="mt-6 rounded-lg bg-primary px-6 py-3 font-label-md text-on-primary transition hover:brightness-110">Tiếp tục mua hàng</button>
+    </div>
+</div>
+
+<main class="mx-auto max-w-container-max px-margin-mobile py-gutter md:px-margin-desktop">
     <section class="group relative mb-section-gap h-[400px] overflow-hidden rounded-xl">
         <div class="relative h-full overflow-hidden">
             <img class="h-full w-full object-cover" src="@heroImage" alt="Coffee hero" />
@@ -107,7 +165,7 @@
             var product = products[index];
             var imageUrl = ImageOf(product, index);
             <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
-                <button type="button" class="js-open-detail block w-full text-left" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
+                <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
                     <div class="relative aspect-square cursor-pointer overflow-hidden">
                         <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
                         <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
@@ -170,7 +228,7 @@
     </div>
 </div>
 
-<footer id="story" class="mt-section-gap flex w-full flex-col items-center gap-gutter bg-surface-container px-margin-mobile py-section-gap md:px-margin-desktop lg:mr-[400px]">
+<footer id="story" class="mt-section-gap flex w-full flex-col items-center gap-gutter bg-surface-container px-margin-mobile py-section-gap md:px-margin-desktop">
     <div class="flex items-center gap-3">
         <span class="brand-blossom" aria-hidden="true">✼</span>
         <span class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
@@ -190,6 +248,7 @@
 <script>
 (() => {
     const productPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPrices));
+    const isAuthenticated = @Json.Serialize(isAuthenticated);
     const toNumber = value => {
         if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
 
@@ -221,14 +280,33 @@
     const getCart = () => normalizeCart(JSON.parse(localStorage.getItem('coffee_cart') || '[]'));
     const setCart = value => localStorage.setItem('coffee_cart', JSON.stringify(value));
     const cartDrawer = document.getElementById('cartDrawer');
+    const cartBackdrop = document.getElementById('cartBackdrop');
     const cartCount = document.getElementById('cartCount');
     const cartItems = document.getElementById('cartItems');
     const cartSubtotal = document.getElementById('cartSubtotal');
+    const clearCartBtn = document.getElementById('clearCartBtn');
+    const checkoutNotice = document.getElementById('checkoutNotice');
+    const checkoutNoticeCard = document.getElementById('checkoutNoticeCard');
+    const checkoutNoticeTitle = document.getElementById('checkoutNoticeTitle');
+    const checkoutNoticeMessage = document.getElementById('checkoutNoticeMessage');
+    const checkoutNoticeIconWrap = document.getElementById('checkoutNoticeIconWrap');
+    const checkoutNoticeClose = document.getElementById('checkoutNoticeClose');
     let current = null;
     let selectedSugar = "100%";
     let selectedSize = "Vừa";
 
-    window.toggleCart = () => cartDrawer.classList.toggle('translate-x-full');
+    const openCart = () => {
+        cartDrawer.classList.remove('translate-x-full');
+        cartBackdrop.classList.remove('hidden');
+    };
+    window.closeCart = () => {
+        cartDrawer.classList.add('translate-x-full');
+        cartBackdrop.classList.add('hidden');
+    };
+    window.toggleCart = () => {
+        if (cartDrawer.classList.contains('translate-x-full')) openCart();
+        else closeCart();
+    };
     window.closeDetail = () => {
         document.getElementById('detailModal').classList.add('hidden');
         document.getElementById('detailModal').classList.remove('flex');
@@ -239,13 +317,18 @@
         cartCount.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
         cartSubtotal.textContent = formatCurrency(cart.reduce((sum, item) => sum + item.price * item.qty, 0));
         cartItems.innerHTML = cart.length
-            ? cart.map(item => `
+            ? cart.map((item, index) => `
                 <div class="flex gap-4 border-b border-outline-variant/10 pb-3">
                     <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                         <img class="h-full w-full object-cover" src="${item.image}" alt="${item.name}">
                     </div>
                     <div class="flex-grow">
-                        <p class="font-label-md text-label-md text-primary font-semibold">${item.name}</p>
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="font-label-md text-label-md text-primary font-semibold">${item.name}</p>
+                            <button type="button" class="js-remove-cart-item rounded-full p-1 text-secondary transition-colors hover:bg-error-container hover:text-error" data-cart-index="${index}" aria-label="Xóa ${item.name} khỏi giỏ hàng">
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                        </div>
                         <p class="text-[12px] text-secondary mt-0.5">Size: ${item.size} | Đường: ${item.sugar}</p>
                         <p class="font-caption text-caption text-secondary">Số lượng: ${item.qty}</p>
                         <div class="mt-1 flex items-center justify-between">
@@ -256,6 +339,18 @@
             : '<p class="font-body-md text-secondary">Chưa có sản phẩm nào.</p>';
     };
 
+    const removeCartItem = index => {
+        const cart = getCart();
+        cart.splice(index, 1);
+        setCart(cart);
+        renderCart();
+    };
+
+    const clearCart = () => {
+        localStorage.removeItem('coffee_cart');
+        renderCart();
+    };
+
     const addToCart = item => {
         const cart = getCart();
         const index = cart.findIndex(entry => entry.name === item.name && entry.sugar === item.sugar && entry.size === item.size);
@@ -263,13 +358,50 @@
         else cart.push({ ...item, qty: 1 });
         setCart(cart);
         renderCart();
+        openCart();
     };
+
+    const showCheckoutNotice = ({ title, message, type = 'success' }) => {
+        checkoutNoticeTitle.textContent = title;
+        checkoutNoticeMessage.textContent = message;
+        checkoutNoticeIconWrap.className = type === 'success'
+            ? 'mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f5e9] text-[#2e7d32]'
+            : 'mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-error-container text-error';
+        checkoutNotice.classList.remove('hidden');
+        checkoutNotice.classList.add('flex');
+        checkoutNoticeCard.classList.remove('checkout-notice-show');
+        void checkoutNoticeCard.offsetWidth;
+        checkoutNoticeCard.classList.add('checkout-notice-show');
+    };
+
+    const hideCheckoutNotice = () => {
+        checkoutNotice.classList.add('hidden');
+        checkoutNotice.classList.remove('flex');
+    };
+
+    checkoutNoticeClose.addEventListener('click', hideCheckoutNotice);
+    checkoutNotice.addEventListener('click', event => {
+        if (event.target === checkoutNotice) hideCheckoutNotice();
+    });
+
+    cartItems.addEventListener('click', event => {
+        const removeButton = event.target.closest('.js-remove-cart-item');
+        if (!removeButton) return;
+
+        removeCartItem(Number(removeButton.dataset.cartIndex));
+    });
+
+    clearCartBtn.addEventListener('click', () => {
+        if (!getCart().length) return;
+        clearCart();
+    });
 
     // Chi tiết sản phẩm & Lựa chọn thuộc tính
     document.querySelectorAll('.js-open-detail').forEach(button => {
         button.addEventListener('click', () => {
             const basePrice = toNumber(button.dataset.price);
             current = { 
+                productId: Number(button.dataset.productId),
                 name: button.dataset.name, 
                 basePrice: basePrice,
                 price: basePrice, 
@@ -351,6 +483,7 @@
         if (current) {
             addToCart({
                 name: current.name,
+                productId: current.productId,
                 price: current.price,
                 image: current.image,
                 sugar: selectedSugar,
@@ -399,11 +532,20 @@
     document.getElementById('checkoutBtn').addEventListener('click', async () => {
         const cart = getCart();
         if (!cart.length) {
-            alert("Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm!");
+            showCheckoutNotice({
+                title: "Giỏ hàng đang trống",
+                message: "Bạn hãy thêm sản phẩm Coffe vào giỏ hàng trước khi mua nhé.",
+                type: "error"
+            });
             return;
         }
 
         try {
+            if (!isAuthenticated) {
+                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent('/Product/Index');
+                return;
+            }
+
             const response = await fetch('/Product/Checkout', {
                 method: 'POST',
                 headers: {
@@ -411,24 +553,48 @@
                 },
                 body: JSON.stringify({
                     items: cart.map(item => ({
+                        productId: item.productId,
                         name: item.name,
-                        qty: item.qty
+                        qty: item.qty,
+                        sugar: item.sugar,
+                        size: item.size
                     }))
                 })
             });
 
+            if (response.status === 401) {
+                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent('/Product/Index');
+                return;
+            }
+
             const result = await response.json();
             if (response.ok && result.success) {
-                alert(result.message);
-                localStorage.removeItem('coffee_cart');
-                renderCart();
-                toggleCart();
+                const purchasedNames = cart
+                    .map(item => item.name)
+                    .filter((name, index, names) => names.indexOf(name) === index)
+                    .slice(0, 3)
+                    .join(", ");
+                clearCart();
+                closeCart();
+                showCheckoutNotice({
+                    title: "Đã mua sản phẩm Coffe",
+                    message: `Cảm ơn bạn đã mua ${purchasedNames || "sản phẩm"} tại Coffe Latte Kawaii. Đơn hàng của bạn đã được lưu vào lịch sử mua hàng.`,
+                    type: "success"
+                });
             } else {
-                alert(result.message || "Đặt hàng thất bại. Vui lòng thử lại!");
+                showCheckoutNotice({
+                    title: "Đặt hàng chưa thành công",
+                    message: result.message || "Vui lòng thử lại sau ít phút.",
+                    type: "error"
+                });
             }
         } catch (error) {
             console.error("Lỗi đặt hàng:", error);
-            alert("Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại!");
+            showCheckoutNotice({
+                title: "Không kết nối được máy chủ",
+                message: "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại nhé.",
+                type: "error"
+            });
         }
     });
 

@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using webcofflatteshop.Models;
 
 namespace webcofflatteshop.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -13,9 +14,23 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Category> Categories => Set<Category>();
 
+    public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(user => user.FullName)
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(user => user.Address)
+                .HasMaxLength(300)
+                .IsRequired();
+        });
 
         modelBuilder.Entity<Category>(entity =>
         {
@@ -62,6 +77,53 @@ public class ApplicationDbContext : DbContext
                 .WithMany(category => category.Products)
                 .HasForeignKey(product => product.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.ToTable("Orders");
+            entity.HasKey(order => order.Id);
+            entity.Property(order => order.UserId)
+                .HasMaxLength(450)
+                .IsRequired();
+            entity.Property(order => order.CustomerEmail)
+                .HasMaxLength(256)
+                .IsRequired();
+            entity.Property(order => order.TotalAmount)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+            entity.Property(order => order.CreatedAt)
+                .HasColumnType("datetime2")
+                .IsRequired();
+            entity.HasMany(order => order.Items)
+                .WithOne(item => item.Order)
+                .HasForeignKey(item => item.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.ToTable("OrderItems");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ProductName)
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(item => item.Sugar)
+                .HasMaxLength(30)
+                .IsRequired();
+            entity.Property(item => item.Size)
+                .HasMaxLength(30)
+                .IsRequired();
+            entity.Property(item => item.UnitPrice)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+            entity.Property(item => item.LineTotal)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+            entity.HasOne(item => item.Product)
+                .WithMany()
+                .HasForeignKey(item => item.ProductId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         SeedMenu(modelBuilder);

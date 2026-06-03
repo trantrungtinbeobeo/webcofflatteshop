@@ -1,0 +1,42 @@
+@model webcofflatteshop.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<main class="min-h-screen bg-background px-margin-mobile py-section-gap font-body text-on-background md:px-margin-desktop">
+    <section class="mx-auto max-w-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-gutter shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
+        <a asp-controller="Product" asp-action="Index" class="mb-8 flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <span class="font-['Noto_Serif'] text-[28px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </span>
+        </a>
+        <h1 class="mb-2 font-headline-md text-headline-md text-primary">Đăng nhập</h1>
+        <p class="mb-6 text-body-md text-secondary">Đăng nhập để đặt hàng và dùng khu quản trị nếu bạn là Admin.</p>
+
+        <form asp-action="Login" method="post" class="space-y-5">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+            <div>
+                <label asp-for="Email" class="mb-2 block font-label-md text-secondary">Email</label>
+                <input asp-for="Email" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="email" />
+            </div>
+            <div>
+                <label asp-for="Password" class="mb-2 block font-label-md text-secondary">Mật khẩu</label>
+                <input asp-for="Password" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="current-password" />
+            </div>
+            <label class="flex items-center gap-2 text-sm text-secondary">
+                <input asp-for="RememberMe" class="rounded border-outline-variant text-primary focus:ring-primary" />
+                Ghi nhớ đăng nhập
+            </label>
+            <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary hover:brightness-110">Đăng nhập</button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-secondary">
+            Chưa có tài khoản?
+            <a asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl" class="font-semibold text-primary underline underline-offset-4">Đăng ký</a>
+        </p>
+    </section>
+</main>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

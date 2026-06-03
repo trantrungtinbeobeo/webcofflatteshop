@@ -1,47 +1,155 @@
 @model IEnumerable<webcofflatteshop.Models.Category>
 @{
     ViewData["Title"] = "Danh mục";
+    var categories = Model.ToList();
+    var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
 }
 
-<div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="mb-0">Danh mục</h1>
-        <a asp-controller="Product" asp-action="Add" class="btn btn-primary">Thêm danh mục nhanh</a>
-    </div>
-
-    @if (TempData["CategorySuccess"] is string successMessage)
-    {
-        <div class="alert alert-success">@successMessage</div>
-    }
-    @if (TempData["CategoryError"] is string errorMessage)
-    {
-        <div class="alert alert-danger">@errorMessage</div>
-    }
-
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên danh mục</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var category in Model)
-                    {
-                        <tr>
-                            <td>@category.Id</td>
-                            <td>@category.Name</td>
-                            <td class="text-end">
-                                <a asp-action="Update" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
-                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary transition-colors duration-200 hover:text-primary">Menu</a>
+            <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
+            </form>
         </div>
     </div>
-</div>
+</nav>
+
+<aside class="fixed left-0 top-20 z-40 hidden h-[calc(100vh-5rem)] w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
+    <div class="mb-section-gap">
+        <a asp-controller="Product" asp-action="Index" class="mb-10 flex items-center gap-3 rounded-lg transition hover:opacity-80">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <div>
+                <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
+                    <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+                </p>
+                <p class="text-caption text-secondary">Admin Dashboard</p>
+            </div>
+        </a>
+        <nav class="space-y-3">
+            <a asp-controller="Product" asp-action="Add" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                Thêm sản phẩm
+            </a>
+            <a asp-controller="Category" asp-action="Index" class="flex items-center gap-3 rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">
+                <span class="material-symbols-outlined text-[18px]">storefront</span>
+                Danh mục
+            </a>
+            <a asp-controller="Product" asp-action="UploadImageList" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                Ảnh & banner
+            </a>
+            <a asp-controller="Product" asp-action="Statistics" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+                Thống kê
+            </a>
+        </nav>
+    </div>
+    <div class="mt-auto border-t border-outline-variant pt-5">
+        <div class="mb-4 flex items-center gap-3">
+            <span class="brand-blossom text-[24px]" aria-hidden="true">✼</span>
+            <div>
+                <p class="font-label-md text-primary">Admin</p>
+                <p class="text-caption text-secondary">Quản trị viên</p>
+            </div>
+        </div>
+        <form asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-error transition-colors hover:bg-error-container">
+                <span class="material-symbols-outlined text-[18px]">logout</span>
+                Đăng xuất
+            </button>
+        </form>
+    </div>
+</aside>
+
+<main class="min-h-screen bg-background p-margin-mobile md:ml-[280px] md:p-margin-desktop">
+    <header class="mx-auto mb-gutter flex max-w-container-max items-end justify-between">
+        <div>
+            <nav class="mb-2 flex items-center gap-2 text-caption text-secondary">
+                <span>Admin</span>
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <span class="font-semibold text-primary">Danh mục</span>
+            </nav>
+            <h1 class="font-headline-md text-primary">Quản lý danh mục sản phẩm</h1>
+        </div>
+        <div class="hidden md:block">
+            <span class="text-caption font-medium uppercase tracking-widest text-secondary">@today</span>
+        </div>
+    </header>
+
+    <section class="mx-auto max-w-container-max">
+        @if (TempData["CategorySuccess"] is string successMessage)
+        {
+            <div class="mb-gutter rounded-lg border border-[#81c784] bg-[#eef8ef] px-4 py-3 text-sm text-primary">@successMessage</div>
+        }
+        @if (TempData["CategoryError"] is string errorMessage)
+        {
+            <div class="mb-gutter rounded-lg border border-error bg-error-container px-4 py-3 text-sm text-on-error-container">@errorMessage</div>
+        }
+
+        <div class="grid grid-cols-1 gap-gutter lg:grid-cols-12">
+            <div class="lg:col-span-8">
+                <div class="overflow-hidden rounded-xl border border-outline-variant/20 bg-white custom-shadow">
+                    <table class="w-full border-collapse text-left">
+                        <thead class="bg-surface-container-low">
+                            <tr>
+                                <th class="px-gutter py-4 font-label-md text-secondary">ID</th>
+                                <th class="px-gutter py-4 font-label-md text-secondary">Tên danh mục</th>
+                                <th class="px-gutter py-4 font-label-md text-secondary">Sản phẩm</th>
+                                <th class="px-gutter py-4 text-right font-label-md text-secondary">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            @foreach (var category in categories)
+                            {
+                                <tr class="transition-colors hover:bg-surface-container-lowest">
+                                    <td class="px-gutter py-4 text-caption text-secondary">CAT-@category.Id.ToString("000")</td>
+                                    <td class="px-gutter py-4 font-label-md text-primary">@category.Name</td>
+                                    <td class="px-gutter py-4 text-body-md text-secondary">@category.Products.Count món</td>
+                                    <td class="px-gutter py-4 text-right">
+                                        <a asp-action="Update" asp-route-id="@category.Id" class="inline-flex p-2 text-secondary transition-colors hover:text-primary">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@category.Id" class="inline-flex p-2 text-secondary transition-colors hover:text-error">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <aside class="space-y-gutter lg:col-span-4">
+                <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                    <h2 class="mb-4 flex items-center gap-2 font-label-md text-primary">
+                        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                        Thêm danh mục nhanh
+                    </h2>
+                    <form asp-controller="Category" asp-action="Add" method="post" class="space-y-4">
+                        <input name="categoryName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-2 text-label-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Tên danh mục mới" />
+                        <button type="submit" class="w-full rounded-lg bg-secondary-container py-2 font-label-md text-on-secondary-container transition-colors hover:bg-secondary hover:text-white">
+                            Thêm danh mục
+                        </button>
+                    </form>
+                </div>
+                <div class="rounded-xl border border-outline-variant/20 bg-surface-container-low p-gutter">
+                    <p class="font-label-md text-primary">@categories.Count danh mục</p>
+                    <p class="mt-1 text-caption text-secondary">Danh mục được dùng để nhóm sản phẩm trên menu khách hàng.</p>
+                </div>
+            </aside>
+        </div>
+    </section>
+</main>

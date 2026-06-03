@@ -37,4 +37,9 @@ public class MockCategoryRepository : ICategoryRepository
 
         _categoryList.Remove(category);
     }
+
+    public void DeleteCategoryWithProducts(int id)
+    {
+        DeleteCategory(id);
+    }
 }

@@ -3,19 +3,65 @@
     ViewData["Title"] = "Xóa danh mục";
 }
 
-<div class="container py-4">
-    <h1>Xóa danh mục</h1>
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary transition-colors duration-200 hover:text-primary">Menu</a>
+            <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
 
-    <div class="card mt-3 p-4 shadow-sm">
-        <p>Bạn có chắc muốn xóa danh mục <strong>@Model.Name</strong>?</p>
+<main class="min-h-screen bg-background px-margin-mobile py-section-gap font-body text-on-background md:px-margin-desktop">
+    <section class="mx-auto max-w-2xl rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-gutter custom-shadow">
+        <a asp-action="Index" class="mb-6 inline-flex items-center gap-2 text-secondary hover:text-primary">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Quay lại danh mục
+        </a>
+        <h1 class="mb-3 font-headline-md text-primary">Xóa danh mục</h1>
+        <p class="text-body-md text-secondary">Bạn có chắc muốn xóa danh mục <strong class="text-primary">@Model.Name</strong>?</p>
+
+        @if (TempData["CategoryError"] is string error)
+        {
+            <div class="mt-gutter rounded-lg border border-error bg-error-container px-4 py-3 text-sm text-on-error-container">@error</div>
+        }
+
         @if (Model.Products.Any())
         {
-            <div class="alert alert-warning">Danh mục này đang có @Model.Products.Count sản phẩm nên không thể xóa.</div>
+            <div class="mt-gutter rounded-lg border border-outline-variant bg-surface-container-low p-4">
+                <p class="font-label-md text-primary">Danh mục này đang có @Model.Products.Count sản phẩm.</p>
+                <p class="mt-1 text-caption text-secondary">Nếu tiếp tục, toàn bộ sản phẩm thuộc danh mục này sẽ bị xóa. Lịch sử mua hàng vẫn giữ lại tên món và giá đã mua.</p>
+            </div>
         }
-        <form asp-action="DeleteConfirmed" method="post" class="d-flex gap-2">
+
+        <form asp-action="DeleteConfirmed" method="post" class="mt-gutter space-y-5">
             <input type="hidden" name="id" value="@Model.Id" />
-            <button type="submit" class="btn btn-danger" disabled="@Model.Products.Any()">Xóa</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            @if (Model.Products.Any())
+            {
+                <label class="flex items-start gap-3 rounded-lg border border-outline-variant/40 bg-white p-4 text-body-md text-secondary">
+                    <input type="checkbox" name="deleteProducts" value="true" class="mt-1 rounded border-outline-variant text-primary focus:ring-primary" />
+                    <span>Tôi đồng ý xóa tất cả sản phẩm thuộc danh mục <strong>@Model.Name</strong>.</span>
+                </label>
+            }
+            <div class="flex flex-wrap gap-3">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-error px-5 py-3 font-label-md text-on-error hover:brightness-110">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    Xác nhận xóa
+                </button>
+                <a asp-action="Index" class="inline-flex items-center rounded-lg border border-outline-variant px-5 py-3 font-label-md text-secondary hover:bg-surface-container">Hủy</a>
+            </div>
         </form>
-    </div>
-</div>
+    </section>
+</main>

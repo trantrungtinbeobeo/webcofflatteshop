@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webcofflatteshop.Models;
 using webcofflatteshop.Repository;
 
 namespace webcofflatteshop.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class CategoryController : Controller
 {
     private readonly ICategoryRepository _categoryRepository;
@@ -86,14 +88,21 @@ public class CategoryController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public IActionResult DeleteConfirmed(int id, bool deleteProducts = false)
     {
         var category = _categoryRepository.GetById(id);
         if (category is null) return NotFound();
 
-        if (category.Products.Any())
+        if (category.Products.Any() && !deleteProducts)
         {
-            TempData["CategoryError"] = "Không thể xóa danh mục đang có sản phẩm.";
+            TempData["CategoryError"] = "Danh mục đang có sản phẩm. Hãy tích chọn xóa kèm sản phẩm nếu muốn xóa toàn bộ.";
+            return View("Delete", category);
+        }
+
+        if (deleteProducts)
+        {
+            _categoryRepository.DeleteCategoryWithProducts(id);
+            TempData["CategorySuccess"] = "Đã xóa danh mục và tất cả sản phẩm thuộc danh mục.";
             return RedirectToAction(nameof(Index));
         }
 

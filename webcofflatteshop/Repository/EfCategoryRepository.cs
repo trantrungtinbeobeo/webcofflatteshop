@@ -15,6 +15,7 @@ public class EfCategoryRepository : ICategoryRepository
 
     public IEnumerable<Category> GetAllCategories() => _context.Categories
         .AsNoTracking()
+        .Include(category => category.Products)
         .OrderBy(category => category.Id)
         .ToList();
 
@@ -43,6 +44,18 @@ public class EfCategoryRepository : ICategoryRepository
         var category = _context.Categories.Find(id);
         if (category is null) return;
 
+        _context.Categories.Remove(category);
+        _context.SaveChanges();
+    }
+
+    public void DeleteCategoryWithProducts(int id)
+    {
+        var category = _context.Categories
+            .Include(item => item.Products)
+            .FirstOrDefault(item => item.Id == id);
+        if (category is null) return;
+
+        _context.Products.RemoveRange(category.Products);
         _context.Categories.Remove(category);
         _context.SaveChanges();
     }

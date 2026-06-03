@@ -1,0 +1,58 @@
+@model webcofflatteshop.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<main class="min-h-screen bg-background px-margin-mobile py-section-gap font-body text-on-background md:px-margin-desktop">
+    <section class="mx-auto max-w-xl rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-gutter shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
+        <a asp-controller="Product" asp-action="Index" class="mb-8 flex items-center gap-3">
+            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <span class="font-['Noto_Serif'] text-[28px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </span>
+        </a>
+        <h1 class="mb-2 font-headline-md text-headline-md text-primary">Đăng ký</h1>
+        <p class="mb-6 text-body-md text-secondary">Tạo tài khoản khách hàng để đặt món và theo dõi lịch sử mua hàng.</p>
+
+        <form asp-action="Register" method="post" class="space-y-5">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label asp-for="UserName" class="mb-2 block font-label-md text-secondary">Tên đăng nhập</label>
+                    <input asp-for="UserName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="username" />
+                </div>
+                <div>
+                    <label asp-for="FullName" class="mb-2 block font-label-md text-secondary">Họ và tên</label>
+                    <input asp-for="FullName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="name" />
+                </div>
+            </div>
+            <div>
+                <label asp-for="Email" class="mb-2 block font-label-md text-secondary">Email</label>
+                <input asp-for="Email" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="email" />
+            </div>
+            <div>
+                <label asp-for="Address" class="mb-2 block font-label-md text-secondary">Địa chỉ</label>
+                <input asp-for="Address" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="street-address" />
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label asp-for="Password" class="mb-2 block font-label-md text-secondary">Mật khẩu</label>
+                    <input asp-for="Password" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="new-password" />
+                </div>
+                <div>
+                    <label asp-for="ConfirmPassword" class="mb-2 block font-label-md text-secondary">Nhập lại mật khẩu</label>
+                    <input asp-for="ConfirmPassword" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 outline-none focus:border-primary focus:ring-1 focus:ring-primary" autocomplete="new-password" />
+                </div>
+            </div>
+            <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary hover:brightness-110">Tạo tài khoản</button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-secondary">
+            Đã có tài khoản?
+            <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl" class="font-semibold text-primary underline underline-offset-4">Đăng nhập</a>
+        </p>
+    </section>
+</main>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
