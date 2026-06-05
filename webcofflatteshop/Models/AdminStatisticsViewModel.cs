@@ -9,6 +9,14 @@ public class AdminStatisticsViewModel
     public int TotalCategories { get; set; }
     public int HomeBannerCount { get; set; }
     public int UploadBannerCount { get; set; }
+    public bool PromoBannerIsEnabled { get; set; }
+    public int PromoBannerDiscountPercent { get; set; }
+    public int PendingOrders { get; set; }
+    public int PreparingOrders { get; set; }
+    public int DeliveringOrders { get; set; }
+    public int CompletedOrders { get; set; }
+    public int PromoOrdersToday { get; set; }
+    public int TotalWorkflowItems => PendingOrders + PreparingOrders + DeliveringOrders + CompletedOrders + PromoOrdersToday;
     public decimal TotalInventoryValue { get; set; }
     public IEnumerable<Product> RecentProducts { get; set; } = [];
     public IEnumerable<CustomerPurchaseSummary> CustomerPurchases { get; set; } = [];

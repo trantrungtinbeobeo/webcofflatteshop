@@ -3,7 +3,19 @@
     ViewData["Title"] = "Thống kê";
     var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
     var customerPurchases = Model.CustomerPurchases.ToList();
+    var topCustomers = customerPurchases.Take(6).ToList();
     var maxSpent = customerPurchases.Any() ? customerPurchases.Max(item => item.TotalSpent) : 0m;
+    var workflowTotal = Math.Max(Model.PendingOrders + Model.PreparingOrders + Model.DeliveringOrders + Model.CompletedOrders + Model.OutOfStockProducts + Model.PromoOrdersToday, 1);
+    var pendingPercent = (double)Model.PendingOrders / workflowTotal * 100;
+    var processingPercent = (double)(Model.PreparingOrders + Model.DeliveringOrders) / workflowTotal * 100;
+    var completedPercent = (double)Model.CompletedOrders / workflowTotal * 100;
+    var outOfStockPercent = (double)Model.OutOfStockProducts / workflowTotal * 100;
+    var promoPercent = (double)Model.PromoOrdersToday / workflowTotal * 100;
+    var pendingEnd = pendingPercent;
+    var processingEnd = pendingEnd + processingPercent;
+    var completedEnd = processingEnd + completedPercent;
+    var outOfStockEnd = completedEnd + outOfStockPercent;
+    string Percent(double value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 }
 
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
@@ -20,7 +32,7 @@
         </div>
         <div class="flex items-center gap-unit">
             <partial name="_UserAvatarHeader" />
-            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử đơn hàng</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
             </form>
@@ -103,8 +115,74 @@
                 <p class="mt-3 font-headline-md text-headline-md text-error">@Model.OutOfStockProducts</p>
             </div>
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
-                <p class="text-caption text-secondary">Banner</p>
-                <p class="mt-3 font-headline-md text-headline-md text-primary">@(Model.HomeBannerCount + Model.UploadBannerCount)</p>
+                <p class="text-caption text-secondary">Khuyến mãi</p>
+                <p class="mt-3 font-headline-md text-headline-md text-primary">@(Model.PromoBannerIsEnabled ? $"{Model.PromoBannerDiscountPercent}%" : "Tắt")</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-gutter lg:grid-cols-2">
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <div class="mb-5">
+                    <h2 class="font-headline-md text-primary">Biểu đồ tiến độ đơn hàng</h2>
+                    <p class="mt-1 text-caption text-secondary">Theo dõi đơn chờ, đang xử lý, hoàn thành, hết hàng và khuyến mãi trong ngày.</p>
+                </div>
+                <div class="flex flex-col items-center gap-gutter md:flex-row">
+                    <div id="workflowPieChart" class="relative h-44 w-44 rounded-full transition-all duration-500" style="background: conic-gradient(#d9a441 0 @Percent(pendingEnd)%, #745853 @Percent(pendingEnd)% @Percent(processingEnd)%, #2e7d32 @Percent(processingEnd)% @Percent(completedEnd)%, #ba1a1a @Percent(completedEnd)% @Percent(outOfStockEnd)%, #7c6bd6 @Percent(outOfStockEnd)% 100%);">
+                        <div class="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-surface-container-lowest text-center">
+                            <span id="workflowTotalCount" class="font-headline-md text-headline-md text-primary">@workflowTotal</span>
+                            <span class="text-caption text-secondary">mục theo dõi</span>
+                        </div>
+                    </div>
+                    <div class="w-full flex-1 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-body-md text-secondary"><i class="h-3 w-3 rounded-full bg-[#d9a441]"></i>Đơn đang chờ</span>
+                            <span id="workflowPendingCount" class="font-label-md text-primary">@Model.PendingOrders</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-body-md text-secondary"><i class="h-3 w-3 rounded-full bg-[#745853]"></i>Đang pha/giao</span>
+                            <span id="workflowProcessingCount" class="font-label-md text-primary">@(Model.PreparingOrders + Model.DeliveringOrders)</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-body-md text-secondary"><i class="h-3 w-3 rounded-full bg-[#2e7d32]"></i>Bán thành công</span>
+                            <span id="workflowCompletedCount" class="font-label-md text-primary">@Model.CompletedOrders</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-body-md text-secondary"><i class="h-3 w-3 rounded-full bg-error"></i>Hết hàng</span>
+                            <span class="font-label-md text-primary">@Model.OutOfStockProducts</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="flex items-center gap-2 text-body-md text-secondary"><i class="h-3 w-3 rounded-full bg-[#7c6bd6]"></i>Khuyến mãi hôm nay</span>
+                            <span id="workflowPromoCount" class="font-label-md text-primary">@Model.PromoOrdersToday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <div class="mb-5">
+                    <h2 class="font-headline-md text-primary">Biểu đồ cột tài khoản mua hàng</h2>
+                    <p class="mt-1 text-caption text-secondary">Top tài khoản theo tổng giá trị đơn hàng.</p>
+                </div>
+                @if (!topCustomers.Any())
+                {
+                    <p class="rounded-lg bg-surface-container-low p-4 text-body-md text-secondary">Chưa có dữ liệu mua hàng để vẽ biểu đồ.</p>
+                }
+                else
+                {
+                    <div class="flex h-64 items-end gap-3 rounded-lg bg-surface-container-low p-4">
+                        @foreach (var customer in topCustomers)
+                        {
+                            var barPercent = maxSpent > 0 ? Math.Max((double)(customer.TotalSpent / maxSpent) * 100, 8) : 8;
+                            <div class="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                                <span class="text-[11px] font-semibold text-primary">@customer.TotalSpent.ToString("N0")đ</span>
+                                <div class="w-full rounded-t-lg bg-[#2e7d32] transition" style="height:@Percent(barPercent)%"></div>
+                                <span class="line-clamp-1 w-full text-center text-[11px] text-secondary" title="@(string.IsNullOrWhiteSpace(customer.FullName) ? customer.UserName : customer.FullName)">
+                                    @(string.IsNullOrWhiteSpace(customer.FullName) ? customer.UserName : customer.FullName)
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         </div>
 
@@ -136,7 +214,7 @@
                                 <p class="font-label-md text-primary">@customer.TotalSpent.ToString("N0")đ</p>
                             </div>
                             <div class="h-3 overflow-hidden rounded-full bg-surface-container">
-                                <div class="h-full rounded-full bg-primary" style="width:@percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                <div class="h-full rounded-full bg-[#2e7d32]" style="width:@percent.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"></div>
                             </div>
                         </div>
                     }
@@ -187,12 +265,12 @@
                             <span class="font-semibold text-primary">@Model.FeaturedProducts</span>
                         </div>
                         <div class="flex justify-between gap-4">
-                            <span class="text-secondary">Banner trang chủ</span>
-                            <span class="font-semibold text-primary">@Model.HomeBannerCount</span>
+                            <span class="text-secondary">Banner khuyến mãi</span>
+                            <span class="font-semibold text-primary">@(Model.PromoBannerIsEnabled ? "Đang áp dụng" : "Chưa áp dụng")</span>
                         </div>
                         <div class="flex justify-between gap-4">
-                            <span class="text-secondary">Banner trang ảnh</span>
-                            <span class="font-semibold text-primary">@Model.UploadBannerCount</span>
+                            <span class="text-secondary">Mức khuyến mãi</span>
+                            <span class="font-semibold text-primary">@Model.PromoBannerDiscountPercent%</span>
                         </div>
                     </div>
                 </div>
@@ -205,6 +283,49 @@
     </section>
 </main>
 
+<script>
+(() => {
+    const pieChart = document.getElementById('workflowPieChart');
+    if (!pieChart) return;
 
+    const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    const updatePie = data => {
+        const pending = Number(data.pendingOrders || 0);
+        const processing = Number(data.preparingOrders || 0) + Number(data.deliveringOrders || 0);
+        const completed = Number(data.completedOrders || 0);
+        const promo = Number(data.promoOrdersToday || 0);
+        const outOfStock = @Json.Serialize(Model.OutOfStockProducts);
+        const total = Math.max(pending + processing + completed + outOfStock + promo, 1);
+        const pendingEnd = pending / total * 100;
+        const processingEnd = pendingEnd + processing / total * 100;
+        const completedEnd = processingEnd + completed / total * 100;
+        const outOfStockEnd = completedEnd + outOfStock / total * 100;
+
+        pieChart.style.background = `conic-gradient(#d9a441 0 ${pendingEnd}%, #745853 ${pendingEnd}% ${processingEnd}%, #2e7d32 ${processingEnd}% ${completedEnd}%, #ba1a1a ${completedEnd}% ${outOfStockEnd}%, #7c6bd6 ${outOfStockEnd}% 100%)`;
+        setText('workflowTotalCount', total);
+        setText('workflowPendingCount', pending);
+        setText('workflowProcessingCount', processing);
+        setText('workflowCompletedCount', completed);
+        setText('workflowPromoCount', promo);
+    };
+
+    const pollStatistics = async () => {
+        try {
+            const response = await fetch('/Product/StatisticsSummary', { cache: 'no-store' });
+            if (!response.ok) return;
+            updatePie(await response.json());
+        } catch {
+            // Polling silently retries on the next tick.
+        }
+    };
+
+    window.setInterval(pollStatistics, 5000);
+    pollStatistics();
+})();
+</script>
 
 

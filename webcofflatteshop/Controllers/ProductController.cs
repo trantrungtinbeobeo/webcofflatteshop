@@ -140,8 +140,11 @@ public class ProductController : Controller
     {
         var products = _productRepository.GetAll().ToList();
         var bannerSettings = _bannerRepository.Get();
-        var customerPurchases = _context.Orders
+        var orderWorkflow = GetOrderWorkflowSummary(bannerSettings.PromoBanner);
+        var completedOrders = _context.Orders
             .AsNoTracking()
+            .Where(order => order.Status == "Completed");
+        var customerPurchases = completedOrders
             .GroupBy(order => order.UserId)
             .Select(group => new
             {
@@ -179,12 +182,36 @@ public class ProductController : Controller
                 .Count(),
             HomeBannerCount = bannerSettings.HomeBanners.Count,
             UploadBannerCount = bannerSettings.UploadBanners.Count,
+            PromoBannerIsEnabled = bannerSettings.PromoBanner.IsEnabled,
+            PromoBannerDiscountPercent = bannerSettings.PromoBanner.DiscountPercent,
+            PendingOrders = orderWorkflow.PendingOrders,
+            PreparingOrders = orderWorkflow.PreparingOrders,
+            DeliveringOrders = orderWorkflow.DeliveringOrders,
+            CompletedOrders = orderWorkflow.CompletedOrders,
+            PromoOrdersToday = orderWorkflow.PromoOrdersToday,
             TotalInventoryValue = products.Sum(product => product.Price * product.Stock),
             RecentProducts = products.OrderByDescending(product => product.UpdatedAt).Take(8).ToList(),
             CustomerPurchases = customerPurchases
         };
 
         return View(model);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public IActionResult StatisticsSummary()
+    {
+        var bannerSettings = _bannerRepository.Get();
+        var orderWorkflow = GetOrderWorkflowSummary(bannerSettings.PromoBanner);
+        return Json(new
+        {
+            pendingOrders = orderWorkflow.PendingOrders,
+            preparingOrders = orderWorkflow.PreparingOrders,
+            deliveringOrders = orderWorkflow.DeliveringOrders,
+            completedOrders = orderWorkflow.CompletedOrders,
+            promoOrdersToday = orderWorkflow.PromoOrdersToday,
+            totalWorkflowItems = orderWorkflow.TotalWorkflowItems
+        });
     }
 
     [Authorize(Roles = "Admin")]
@@ -238,13 +265,18 @@ public class ProductController : Controller
     [HttpPost]
     public async Task<IActionResult> UpdatePromoBanner(
         IFormFile? promoFile,
+        string? selectedPromoImage,
         string title,
         string description,
         string? linkUrl,
-        bool isEnabled = false)
+        int? promoProductId,
+        int discountPercent = 0)
     {
         var settings = _bannerRepository.Get();
         settings.PromoBanner ??= new PromoBannerSettings();
+        settings.PromoBanner.ImageUrls ??= new List<string>();
+        settings.PromoBanner.Items ??= new List<PromoBannerItem>();
+        var activeImageUrl = string.IsNullOrWhiteSpace(selectedPromoImage) ? settings.PromoBanner.ImageUrl : selectedPromoImage.Trim();
 
         if (promoFile is not null && promoFile.Length > 0)
         {
@@ -267,7 +299,20 @@ public class ProductController : Controller
                 await promoFile.CopyToAsync(stream);
             }
 
-            settings.PromoBanner.ImageUrl = $"/uploads/banners/{fileName}";
+            var relativePromoImage = $"/uploads/banners/{fileName}";
+            activeImageUrl = relativePromoImage;
+            settings.PromoBanner.ImageUrls.Insert(0, relativePromoImage);
+            settings.PromoBanner.ImageUrls = settings.PromoBanner.ImageUrls
+                .Where(image => !string.IsNullOrWhiteSpace(image))
+                .Distinct()
+                .Take(5)
+                .ToList();
+        }
+
+        if (string.IsNullOrWhiteSpace(activeImageUrl))
+        {
+            TempData["BannerError"] = "Vui lòng chọn hoặc upload ảnh banner khuyến mãi.";
+            return RedirectToAction(nameof(UploadImageList));
         }
 
         settings.PromoBanner.Title = string.IsNullOrWhiteSpace(title) ? "Ưu đãi hôm nay" : title.Trim();
@@ -275,10 +320,58 @@ public class ProductController : Controller
             ? "Theo dõi ưu đãi mới nhất tại Coffe Latte Kawaii."
             : description.Trim();
         settings.PromoBanner.LinkUrl = string.IsNullOrWhiteSpace(linkUrl) ? null : linkUrl.Trim();
-        settings.PromoBanner.IsEnabled = isEnabled;
+        settings.PromoBanner.ProductId = promoProductId;
+        settings.PromoBanner.DiscountPercent = Math.Clamp(discountPercent, 0, 100);
+        settings.PromoBanner.ImageUrl = activeImageUrl;
+        settings.PromoBanner.IsEnabled = true;
+        if (!settings.PromoBanner.ImageUrls.Contains(activeImageUrl))
+        {
+            settings.PromoBanner.ImageUrls.Insert(0, activeImageUrl);
+        }
+
+        var promoItem = settings.PromoBanner.Items.FirstOrDefault(item => item.ImageUrl == activeImageUrl);
+        if (promoItem is null)
+        {
+            promoItem = new PromoBannerItem { ImageUrl = activeImageUrl };
+            settings.PromoBanner.Items.Add(promoItem);
+        }
+
+        promoItem.Title = settings.PromoBanner.Title;
+        promoItem.Description = settings.PromoBanner.Description;
+        promoItem.LinkUrl = settings.PromoBanner.LinkUrl;
+        promoItem.ProductId = settings.PromoBanner.ProductId;
+        promoItem.DiscountPercent = settings.PromoBanner.DiscountPercent;
 
         _bannerRepository.Save(settings);
-        TempData["BannerSuccess"] = "Đã cập nhật banner khuyến mãi.";
+        TempData["BannerSuccess"] = "Đã áp dụng banner khuyến mãi.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    public IActionResult SelectPromoBanner(string bannerUrl)
+    {
+        if (string.IsNullOrWhiteSpace(bannerUrl))
+        {
+            return RedirectToAction(nameof(UploadImageList));
+        }
+
+        var settings = _bannerRepository.Get();
+        settings.PromoBanner ??= new PromoBannerSettings();
+        settings.PromoBanner.Items ??= new List<PromoBannerItem>();
+        var selected = settings.PromoBanner.Items.FirstOrDefault(item => item.ImageUrl == bannerUrl);
+        settings.PromoBanner.ImageUrl = bannerUrl;
+        if (selected is not null)
+        {
+            settings.PromoBanner.Title = selected.Title;
+            settings.PromoBanner.Description = selected.Description;
+            settings.PromoBanner.LinkUrl = selected.LinkUrl;
+            settings.PromoBanner.ProductId = selected.ProductId;
+            settings.PromoBanner.DiscountPercent = selected.DiscountPercent;
+        }
+
+        _bannerRepository.Save(settings);
+        TempData["BannerSuccess"] = "Đã tải dữ liệu banner khuyến mãi vào form chỉnh sửa.";
         return RedirectToAction(nameof(UploadImageList));
     }
 
@@ -299,6 +392,19 @@ public class ProductController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    public IActionResult DisablePromoBanner()
+    {
+        var settings = _bannerRepository.Get();
+        settings.PromoBanner ??= new PromoBannerSettings();
+        settings.PromoBanner.IsEnabled = false;
+        _bannerRepository.Save(settings);
+
+        TempData["BannerSuccess"] = "Đã gỡ banner khuyến mãi khỏi trang chủ, dữ liệu vẫn được giữ lại.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
     public IActionResult DeletePromoBanner()
     {
         var settings = _bannerRepository.Get();
@@ -314,7 +420,25 @@ public class ProductController : Controller
     public IActionResult DeleteBanner(string bannerUrl, string target = "home")
     {
         var settings = _bannerRepository.Get();
-        if (target == "upload") settings.UploadBanners.Remove(bannerUrl);
+        if (target == "promo")
+        {
+            settings.PromoBanner.ImageUrls.Remove(bannerUrl);
+            settings.PromoBanner.Items.RemoveAll(item => item.ImageUrl == bannerUrl);
+            if (settings.PromoBanner.ImageUrl == bannerUrl)
+            {
+                settings.PromoBanner.ImageUrl = settings.PromoBanner.ImageUrls.FirstOrDefault();
+                var selected = settings.PromoBanner.Items.FirstOrDefault(item => item.ImageUrl == settings.PromoBanner.ImageUrl);
+                if (selected is not null)
+                {
+                    settings.PromoBanner.Title = selected.Title;
+                    settings.PromoBanner.Description = selected.Description;
+                    settings.PromoBanner.LinkUrl = selected.LinkUrl;
+                    settings.PromoBanner.ProductId = selected.ProductId;
+                    settings.PromoBanner.DiscountPercent = selected.DiscountPercent;
+                }
+            }
+        }
+        else if (target == "upload") settings.UploadBanners.Remove(bannerUrl);
         else settings.HomeBanners.Remove(bannerUrl);
         _bannerRepository.Save(settings);
         TempData["BannerSuccess"] = "Đã xóa banner.";
@@ -400,6 +524,9 @@ public class ProductController : Controller
             return BadRequest(new { success = false, message = "Giỏ hàng của bạn đang trống." });
         }
 
+        var fulfillmentMethod = request.FulfillmentMethod == "Delivery" ? "Delivery" : "Pickup";
+        var shippingFee = fulfillmentMethod == "Delivery" ? 15000m : 0m;
+
         var user = await _userManager.GetUserAsync(User);
         if (user is null || string.IsNullOrWhiteSpace(user.Email))
         {
@@ -410,10 +537,14 @@ public class ProductController : Controller
         var products = await _context.Products
             .Where(product => productIds.Contains(product.Id))
             .ToDictionaryAsync(product => product.Id);
+        var promoBanner = _bannerRepository.Get().PromoBanner;
         var order = new Order
         {
             UserId = user.Id,
             CustomerEmail = user.Email,
+            FulfillmentMethod = fulfillmentMethod,
+            ShippingFee = shippingFee,
+            Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -434,7 +565,7 @@ public class ProductController : Controller
                 return BadRequest(new { success = false, message = $"Sản phẩm '{product.Name}' chỉ còn {product.Stock} ly trong kho." });
             }
 
-            var unitPrice = ApplySizePrice(product.Price, item.Size);
+            var unitPrice = ApplyPromoPrice(ApplySizePrice(product.Price, item.Size), product.Id, promoBanner);
             var lineTotal = unitPrice * item.Qty;
             product.Stock -= item.Qty;
             order.Items.Add(new OrderItem
@@ -447,8 +578,10 @@ public class ProductController : Controller
                 Sugar = item.Sugar,
                 Size = item.Size
             });
-            order.TotalAmount += lineTotal;
+            order.SubtotalAmount += lineTotal;
         }
+
+        order.TotalAmount = order.SubtotalAmount + order.ShippingFee;
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
@@ -480,11 +613,56 @@ public class ProductController : Controller
             _ => basePrice
         };
     }
+
+    private OrderWorkflowSummary GetOrderWorkflowSummary(PromoBannerSettings promoBanner)
+    {
+        var orders = _context.Orders
+            .AsNoTracking()
+            .Include(order => order.Items)
+            .ToList();
+        var today = DateTime.UtcNow.Date;
+        var promoProductId = promoBanner.ProductId;
+
+        return new OrderWorkflowSummary
+        {
+            PendingOrders = orders.Count(order => string.IsNullOrWhiteSpace(order.Status) || order.Status == "Pending"),
+            PreparingOrders = orders.Count(order => order.Status == "Preparing"),
+            DeliveringOrders = orders.Count(order => order.Status == "Delivering"),
+            CompletedOrders = orders.Count(order => order.Status == "Completed"),
+            PromoOrdersToday = promoProductId is null
+                ? 0
+                : orders.Count(order =>
+                    order.CreatedAt.Date == today &&
+                    order.Items.Any(item => item.ProductId == promoProductId))
+        };
+    }
+
+    private static decimal ApplyPromoPrice(decimal price, int productId, PromoBannerSettings promoBanner)
+    {
+        if (!promoBanner.IsEnabled || promoBanner.ProductId != productId || promoBanner.DiscountPercent <= 0)
+        {
+            return price;
+        }
+
+        var discountPercent = Math.Clamp(promoBanner.DiscountPercent, 0, 100);
+        return Math.Max(decimal.Round(price * (100 - discountPercent) / 100, 0), 0);
+    }
+}
+
+public class OrderWorkflowSummary
+{
+    public int PendingOrders { get; set; }
+    public int PreparingOrders { get; set; }
+    public int DeliveringOrders { get; set; }
+    public int CompletedOrders { get; set; }
+    public int PromoOrdersToday { get; set; }
+    public int TotalWorkflowItems => PendingOrders + PreparingOrders + DeliveringOrders + CompletedOrders + PromoOrdersToday;
 }
 
 public class CheckoutRequest
 {
     public List<CartItemDto> Items { get; set; } = [];
+    public string FulfillmentMethod { get; set; } = "Pickup";
 }
 
 public class CartItemDto

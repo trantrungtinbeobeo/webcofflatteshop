@@ -1,17 +1,25 @@
 ﻿@model webcofflatteshop.Models.PurchaseHistoryViewModel
 @using System.Globalization
 @{
-    ViewData["Title"] = "Lịch sử mua hàng";
+    ViewData["Title"] = "Lịch sử đơn hàng";
     var vi = new CultureInfo("vi-VN");
     var orders = (Model.Orders ?? Enumerable.Empty<webcofflatteshop.Models.Order>())
         .OrderByDescending(order => order.CreatedAt)
         .ToList();
-    var totalSpent = orders.Sum(order => order.TotalAmount);
+    var totalSpent = Model.IsAdmin
+        ? orders.Where(order => order.Status == "Completed").Sum(order => order.TotalAmount)
+        : orders.Sum(order => order.TotalAmount);
     var totalItems = orders.Sum(order => order.Items.Sum(item => item.Quantity));
     var latestOrder = orders.FirstOrDefault();
+    var pendingOrders = orders.Count(order => order.Status != "Completed");
 
     string Money(decimal value) => value.ToString("N0", vi) + " VNĐ";
     string OrderCode(int id) => $"#DH{id:00000}";
+    string StatusText(string? status) => status == "Completed" ? "Hoàn thành" : status == "Preparing" ? "Đang pha chế" : status == "Delivering" ? "Đang giao" : "Chờ xử lý";
+    string StatusIcon(string? status) => status == "Completed" ? "check_circle" : status == "Preparing" ? "local_cafe" : status == "Delivering" ? "local_shipping" : "schedule";
+    int StatusStep(string? status) => status == "Completed" ? 4 : status == "Delivering" ? 3 : status == "Preparing" ? 2 : 1;
+    int StatusPercent(string? status) => StatusStep(status) * 25;
+    string StatusColor(string? status) => status == "Completed" ? "#2e7d32" : status == "Delivering" ? "#8a6a24" : status == "Preparing" ? "#745853" : "#d9a441";
 }
 
 <header class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
@@ -27,7 +35,7 @@
 
         <div class="hidden items-center gap-10 md:flex">
             <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary transition-colors duration-200 hover:text-primary">Menu</a>
-            <a asp-controller="Account" asp-action="PurchaseHistory" class="font-body-md border-b-2 border-primary pb-1 text-primary">Lịch sử</a>
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="font-body-md border-b-2 border-primary pb-1 text-primary">Lịch sử đơn hàng</a>
         </div>
 
         <div class="flex items-center gap-4 md:gap-6">
@@ -50,11 +58,48 @@
     <section class="mb-10 text-center md:text-left">
         <div class="mb-4 inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-1 text-on-secondary-container">
             <span class="h-2 w-2 rounded-full bg-[#6a8e4e]"></span>
-            <span class="font-label-md text-[12px] uppercase tracking-widest">Tài khoản cá nhân</span>
+            <span class="font-label-md text-[12px] uppercase tracking-widest">@(Model.IsAdmin ? "Tài khoản admin" : "Tài khoản cá nhân")</span>
         </div>
-        <h1 class="mb-2 font-display-lg text-display-lg text-primary">Lịch sử mua hàng</h1>
-        <p class="font-body-lg text-secondary">Xem lại những hương vị bạn đã từng thưởng thức tại Coffe Latte Kawaii.</p>
+        <h1 class="mb-2 font-display-lg text-display-lg text-primary">Lịch sử đơn hàng</h1>
+        <p class="font-body-lg text-secondary">@(Model.IsAdmin ? "Theo dõi tiến trình đơn hàng của khách tại Coffe Latte Kawaii." : "Xem lại những đơn hàng bạn đã đặt tại Coffe Latte Kawaii.")</p>
     </section>
+
+    <section id="orderRealtimeNotice" class="mb-8 flex items-center justify-between gap-4 rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
+        <div class="flex items-center gap-3">
+            <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary-container text-primary">
+                <span id="orderRealtimeIcon" class="material-symbols-outlined">@(StatusIcon(latestOrder?.Status))</span>
+                <span id="orderRealtimeBadge" class="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-on-primary">@pendingOrders</span>
+            </div>
+            <div>
+                <p class="font-label-md text-primary">Theo dõi đơn hàng</p>
+                <p id="orderRealtimeText" class="text-caption text-secondary">
+                    @(latestOrder is null
+                        ? "Chưa có đơn hàng nào để theo dõi."
+                        : Model.IsAdmin
+                            ? $"Hiện có {pendingOrders} đơn hàng đang cần xử lý."
+                            : $"Đơn gần nhất {OrderCode(latestOrder.Id)} đang ở trạng thái {StatusText(latestOrder.Status).ToLower(vi)}.")
+                </p>
+            </div>
+        </div>
+        <span class="hidden rounded-full bg-secondary-container px-3 py-1 text-caption font-semibold text-on-secondary-container sm:inline-flex">Real time 5s</span>
+    </section>
+
+    @if (Model.IsAdmin)
+    {
+        <section id="adminOrderNotice" class="mb-8 flex items-center justify-between gap-4 rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-4 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
+            <div class="flex items-center gap-3">
+                <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary-container text-primary">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span id="adminPendingBadge" class="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-on-primary">@pendingOrders</span>
+                </div>
+                <div>
+                    <p class="font-label-md text-primary">Thông báo đơn hàng</p>
+                    <p id="adminOrderNoticeText" class="text-caption text-secondary">Hiện có @pendingOrders đơn hàng đang cần theo dõi.</p>
+                </div>
+            </div>
+            <span class="hidden rounded-full bg-secondary-container px-3 py-1 text-caption font-semibold text-on-secondary-container sm:inline-flex">Real time 5s</span>
+        </section>
+    }
 
     <section class="mb-8 grid grid-cols-1 gap-gutter md:grid-cols-3">
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
@@ -62,11 +107,11 @@
             <p class="mt-2 font-headline-md text-headline-md text-primary">@orders.Count</p>
         </div>
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
-            <p class="text-caption text-secondary">Sản phẩm đã mua</p>
+            <p class="text-caption text-secondary">Sản phẩm trong đơn</p>
             <p class="mt-2 font-headline-md text-headline-md text-primary">@totalItems</p>
         </div>
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
-            <p class="text-caption text-secondary">Tổng chi tiêu</p>
+            <p class="text-caption text-secondary">@(Model.IsAdmin ? "Tổng doanh thu" : "Tổng chi tiêu")</p>
             <p class="mt-2 font-headline-md text-headline-md text-primary">@Money(totalSpent)</p>
         </div>
     </section>
@@ -78,7 +123,8 @@
         </div>
         <div class="flex flex-wrap gap-2">
             <button class="history-filter rounded-full bg-primary px-4 py-2 font-label-md text-on-primary" data-filter="all" type="button">Tất cả</button>
-            <button class="history-filter rounded-full bg-secondary-container px-4 py-2 font-label-md text-on-secondary-container" data-filter="completed" type="button">Đã hoàn thành</button>
+            <button class="history-filter rounded-full bg-secondary-container px-4 py-2 font-label-md text-on-secondary-container" data-filter="completed" type="button">Hoàn thành</button>
+            <button class="history-filter rounded-full bg-secondary-container px-4 py-2 font-label-md text-on-secondary-container" data-filter="pending" type="button">Chờ xử lý</button>
             <button class="history-filter rounded-full bg-secondary-container px-4 py-2 font-label-md text-on-secondary-container" data-filter="today" type="button">Hôm nay</button>
         </div>
         @if (latestOrder is not null)
@@ -92,7 +138,7 @@
         <section class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter text-center shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
             <span class="material-symbols-outlined mb-4 text-[48px] text-outline">receipt_long</span>
             <h2 class="mb-2 font-headline-md text-primary">Bạn chưa có đơn hàng nào</h2>
-            <p class="mb-6 text-body-md text-secondary">Khi bạn đặt món, lịch sử mua hàng sẽ xuất hiện tại đây.</p>
+            <p class="mb-6 text-body-md text-secondary">Khi có đơn đặt hàng, lịch sử đơn hàng sẽ xuất hiện tại đây.</p>
             <a asp-controller="Product" asp-action="Index" class="inline-flex rounded-lg bg-primary px-6 py-3 font-label-md text-on-primary">Khám phá menu</a>
         </section>
     }
@@ -104,19 +150,29 @@
                 var localCreatedAt = order.CreatedAt.ToLocalTime();
                 var itemSummary = string.Join(", ", order.Items.Select(item => $"{item.ProductName} ({item.Size}) x{item.Quantity}"));
                 var searchableText = $"{OrderCode(order.Id)} {itemSummary} {localCreatedAt:dd/MM/yyyy}";
+                var status = string.IsNullOrWhiteSpace(order.Status) ? "Pending" : order.Status;
+                var statusText = StatusText(status);
+                var statusStep = StatusStep(status);
+                var progressPercent = StatusPercent(status);
+                var progressColor = StatusColor(status);
+                var filterStatus = status == "Completed" ? "completed" : "pending";
                 <article class="order-card-hover order-card rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-[0_4px_20px_rgba(62,39,35,0.03)] transition-all duration-300"
+                         data-order-id="@order.Id"
                          data-order="@searchableText"
-                         data-status="completed"
+                         data-status="@filterStatus"
                          data-date="@localCreatedAt.ToString("yyyy-MM-dd")">
                     <div class="mb-6 flex flex-col items-start justify-between gap-4 border-b border-surface-container-high pb-6 md:flex-row md:items-center">
                         <div>
                             <div class="mb-1 flex flex-wrap items-center gap-3">
                                 <span class="font-headline-md text-headline-md text-primary">@OrderCode(order.Id)</span>
-                                <span class="rounded-full bg-secondary-container px-3 py-1 font-label-md text-caption text-on-secondary-container">Đã hoàn thành</span>
+                                <span class="rounded-full bg-secondary-container px-3 py-1 font-label-md text-caption text-on-secondary-container">@statusText</span>
                             </div>
                             <p class="flex items-center gap-2 font-body-md text-secondary">
                                 <span class="material-symbols-outlined text-[18px]">calendar_today</span>
                                 @localCreatedAt.ToString("dd/MM/yyyy HH:mm", vi)
+                            </p>
+                            <p class="mt-1 text-caption text-secondary">
+                                @(order.FulfillmentMethod == "Delivery" ? "Giao tận nhà trong bán kính 1km" : "Nhận thức uống tại cửa hàng")
                             </p>
                         </div>
                         <div class="w-full text-left md:w-auto md:text-right">
@@ -127,8 +183,46 @@
 
                     <div class="flex flex-col items-end justify-between gap-6 md:flex-row">
                         <div class="flex-1">
-                            <p class="mb-2 font-label-md text-on-surface-variant">Sản phẩm đã mua</p>
+                            <p class="mb-2 font-label-md text-on-surface-variant">Sản phẩm trong đơn</p>
                             <p class="font-body-md leading-relaxed text-secondary">@itemSummary</p>
+                            <div class="order-progress mt-5 rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-4"
+                                 data-progress-order-id="@order.Id"
+                                 data-progress-status="@status">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <p class="text-caption font-semibold uppercase tracking-widest text-secondary">Tiến trình đơn hàng</p>
+                                    <span class="order-progress-label rounded-full px-3 py-1 text-caption font-bold text-white" style="background-color:@progressColor">@statusText</span>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute left-0 right-0 top-5 h-1 rounded-full bg-surface-container-high"></div>
+                                    <div class="order-progress-fill absolute left-0 top-5 h-1 rounded-full transition-all duration-700" style="width:@progressPercent%; background-color:@progressColor"></div>
+                                    <div class="relative grid grid-cols-4 gap-2">
+                                        @{
+                                            var stepLabels = new[] { "Chờ xử lý", "Đang pha chế", "Đang giao", "Hoàn thành" };
+                                            var stepIcons = new[] { "schedule", "local_cafe", "local_shipping", "check_circle" };
+                                        }
+                                        @for (var stepIndex = 0; stepIndex < stepLabels.Length; stepIndex++)
+                                        {
+                                            var stepNumber = stepIndex + 1;
+                                            var isActiveStep = stepNumber <= statusStep;
+                                            <div class="text-center">
+                                                <span class="order-progress-icon mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-500 @(isActiveStep ? "border-transparent text-white" : "border-outline-variant bg-surface-container-lowest text-secondary")" data-step="@stepNumber" style="@(isActiveStep ? $"background-color:{progressColor}" : "")">
+                                                    <span class="material-symbols-outlined text-[20px]">@stepIcons[stepIndex]</span>
+                                                </span>
+                                                <span class="mt-2 block text-[11px] font-semibold leading-4 @(isActiveStep ? "text-primary" : "text-secondary")">@stepLabels[stepIndex]</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            @if (Model.IsAdmin)
+                            {
+                                <div class="mt-4 grid grid-cols-4 gap-2 text-center text-[11px] font-semibold text-secondary">
+                                    <span class="rounded-full @(status == "Pending" ? "bg-primary text-on-primary" : "bg-surface-container") px-2 py-1">Chờ</span>
+                                    <span class="rounded-full @(status == "Preparing" ? "bg-primary text-on-primary" : "bg-surface-container") px-2 py-1">Pha chế</span>
+                                    <span class="rounded-full @(status == "Delivering" ? "bg-primary text-on-primary" : "bg-surface-container") px-2 py-1">Giao</span>
+                                    <span class="rounded-full @(status == "Completed" ? "bg-primary text-on-primary" : "bg-surface-container") px-2 py-1">Xong</span>
+                                </div>
+                            }
                         </div>
                         <button class="order-detail-toggle flex whitespace-nowrap rounded-lg bg-primary-container px-6 py-3 font-label-md text-on-primary-container transition-all hover:bg-primary hover:text-white" type="button">
                             Xem chi tiết
@@ -153,6 +247,21 @@
                             <a asp-controller="Product" asp-action="Index" class="rounded-lg border border-outline-variant px-4 py-2 font-label-md text-secondary transition hover:bg-surface-container">Mua thêm món</a>
                             <button type="button" class="rounded-lg bg-secondary-container px-4 py-2 font-label-md text-on-secondary-container" onclick="window.print()">In lịch sử</button>
                         </div>
+                        <div class="mt-4 rounded-lg bg-surface-container-lowest p-3 text-caption text-secondary">
+                            Tạm tính: @Money(order.SubtotalAmount > 0 ? order.SubtotalAmount : order.TotalAmount - order.ShippingFee) |
+                            Ship: @Money(order.ShippingFee) |
+                            Tổng: @Money(order.TotalAmount)
+                        </div>
+                        @if (Model.IsAdmin)
+                        {
+                            <form asp-controller="Account" asp-action="UpdateOrderStatus" method="post" class="mt-4 flex flex-wrap gap-2">
+                                <input type="hidden" name="orderId" value="@order.Id" />
+                                <button name="status" value="Pending" class="rounded-lg border border-outline-variant px-3 py-2 text-caption font-semibold text-secondary hover:bg-surface-container" type="submit">Chờ xử lý</button>
+                                <button name="status" value="Preparing" class="rounded-lg border border-outline-variant px-3 py-2 text-caption font-semibold text-secondary hover:bg-surface-container" type="submit">Đang pha chế</button>
+                                <button name="status" value="Delivering" class="rounded-lg border border-outline-variant px-3 py-2 text-caption font-semibold text-secondary hover:bg-surface-container" type="submit">Đang giao</button>
+                                <button name="status" value="Completed" class="rounded-lg bg-primary px-3 py-2 text-caption font-semibold text-on-primary" type="submit">Hoàn thành</button>
+                            </form>
+                        }
                     </div>
                 </article>
             }
@@ -188,7 +297,7 @@
             <h4 class="mb-6 font-label-md uppercase tracking-wider text-primary">Khám phá</h4>
             <ul class="flex flex-col gap-4 font-body-md text-secondary">
                 <li><a asp-controller="Product" asp-action="Index" class="transition-colors hover:text-primary">Thực đơn đặc sắc</a></li>
-                <li><a asp-controller="Account" asp-action="PurchaseHistory" class="transition-colors hover:text-primary">Lịch sử mua hàng</a></li>
+                <li><a asp-controller="Account" asp-action="PurchaseHistory" class="transition-colors hover:text-primary">Lịch sử đơn hàng</a></li>
             </ul>
         </div>
         <div>
@@ -274,6 +383,115 @@
             card.style.borderColor = 'rgba(210, 180, 140, 0.2)';
         });
     });
+
+    const statusMeta = {
+        Pending: { text: 'Chờ xử lý', icon: 'schedule', color: '#d9a441', step: 1 },
+        Preparing: { text: 'Đang pha chế', icon: 'local_cafe', color: '#745853', step: 2 },
+        Delivering: { text: 'Đang giao', icon: 'local_shipping', color: '#8a6a24', step: 3 },
+        Completed: { text: 'Hoàn thành', icon: 'check_circle', color: '#2e7d32', step: 4 }
+    };
+    const orderRealtimeIcon = document.getElementById('orderRealtimeIcon');
+    const orderRealtimeBadge = document.getElementById('orderRealtimeBadge');
+    const orderRealtimeText = document.getElementById('orderRealtimeText');
+    const orderStatusCache = new Map(cards.map(card => [Number(card.dataset.orderId), card.querySelector('[data-progress-order-id]')?.dataset.progressStatus || 'Pending']));
+    const setOrderProgress = (orderId, status) => {
+        const meta = statusMeta[status] || statusMeta.Pending;
+        const card = document.querySelector(`[data-order-id="${orderId}"]`);
+        const progress = document.querySelector(`[data-progress-order-id="${orderId}"]`);
+        if (!card || !progress) return;
+
+        progress.dataset.progressStatus = status;
+        card.dataset.status = status === 'Completed' ? 'completed' : 'pending';
+        card.querySelector('.rounded-full.bg-secondary-container, .rounded-full.bg-primary')?.replaceChildren(document.createTextNode(meta.text));
+
+        const label = progress.querySelector('.order-progress-label');
+        const fill = progress.querySelector('.order-progress-fill');
+        if (label) {
+            label.textContent = meta.text;
+            label.style.backgroundColor = meta.color;
+        }
+        if (fill) {
+            fill.style.width = `${meta.step * 25}%`;
+            fill.style.backgroundColor = meta.color;
+        }
+
+        progress.querySelectorAll('.order-progress-icon').forEach(icon => {
+            const step = Number(icon.dataset.step);
+            const isActive = step <= meta.step;
+            icon.classList.toggle('border-transparent', isActive);
+            icon.classList.toggle('text-white', isActive);
+            icon.classList.toggle('border-outline-variant', !isActive);
+            icon.classList.toggle('bg-surface-container-lowest', !isActive);
+            icon.classList.toggle('text-secondary', !isActive);
+            icon.style.backgroundColor = isActive ? meta.color : '';
+        });
+    };
+
+    const pollOrderRealtime = async () => {
+        try {
+            const response = await fetch('/Account/OrderRealtimeSummary', { cache: 'no-store' });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (orderRealtimeBadge) orderRealtimeBadge.textContent = data.activeCount ?? 0;
+            const activeMeta = statusMeta[data.latestActiveStatus] || statusMeta.Pending;
+            if (orderRealtimeIcon) orderRealtimeIcon.textContent = activeMeta.icon;
+            if (orderRealtimeText) {
+                if ((data.totalCount ?? 0) === 0) {
+                    orderRealtimeText.textContent = 'Chưa có đơn hàng nào để theo dõi.';
+                } else if (data.isAdmin) {
+                    orderRealtimeText.textContent = `Hiện có ${data.activeCount ?? 0} đơn hàng đang cần xử lý.`;
+                } else if (data.latestActiveOrderId) {
+                    orderRealtimeText.textContent = `Đơn #DH${String(data.latestActiveOrderId).padStart(5, '0')} đang ở trạng thái ${activeMeta.text.toLowerCase()}.`;
+                } else {
+                    orderRealtimeText.textContent = 'Tất cả đơn hàng của bạn đã hoàn thành.';
+                }
+            }
+
+            (data.orders || []).forEach(order => {
+                const oldStatus = orderStatusCache.get(order.id);
+                if (oldStatus && oldStatus !== order.status && orderRealtimeText && !data.isAdmin) {
+                    const meta = statusMeta[order.status] || statusMeta.Pending;
+                    orderRealtimeText.textContent = `Đơn #DH${String(order.id).padStart(5, '0')} vừa chuyển sang ${meta.text.toLowerCase()}.`;
+                }
+                orderStatusCache.set(order.id, order.status);
+                setOrderProgress(order.id, order.status);
+            });
+            applyFilters();
+        } catch {
+            // Polling silently retries on the next tick.
+        }
+    };
+
+    window.setInterval(pollOrderRealtime, 5000);
+    pollOrderRealtime();
+
+    const isAdmin = @Json.Serialize(Model.IsAdmin);
+    if (isAdmin) {
+        const badge = document.getElementById('adminPendingBadge');
+        const noticeText = document.getElementById('adminOrderNoticeText');
+        let latestSeenOrderId = @Json.Serialize(latestOrder?.Id);
+
+        const pollAdminOrders = async () => {
+            try {
+                const response = await fetch('/Account/AdminOrderSummary', { cache: 'no-store' });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (badge) badge.textContent = data.pendingCount;
+                if (noticeText) {
+                    noticeText.textContent = `Hiện có ${data.pendingCount} đơn hàng đang cần theo dõi.`;
+                }
+                if (data.latestOrderId && latestSeenOrderId && data.latestOrderId > latestSeenOrderId && noticeText) {
+                    noticeText.textContent = `Có đơn hàng mới #DH${String(data.latestOrderId).padStart(5, '0')} vừa được tạo.`;
+                }
+                if (data.latestOrderId) latestSeenOrderId = data.latestOrderId;
+            } catch {
+                // Polling silently retries on the next tick.
+            }
+        };
+
+        window.setInterval(pollAdminOrders, 5000);
+        pollAdminOrders();
+    }
 })();
 </script>
 

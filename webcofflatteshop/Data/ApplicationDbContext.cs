@@ -102,6 +102,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(order => order.TotalAmount)
                 .HasColumnType("decimal(18,2)")
                 .IsRequired();
+            entity.Property(order => order.SubtotalAmount)
+                .HasColumnType("decimal(18,2)")
+                .HasDefaultValue(0m)
+                .IsRequired();
+            entity.Property(order => order.ShippingFee)
+                .HasColumnType("decimal(18,2)")
+                .HasDefaultValue(0m)
+                .IsRequired();
+            entity.Property(order => order.FulfillmentMethod)
+                .HasMaxLength(30)
+                .HasDefaultValue("Pickup")
+                .IsRequired();
+            entity.Property(order => order.Status)
+                .HasMaxLength(30)
+                .HasDefaultValue("Pending")
+                .IsRequired();
             entity.Property(order => order.CreatedAt)
                 .HasColumnType("datetime2")
                 .IsRequired();

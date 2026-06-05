@@ -2,10 +2,14 @@
 @{
     ViewData["Title"] = "Ảnh & banner";
     var products = Model.ToList();
-    var uploadBanners = (ViewBag.UploadBanners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
-    var homeBanners = (ViewBag.HomeBanners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
+    var homeBanners = (ViewBag.HomeBanners as IEnumerable<string> ?? Enumerable.Empty<string>()).ToList();
     var promoBanner = ViewBag.PromoBanner as webcofflatteshop.Models.PromoBannerSettings ?? new webcofflatteshop.Models.PromoBannerSettings();
     var promoImage = string.IsNullOrWhiteSpace(promoBanner.ImageUrl) ? "/images/default-coffee.svg" : promoBanner.ImageUrl;
+    var promoImages = (promoBanner.ImageUrls ?? new List<string>()).Where(image => !string.IsNullOrWhiteSpace(image)).ToList();
+    if (!promoImages.Any() && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl))
+    {
+        promoImages.Add(promoBanner.ImageUrl);
+    }
     var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
     string ProductImage(webcofflatteshop.Models.Product product) => string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl;
 }
@@ -24,7 +28,7 @@
         </div>
         <div class="flex items-center gap-unit">
             <partial name="_UserAvatarHeader" />
-            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử đơn hàng</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
             </form>
@@ -85,7 +89,7 @@
                 <span class="material-symbols-outlined text-[12px]">chevron_right</span>
                 <span class="font-semibold text-primary">Ảnh & banner</span>
             </nav>
-            <h1 class="font-headline-md text-primary">Cập nhật hình ảnh sản phẩm và banner</h1>
+            <h1 class="font-headline-md text-primary">Cập nhật hình ảnh sản phẩm và banner khuyến mãi</h1>
         </div>
         <div class="hidden md:block">
             <span class="text-caption font-medium uppercase tracking-widest text-secondary">@today</span>
@@ -104,45 +108,112 @@
             }
 
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
-                <h2 class="mb-5 flex items-center gap-2 font-label-md text-primary">
-                    <span class="material-symbols-outlined text-[20px]">wallpaper</span>
-                    Banner đang dùng
-                </h2>
-                <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+                <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h3 class="mb-3 font-label-md text-secondary">Banner trang chủ</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            @foreach (var banner in homeBanners)
-                            {
-                                <form asp-action="DeleteBanner" method="post" class="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low">
-                                    <input type="hidden" name="bannerUrl" value="@banner" />
-                                    <input type="hidden" name="target" value="home" />
-                                    <img src="@banner" class="h-24 w-full object-cover" alt="Banner trang chủ" />
-                                    <button type="submit" class="flex w-full items-center justify-center gap-1 px-3 py-2 text-caption text-error hover:bg-error-container">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                                        Xóa
-                                    </button>
-                                </form>
-                            }
-                        </div>
+                        <h2 class="flex items-center gap-2 font-label-md text-primary">
+                            <span class="material-symbols-outlined text-[20px]">wallpaper</span>
+                            Banner trang chủ
+                        </h2>
+                        <p class="mt-2 text-caption text-secondary">Tổng @homeBanners.Count banner đang dùng cho carousel trang chủ.</p>
                     </div>
+                </div>
+                <form asp-action="UploadBannerImage" method="post" enctype="multipart/form-data" class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                    <input type="hidden" name="target" value="home" />
                     <div>
-                        <h3 class="mb-3 font-label-md text-secondary">Banner trang ảnh</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            @foreach (var banner in uploadBanners)
-                            {
-                                <form asp-action="DeleteBanner" method="post" class="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low">
-                                    <input type="hidden" name="bannerUrl" value="@banner" />
-                                    <input type="hidden" name="target" value="upload" />
-                                    <img src="@banner" class="h-24 w-full object-cover" alt="Banner trang ảnh" />
-                                    <button type="submit" class="flex w-full items-center justify-center gap-1 px-3 py-2 text-caption text-error hover:bg-error-container">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                                        Xóa
-                                    </button>
-                                </form>
-                            }
+                        <label class="mb-2 block text-caption text-secondary">Upload banner trang chủ</label>
+                        <div class="mb-3 hidden overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low" data-preview-box="home-banner">
+                            <img data-preview-img="home-banner" src="" class="h-32 w-full object-cover" alt="Xem trước banner trang chủ" />
                         </div>
+                        <input type="file" name="bannerFile" data-file-preview="home-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
                     </div>
+                    <button type="submit" class="rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Upload</button>
+                </form>
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+                    @foreach (var banner in homeBanners)
+                    {
+                        <form asp-action="DeleteBanner" method="post" class="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low">
+                            <input type="hidden" name="bannerUrl" value="@banner" />
+                            <input type="hidden" name="target" value="home" />
+                            <img src="@banner" class="h-24 w-full object-cover" alt="Banner trang chủ" />
+                            <button type="submit" class="flex w-full items-center justify-center gap-1 px-3 py-2 text-caption text-error hover:bg-error-container">
+                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                                Xóa
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 class="flex items-center gap-2 font-label-md text-primary">
+                            <span class="material-symbols-outlined text-[20px]">local_offer</span>
+                            Banner khuyến mãi đang thiết lập
+                        </h2>
+                        <p class="mt-2 text-caption text-secondary">Tổng @promoImages.Count banner khuyến mãi. Khung này sẽ hiện giữa bên phải trang chủ khi được áp dụng.</p>
+                    </div>
+                    <span class="w-fit rounded-full px-3 py-1 text-caption font-bold @(promoBanner.IsEnabled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700")">
+                        @(promoBanner.IsEnabled ? "Đang áp dụng" : "Chưa áp dụng")
+                    </span>
+                </div>
+                <div class="mt-5 flex flex-col gap-gutter md:flex-row md:items-center">
+                    <div class="h-28 w-full overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low md:w-60">
+                        <img data-promo-current-img src="@promoImage" class="h-full w-full object-cover" alt="Banner khuyến mãi hiện tại" />
+                    </div>
+                    <div class="flex-1">
+                        <p data-promo-current-title class="font-headline-md text-headline-md text-primary">@promoBanner.Title</p>
+                        <p data-promo-current-description class="mt-1 text-body-md text-secondary">@promoBanner.Description</p>
+                        <p class="mt-2 text-caption text-secondary">
+                            Sản phẩm áp dụng:
+                            <span data-promo-current-product class="font-semibold text-primary">
+                                @(products.FirstOrDefault(product => product.Id == promoBanner.ProductId)?.Name ?? "Chưa chọn")
+                            </span>
+                        </p>
+                        <p data-promo-current-discount class="mt-3 inline-flex items-center rounded-full bg-tertiary-fixed px-3 py-1 text-caption font-bold text-on-tertiary-fixed">
+                            Giảm @promoBanner.DiscountPercent%
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+                    @foreach (var banner in promoImages)
+                    {
+                        var isSelected = banner == promoBanner.ImageUrl;
+                        var promoItem = promoBanner.Items.FirstOrDefault(item => item.ImageUrl == banner);
+                        var itemProductId = promoItem?.ProductId ?? (isSelected ? promoBanner.ProductId : null);
+                        var itemDiscountPercent = promoItem?.DiscountPercent ?? (isSelected ? promoBanner.DiscountPercent : 0);
+                        var itemTitle = promoItem?.Title ?? (isSelected ? promoBanner.Title : "Ưu đãi hôm nay");
+                        var itemDescription = promoItem?.Description ?? (isSelected ? promoBanner.Description : "Theo dõi ưu đãi mới nhất tại Coffe Latte Kawaii.");
+                        var itemLinkUrl = promoItem?.LinkUrl ?? (isSelected ? promoBanner.LinkUrl : null);
+                        var itemProductName = products.FirstOrDefault(product => product.Id == itemProductId)?.Name ?? "Chưa chọn";
+                        <div data-promo-card class="overflow-hidden rounded-lg border @(isSelected ? "border-primary" : "border-outline-variant/30") bg-surface-container-low">
+                            <button type="button"
+                                    class="group relative block h-24 w-full overflow-hidden text-left"
+                                    aria-label="Chỉnh banner khuyến mãi"
+                                    data-promo-select
+                                    data-promo-image="@banner"
+                                    data-promo-title="@itemTitle"
+                                    data-promo-description="@itemDescription"
+                                    data-promo-link-url="@itemLinkUrl"
+                                    data-promo-product-id="@itemProductId"
+                                    data-promo-product-name="@itemProductName"
+                                    data-promo-discount="@itemDiscountPercent">
+                                <img src="@banner" class="h-full w-full object-cover transition duration-200 group-hover:scale-105" alt="Banner khuyến mãi" />
+                                <span class="absolute inset-0 flex items-center justify-center bg-black/0 text-caption font-bold text-white opacity-0 transition duration-200 group-hover:bg-black/45 group-hover:opacity-100">
+                                    Chỉnh
+                                </span>
+                                <span data-promo-selected-badge class="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-on-primary @(isSelected ? "" : "hidden")">Đang chọn</span>
+                            </button>
+                            <form asp-action="DeleteBanner" method="post">
+                                <input type="hidden" name="bannerUrl" value="@banner" />
+                                <input type="hidden" name="target" value="promo" />
+                                <button type="submit" class="flex w-full items-center justify-center gap-1 px-3 py-2 text-caption text-error hover:bg-error-container">
+                                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -191,67 +262,50 @@
 
         <section class="space-y-gutter lg:col-span-4">
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
-                <h2 class="mb-4 flex items-center gap-2 font-label-md text-primary">
-                    <span class="material-symbols-outlined text-[20px]">upload</span>
-                    Upload banner
-                </h2>
-                <form asp-action="UploadBannerImage" method="post" enctype="multipart/form-data" class="mb-5 space-y-3">
-                    <input type="hidden" name="target" value="home" />
-                    <label class="block text-caption text-secondary">Banner trang chủ</label>
-                    <div class="hidden overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low" data-preview-box="home-banner">
-                        <img data-preview-img="home-banner" src="" class="h-32 w-full object-cover" alt="Xem trước banner trang chủ" />
-                    </div>
-                    <input type="file" name="bannerFile" data-file-preview="home-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
-                    <p class="text-caption text-secondary">Chọn tệp để xem trước, sau đó bấm upload.</p>
-                    <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Upload trang chủ</button>
-                </form>
-                <form asp-action="UploadBannerImage" method="post" enctype="multipart/form-data" class="space-y-3">
-                    <input type="hidden" name="target" value="upload" />
-                    <label class="block text-caption text-secondary">Banner trang ảnh</label>
-                    <div class="hidden overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low" data-preview-box="upload-banner">
-                        <img data-preview-img="upload-banner" src="" class="h-32 w-full object-cover" alt="Xem trước banner trang ảnh" />
-                    </div>
-                    <input type="file" name="bannerFile" data-file-preview="upload-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
-                    <p class="text-caption text-secondary">Chọn tệp để xem trước, sau đó bấm upload.</p>
-                    <button type="submit" class="w-full rounded-lg bg-secondary-container px-4 py-3 font-label-md text-on-secondary-container">Upload trang ảnh</button>
-                </form>
-            </div>
-
-            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <h2 class="flex items-center gap-2 font-label-md text-primary">
                         <span class="material-symbols-outlined text-[20px]">campaign</span>
-                        Banner khuyến mãi
+                        Thông tin banner khuyến mãi
                     </h2>
                     <span class="rounded-full px-3 py-1 text-caption font-bold @(promoBanner.IsEnabled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700")">
-                        @(promoBanner.IsEnabled ? "Đang bật" : "Đang tắt")
+                        @(promoBanner.IsEnabled ? "Đang áp dụng" : "Chưa áp dụng")
                     </span>
                 </div>
-                <form asp-action="UpdatePromoBanner" method="post" enctype="multipart/form-data" class="space-y-3">
+                <form asp-action="UpdatePromoBanner" method="post" enctype="multipart/form-data" class="space-y-3" data-promo-form>
+                    <input type="hidden" name="selectedPromoImage" value="@promoBanner.ImageUrl" />
                     <div class="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low">
-                        <img data-preview-img="promo-banner" src="@promoImage" class="h-44 w-full object-cover" alt="Banner khuyến mãi" />
+                        <img data-preview-img="promo-banner" src="@promoImage" class="h-32 w-full object-cover" alt="Banner khuyến mãi" />
                     </div>
                     <label class="block text-caption text-secondary">Ảnh banner khuyến mãi</label>
                     <input type="file" name="promoFile" data-file-preview="promo-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" />
                     <input name="title" value="@promoBanner.Title" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Tiêu đề khuyến mãi" />
+                    <label class="block text-caption text-secondary">Sản phẩm áp dụng khuyến mãi</label>
+                    <select name="promoProductId" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" required>
+                        <option value="">Chọn sản phẩm</option>
+                        @foreach (var product in products.OrderBy(product => product.Name))
+                        {
+                            if (promoBanner.ProductId == product.Id)
+                            {
+                                <option value="@product.Id" selected>@product.Name - @product.Price.ToString("N0")đ</option>
+                            }
+                            else
+                            {
+                                <option value="@product.Id">@product.Name - @product.Price.ToString("N0")đ</option>
+                            }
+                        }
+                    </select>
+                    <label class="block text-caption text-secondary">Phần trăm khuyến mãi</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="discountPercent" value="@promoBanner.DiscountPercent" min="0" max="100" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="0 - 100" />
+                        <span class="rounded-lg bg-secondary-container px-3 py-2 font-label-md text-on-secondary-container">%</span>
+                    </div>
                     <textarea name="description" rows="3" class="w-full resize-none rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Mô tả khuyến mãi">@promoBanner.Description</textarea>
                     <input name="linkUrl" value="@promoBanner.LinkUrl" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Link tùy chọn" />
-                    <label class="flex items-center justify-between rounded-lg bg-surface-container-low px-3 py-3 font-label-md text-primary">
-                        <span>Hiển thị ở menu Admin</span>
-                        <input type="checkbox" name="isEnabled" value="true" class="rounded border-outline-variant text-primary focus:ring-primary" @(promoBanner.IsEnabled ? "checked" : "") />
-                    </label>
-                    <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Lưu banner khuyến mãi</button>
+                    <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Áp dụng</button>
                 </form>
-                <div class="mt-3 grid grid-cols-2 gap-3">
-                    <form asp-action="TogglePromoBanner" method="post">
-                        <button type="submit" class="w-full rounded-lg border border-outline-variant px-4 py-3 font-label-md text-secondary hover:bg-surface-container">
-                            @(promoBanner.IsEnabled ? "Tắt" : "Bật")
-                        </button>
-                    </form>
-                    <form asp-action="DeletePromoBanner" method="post">
-                        <button type="submit" class="w-full rounded-lg border border-error px-4 py-3 font-label-md text-error hover:bg-error-container">Xóa</button>
-                    </form>
-                </div>
+                <form asp-action="DisablePromoBanner" method="post" class="mt-3">
+                    <button type="submit" class="w-full rounded-lg border border-outline-variant px-4 py-3 font-label-md text-secondary hover:bg-surface-container">Không áp dụng</button>
+                </form>
             </div>
 
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container-low p-gutter">
@@ -275,6 +329,59 @@
 
                     img.src = URL.createObjectURL(file);
                     box?.classList.remove('hidden');
+                });
+            });
+
+            const promoForm = document.querySelector('[data-promo-form]');
+            if (!promoForm) return;
+
+            const setFieldValue = (selector, value) => {
+                const field = promoForm.querySelector(selector);
+                if (field) field.value = value ?? '';
+            };
+
+            document.querySelectorAll('[data-promo-select]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const image = button.dataset.promoImage || '';
+                    const title = button.dataset.promoTitle || '';
+                    const description = button.dataset.promoDescription || '';
+                    const linkUrl = button.dataset.promoLinkUrl || '';
+                    const productId = button.dataset.promoProductId || '';
+                    const productName = button.dataset.promoProductName || 'Chưa chọn';
+                    const discount = button.dataset.promoDiscount || '0';
+
+                    setFieldValue('[name="selectedPromoImage"]', image);
+                    setFieldValue('[name="title"]', title);
+                    setFieldValue('[name="description"]', description);
+                    setFieldValue('[name="linkUrl"]', linkUrl);
+                    setFieldValue('[name="promoProductId"]', productId);
+                    setFieldValue('[name="discountPercent"]', discount);
+
+                    const previewImage = promoForm.querySelector('[data-preview-img="promo-banner"]');
+                    if (previewImage) previewImage.src = image;
+
+                    document.querySelectorAll('[data-promo-card]').forEach((card) => {
+                        card.classList.remove('border-primary');
+                        card.classList.add('border-outline-variant/30');
+                    });
+                    const card = button.closest('[data-promo-card]');
+                    card?.classList.add('border-primary');
+                    card?.classList.remove('border-outline-variant/30');
+
+                    document.querySelectorAll('[data-promo-selected-badge]').forEach((badge) => badge.classList.add('hidden'));
+                    button.querySelector('[data-promo-selected-badge]')?.classList.remove('hidden');
+
+                    const currentImage = document.querySelector('[data-promo-current-img]');
+                    const currentTitle = document.querySelector('[data-promo-current-title]');
+                    const currentDescription = document.querySelector('[data-promo-current-description]');
+                    const currentProduct = document.querySelector('[data-promo-current-product]');
+                    const currentDiscount = document.querySelector('[data-promo-current-discount]');
+
+                    if (currentImage) currentImage.src = image;
+                    if (currentTitle) currentTitle.textContent = title;
+                    if (currentDescription) currentDescription.textContent = description;
+                    if (currentProduct) currentProduct.textContent = productName;
+                    if (currentDiscount) currentDiscount.textContent = `Giảm ${discount}%`;
                 });
             });
         })();

@@ -17,7 +17,7 @@
         </div>
         <div class="flex items-center gap-unit">
             <partial name="_UserAvatarHeader" />
-            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử đơn hàng</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
             </form>
@@ -43,7 +43,7 @@
         {
             <div class="mt-gutter rounded-lg border border-outline-variant bg-surface-container-low p-4">
                 <p class="font-label-md text-primary">Danh mục này đang có @Model.Products.Count sản phẩm.</p>
-                <p class="mt-1 text-caption text-secondary">Nếu tiếp tục, toàn bộ sản phẩm thuộc danh mục này sẽ bị xóa. Lịch sử mua hàng vẫn giữ lại tên món và giá đã mua.</p>
+                <p class="mt-1 text-caption text-secondary">Nếu tiếp tục, toàn bộ sản phẩm thuộc danh mục này sẽ bị xóa. Lịch sử đơn hàng vẫn giữ lại tên món và giá đã mua.</p>
             </div>
         }
 

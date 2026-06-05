@@ -1,25 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="405" viewBox="0 0 720 405">
-  <rect width="720" height="405" fill="#fafaf5"/>
-  <g fill="none" stroke="#4b3a30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".46">
-    <path d="M55 74h48v55H55z"/>
-    <path d="M65 74v-14h28v14M103 90h18c12 0 12 24 0 24h-18"/>
-    <path d="M65 129h28M194 54c24 20 12 57-19 58-27 0-40-33-22-53"/>
-    <path d="M166 47c7 18 20 28 39 31M172 124h42M174 124l-12 50h60l-12-50"/>
-    <path d="M308 62h52l-8 82h-36zM318 54h32M323 88h22"/>
-    <path d="M456 74c34-14 62 5 58 35-4 27-43 39-65 18-18-18-13-44 7-53z"/>
-    <path d="M470 91c16-8 34 2 31 18-3 15-25 19-36 8"/>
-    <path d="M604 78h38l11 68h-60zM612 78v-20h22v20M598 108h50"/>
-    <path d="M79 238c25-27 68-10 67 28-1 34-40 51-68 29-21-17-20-41 1-57z"/>
-    <path d="M99 238c8 22 23 34 48 36M98 310h42"/>
-    <path d="M235 234h76l-13 79h-50zM252 258c12 10 25 10 37 0"/>
-    <path d="M393 245h58v56h-58zM405 245v-16h34v16M451 262h16c10 0 10 22 0 22h-16"/>
-    <path d="M562 235h54v78h-54zM572 235c8-14 27-14 35 0M578 260h21"/>
-    <path d="M54 351c16-10 31-10 47 0M64 364c9-7 19-7 27 0M612 352c16-10 31-10 47 0M622 365c9-7 19-7 27 0"/>
-    <path d="M31 180c18-10 35-10 53 0M37 194c14-7 27-7 41 0M351 176c18-10 35-10 53 0M357 190c14-7 27-7 41 0"/>
-    <path d="M142 191c14-18 34-20 48-2-16 10-32 10-48 2zM528 180c14-18 34-20 48-2-16 10-32 10-48 2z"/>
-    <path d="M683 175c10-18 24-18 34 0-10 18-24 18-34 0z"/>
-    <circle cx="338" cy="326" r="11"/>
-    <circle cx="496" cy="342" r="9"/>
-    <circle cx="141" cy="335" r="8"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480">
+  <defs>
+    <symbol id="bean" viewBox="0 0 40 56">
+      <path d="M28.8 4.8c12.7 8.8 9.2 34.9-4.7 44.6C14 56.5 2.4 50.6 1.6 36.9.7 21.9 16 7.8 28.8 4.8Z"/>
+      <path d="M26.7 8.2c-8.8 9.6-9.8 22.4-3.1 38.5"/>
+    </symbol>
+    <symbol id="cup" viewBox="0 0 88 76">
+      <path d="M14 26h46v29c0 9.6-7.7 17-17.2 17H31.2C21.7 72 14 64.4 14 55V26Z"/>
+      <path d="M60 34h10.5c7.5 0 10.8 9.4 5.2 14.6-3.1 2.9-7.2 4.4-15.7 4.4"/>
+      <path d="M22 26c3.3 4.6 8.8 7.2 16 7.2 6.6 0 11.6-2.4 14.6-7.2"/>
+      <path d="M25 16c-3.7-6 4.7-8.3 1.4-13M43 16c-3.7-6 4.7-8.3 1.4-13M61 16c-3.7-6 4.7-8.3 1.4-13"/>
+    </symbol>
+    <symbol id="takeaway" viewBox="0 0 62 92">
+      <path d="M15 22h32l-4 64H19L15 22Z"/>
+      <path d="M19 22l3-14h18l3 14M17 42h28"/>
+      <path d="M23 55c6 5 12 5 18 0"/>
+    </symbol>
+    <symbol id="moka" viewBox="0 0 78 90">
+      <path d="M22 30h35l-5 24H27L22 30Z"/>
+      <path d="M28 54h22l8 30H20l8-30Z"/>
+      <path d="M31 15h17l3 15H28l3-15Z"/>
+      <path d="M57 37h10c7 0 7 16 0 16H55"/>
+      <path d="M29 70h20"/>
+    </symbol>
+    <symbol id="spark" viewBox="0 0 34 34">
+      <path d="M17 2v30M2 17h30M6.4 6.4l21.2 21.2M27.6 6.4 6.4 27.6"/>
+    </symbol>
+  </defs>
+
+  <g fill="none" stroke="#5f4a3d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55">
+    <use href="#cup" x="20" y="18" width="78" height="67" transform="rotate(-7 59 52)"/>
+    <use href="#bean" x="126" y="20" width="26" height="36" transform="rotate(22 139 38)"/>
+    <use href="#takeaway" x="188" y="10" width="54" height="80" transform="rotate(5 215 50)"/>
+    <use href="#bean" x="292" y="28" width="24" height="34" transform="rotate(-32 304 45)"/>
+    <use href="#moka" x="374" y="4" width="62" height="72" transform="rotate(10 405 40)"/>
+
+    <use href="#bean" x="52" y="128" width="30" height="42" transform="rotate(48 67 149)"/>
+    <path d="M126 136c20-12 42-10 61 5M134 151c14-7 29-6 43 2"/>
+    <use href="#cup" x="232" y="118" width="76" height="66" transform="rotate(7 270 151)"/>
+    <use href="#bean" x="354" y="130" width="28" height="39" transform="rotate(-14 368 150)"/>
+    <path d="M414 138c16 9 27 9 43 0M423 154c8 5 17 5 25 0"/>
+
+    <use href="#takeaway" x="18" y="218" width="50" height="74" transform="rotate(-8 43 255)"/>
+    <use href="#bean" x="110" y="232" width="25" height="36" transform="rotate(-47 122 250)"/>
+    <use href="#moka" x="184" y="208" width="64" height="74" transform="rotate(-6 216 245)"/>
+    <use href="#bean" x="282" y="220" width="30" height="42" transform="rotate(28 297 241)"/>
+    <use href="#cup" x="372" y="214" width="76" height="66" transform="rotate(-5 410 247)"/>
+
+    <path d="M30 360c18-12 37-11 56 3M40 376c11-6 23-5 34 1"/>
+    <use href="#cup" x="118" y="334" width="76" height="66" transform="rotate(6 156 367)"/>
+    <use href="#bean" x="236" y="354" width="27" height="38" transform="rotate(-20 249 373)"/>
+    <use href="#takeaway" x="304" y="330" width="52" height="77" transform="rotate(8 330 368)"/>
+    <use href="#bean" x="420" y="350" width="28" height="40" transform="rotate(52 434 370)"/>
+  </g>
+
+  <g fill="none" stroke="#7b6658" stroke-width="1.6" stroke-linecap="round" opacity=".36">
+    <use href="#spark" x="94" y="86" width="18" height="18" transform="rotate(18 103 95)"/>
+    <use href="#spark" x="330" y="86" width="16" height="16" transform="rotate(-8 338 94)"/>
+    <use href="#spark" x="196" y="166" width="18" height="18"/>
+    <use href="#spark" x="88" y="306" width="16" height="16"/>
+    <use href="#spark" x="394" y="304" width="18" height="18" transform="rotate(22 403 313)"/>
+    <circle cx="158" cy="104" r="4"/>
+    <circle cx="342" cy="196" r="4"/>
+    <circle cx="76" cy="416" r="3.5"/>
+    <circle cx="272" cy="320" r="3.5"/>
+    <path d="M17 103c12-6 23-6 35 0M429 98c12-6 23-6 35 0M136 428c12-6 23-6 35 0M398 427c12-6 23-6 35 0"/>
   </g>
 </svg>

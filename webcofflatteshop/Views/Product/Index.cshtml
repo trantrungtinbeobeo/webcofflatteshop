@@ -4,7 +4,14 @@
     ViewData["Title"] = "Menu";
     var banners = (ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
     var promoBanner = ViewBag.PromoBanner as webcofflatteshop.Models.PromoBannerSettings ?? new webcofflatteshop.Models.PromoBannerSettings();
-    var showPromoBanner = promoBanner.IsEnabled && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl);
+    var promoImages = (promoBanner.ImageUrls ?? new List<string>())
+        .Where(image => !string.IsNullOrWhiteSpace(image))
+        .ToList();
+    if (!promoImages.Any() && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl))
+    {
+        promoImages.Add(promoBanner.ImageUrl);
+    }
+    var showPromoBanner = promoBanner.IsEnabled && promoImages.Any();
     var products = Model.Where(product => product.IsAvailable).ToList();
     var categories = products
         .Where(product => product.Category is not null)
@@ -13,6 +20,7 @@
         .OrderBy(category => category.CategoryId)
         .ToList();
     var productPrices = products.ToDictionary(product => product.Name, product => product.Price);
+    var productPricesById = products.ToDictionary(product => product.Id, product => product.Price);
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var fallbackImages = new[]
     {
@@ -29,6 +37,8 @@
         heroBanners.Add("https://lh3.googleusercontent.com/aida-public/AB6AXuCYz6au7BPWgtSSBFiSZJVjAly8L00XGdg-tPC4829OE-DiHnKyKeSY6Mpr26uJoVFOx85UdexJd1d_f9NDIDLMgzO7koTOcWG6FRVJ-OVuTowfYg8k3u2Tp_uyWppOLMczAyclalIUQtggbC15NjCar30VXcyHovsL6YnJSPZIwk2FyHa5CzvUX4qe5cxy2HOC6SWqB7Oys46JRkS7e_o2dt8jPgAGTcwq3ONsQVlR-2338Ikw0xTyKzPDMKNG7dl33GDc4iNo8SE");
     }
     string ImageOf(webcofflatteshop.Models.Product product, int index) => string.IsNullOrWhiteSpace(product.ImageUrl) ? fallbackImages[index % fallbackImages.Length] : product.ImageUrl;
+    bool HasPromo(webcofflatteshop.Models.Product product) => promoBanner.IsEnabled && promoBanner.ProductId == product.Id && promoBanner.DiscountPercent > 0;
+    decimal PromoPrice(decimal price) => Math.Max(decimal.Round(price * (100 - Math.Clamp(promoBanner.DiscountPercent, 0, 100)) / 100, 0), 0);
     string IconOf(string name)
     {
         var lower = name.ToLowerInvariant();
@@ -84,7 +94,7 @@
             {
                 <partial name="_UserAvatarHeader" />
                 <a asp-controller="Account" asp-action="Profile" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Trang cá nhân</a>
-                <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+                <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử đơn hàng</a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
                 </form>
@@ -134,7 +144,7 @@
 </div>
 
 <div id="checkoutNotice" class="fixed inset-0 z-[90] hidden items-center justify-center bg-primary/35 px-margin-mobile backdrop-blur-sm">
-    <div id="checkoutNoticeCard" class="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-gutter text-center shadow-2xl">
+    <div id="checkoutNoticeCard" class="w-full max-w-lg rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-gutter text-center shadow-2xl">
         <div id="checkoutNoticeIconWrap" class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#e8f5e9] text-[#2e7d32]">
             <svg class="h-12 w-12" viewBox="0 0 52 52" aria-hidden="true">
                 <circle cx="26" cy="26" r="23" fill="none" stroke="currentColor" stroke-width="3" opacity=".22"></circle>
@@ -144,6 +154,40 @@
         <h2 id="checkoutNoticeTitle" class="mb-2 font-headline-md text-headline-md text-primary">Đã mua sản phẩm Coffe</h2>
         <p id="checkoutNoticeMessage" class="font-body-md text-secondary">Cảm ơn bạn đã mua hàng tại Coffe Latte Kawaii.</p>
         <button id="checkoutNoticeClose" type="button" class="mt-6 rounded-lg bg-primary px-6 py-3 font-label-md text-on-primary transition hover:brightness-110">Tiếp tục mua hàng</button>
+    </div>
+</div>
+
+<div id="checkoutConfirm" class="fixed inset-0 z-[88] hidden items-center justify-center bg-primary/35 px-margin-mobile backdrop-blur-sm">
+    <div class="w-full max-w-xl rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-gutter shadow-2xl">
+        <div class="mb-5 flex items-center justify-center gap-3 text-center">
+            <partial name="_SakuraLogoMark" />
+            <div>
+                <p class="font-['Noto_Serif'] text-[26px] font-bold leading-none text-primary">Coffe-latteKawaii</p>
+                <p class="mt-1 text-caption text-secondary">Xác nhận đơn hàng</p>
+            </div>
+        </div>
+        <div id="checkoutConfirmItems" class="max-h-56 space-y-3 overflow-y-auto rounded-xl bg-surface-container-low p-4"></div>
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label class="checkout-method rounded-xl border border-primary bg-secondary-container p-4 text-primary">
+                <input type="radio" name="fulfillmentMethod" value="Pickup" class="mr-2 text-primary" checked />
+                <span class="font-label-md">Nhận tại cửa hàng</span>
+                <span class="mt-1 block text-caption text-secondary">Không tính phí ship.</span>
+            </label>
+            <label class="checkout-method rounded-xl border border-outline-variant bg-white p-4 text-primary">
+                <input type="radio" name="fulfillmentMethod" value="Delivery" class="mr-2 text-primary" />
+                <span class="font-label-md">Giao tận nhà 1km</span>
+                <span class="mt-1 block text-caption text-secondary">Phí ship 15.000 VNĐ.</span>
+            </label>
+        </div>
+        <div class="mt-5 space-y-2 rounded-xl bg-surface-container-low p-4">
+            <div class="flex justify-between text-body-md text-secondary"><span>Tạm tính</span><span id="confirmSubtotal">0 VNĐ</span></div>
+            <div class="flex justify-between text-body-md text-secondary"><span>Phí ship</span><span id="confirmShipping">0 VNĐ</span></div>
+            <div class="flex justify-between font-headline-md text-primary"><span>Tổng cộng</span><span id="confirmTotal">0 VNĐ</span></div>
+        </div>
+        <div class="mt-5 grid grid-cols-2 gap-3">
+            <button id="checkoutCancel" type="button" class="rounded-lg border border-outline-variant px-4 py-3 font-label-md text-secondary hover:bg-surface-container">Hủy</button>
+            <button id="checkoutConfirmBtn" type="button" class="rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary hover:brightness-110">Xác nhận</button>
+        </div>
     </div>
 </div>
 
@@ -179,31 +223,50 @@
     </section>
 
     <section class="hide-scrollbar mb-gutter flex gap-4 overflow-x-auto py-2">
+        <button class="category-btn whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft" data-category-id="all">Tất cả</button>
         @foreach (var category in categories)
         {
             <button class="category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container" data-category-id="@category.CategoryId">@category.Name</button>
         }
     </section>
 
-    <section class="grid grid-cols-1 gap-gutter @(showPromoBanner ? "lg:grid-cols-[minmax(0,1fr)_280px]" : "")">
+    <section class="relative">
         <div id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
             @for (var index = 0; index < products.Count; index++)
             {
                 var product = products[index];
                 var imageUrl = ImageOf(product, index);
+                var hasPromo = HasPromo(product);
+                var promoPrice = hasPromo ? PromoPrice(product.Price) : product.Price;
                 <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
-                    <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
+                    <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-discount-percent="@(hasPromo ? promoBanner.DiscountPercent : 0)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
                         <div class="relative aspect-square cursor-pointer overflow-hidden">
                             <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
                             <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
                                 <span class="material-symbols-outlined text-primary">@IconOf(product.Name)</span>
                             </div>
+                            @if (hasPromo)
+                            {
+                                <div class="absolute left-4 top-4 rounded-full bg-tertiary-fixed px-3 py-1 text-caption font-bold text-on-tertiary-fixed">-@promoBanner.DiscountPercent%</div>
+                            }
                         </div>
                         <div class="p-gutter">
                             <h3 class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
                             <p class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
                             <div class="flex items-center justify-between gap-3">
-                                <span class="font-label-md text-lg text-on-tertiary-container">@product.Price.ToString("N0") VNĐ</span>
+                                <span class="font-label-md text-on-tertiary-container">
+                                    @if (hasPromo)
+                                    {
+                                        <span class="block text-[12px] leading-4 text-secondary line-through">@product.Price.ToString("N0") VNĐ</span>
+                                        <span class="flex items-center gap-2 text-base leading-5">
+                                            @promoPrice.ToString("N0") VNĐ
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-lg">@product.Price.ToString("N0") VNĐ</span>
+                                    }
+                                </span>
                                 <span class="rounded-lg bg-primary px-4 py-2 font-label-md text-on-primary transition-soft hover:brightness-125">Thêm vào giỏ</span>
                             </div>
                         </div>
@@ -213,25 +276,49 @@
         </div>
         @if (showPromoBanner)
         {
-            <aside class="hidden lg:block">
-                <div class="sticky top-28 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
+            <aside class="pointer-events-auto fixed right-4 top-1/2 z-40 hidden w-36 -translate-y-1/2 lg:block xl:w-40">
+                <div id="promoCarousel" class="relative overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.08)]" data-interval="5000">
                     @if (!string.IsNullOrWhiteSpace(promoBanner.LinkUrl))
                     {
                         <a href="@promoBanner.LinkUrl" class="block">
-                            <img src="@promoBanner.ImageUrl" alt="@promoBanner.Title" class="h-[360px] w-full object-cover" />
+                            <div class="relative h-[520px] overflow-hidden">
+                                @for (var promoIndex = 0; promoIndex < promoImages.Count; promoIndex++)
+                                {
+                                    <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" />
+                                }
+                            </div>
                         </a>
                     }
                     else
                     {
-                        <img src="@promoBanner.ImageUrl" alt="@promoBanner.Title" class="h-[360px] w-full object-cover" />
+                        <div class="relative h-[520px] overflow-hidden">
+                            @for (var promoIndex = 0; promoIndex < promoImages.Count; promoIndex++)
+                            {
+                                <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" />
+                            }
+                        </div>
                     }
-                    <div class="space-y-2 p-4">
-                        <div class="flex items-center gap-2 text-caption font-bold uppercase tracking-widest text-secondary">
+                    @if (promoImages.Count > 1)
+                    {
+                        <div class="absolute left-1/2 top-[492px] z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-primary/20 px-1.5 py-1 backdrop-blur-sm">
+                            @for (var promoIndex = 0; promoIndex < promoImages.Count; promoIndex++)
+                            {
+                                <span class="promo-dot h-1.5 w-1.5 rounded-full bg-white/50 @(promoIndex == 0 ? "bg-white/90" : "")"></span>
+                            }
+                        </div>
+                    }
+                    <div class="space-y-2 p-2.5">
+                        <div class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-secondary">
                             <span class="material-symbols-outlined text-[16px]">local_offer</span>
                             Khuyến mãi
                         </div>
-                        <h2 class="font-headline-md text-headline-md text-primary">@promoBanner.Title</h2>
-                        <p class="text-caption text-secondary">@promoBanner.Description</p>
+                        <div class="space-y-2">
+                            <h2 class="font-headline-md text-[16px] leading-5 text-primary">@promoBanner.Title</h2>
+                            <span class="inline-flex rounded-full bg-tertiary-fixed px-2 py-1 text-[11px] font-bold text-on-tertiary-fixed">
+                                @(promoBanner.DiscountPercent > 0 ? $"-{promoBanner.DiscountPercent}%" : "Ưu đãi")
+                            </span>
+                        </div>
+                        <p class="text-[11px] leading-4 text-secondary">@promoBanner.Description</p>
                     </div>
                 </div>
             </aside>
@@ -356,7 +443,38 @@
         restartCarousel();
     }
 
+    const promoCarousel = document.getElementById('promoCarousel');
+    if (promoCarousel) {
+        const slides = Array.from(promoCarousel.querySelectorAll('.promo-slide'));
+        const dots = Array.from(promoCarousel.querySelectorAll('.promo-dot'));
+        let activePromoSlide = 0;
+        const showPromoSlide = index => {
+            if (!slides.length) return;
+            activePromoSlide = (index + slides.length) % slides.length;
+            slides.forEach((slide, slideIndex) => {
+                const isActive = slideIndex === activePromoSlide;
+                slide.classList.toggle('opacity-100', isActive);
+                slide.classList.toggle('opacity-0', !isActive);
+            });
+            dots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === activePromoSlide;
+                dot.classList.toggle('bg-white/90', isActive);
+                dot.classList.toggle('bg-white/50', !isActive);
+            });
+        };
+        if (slides.length > 1) {
+            window.setInterval(() => showPromoSlide(activePromoSlide + 1), Number(promoCarousel.dataset.interval || 5000));
+        }
+        showPromoSlide(0);
+    }
+
     const productPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPrices));
+    const productPricesById = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPricesById));
+    const promoPricing = {
+        productId: @Json.Serialize(promoBanner.IsEnabled && promoBanner.DiscountPercent > 0 ? promoBanner.ProductId : null),
+        discountPercent: @Json.Serialize(Math.Clamp(promoBanner.DiscountPercent, 0, 100))
+    };
+    const shippingFee = 15000;
     const isAuthenticated = @Json.Serialize(isAuthenticated);
     const toNumber = value => {
         if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -371,19 +489,31 @@
         return Number.isFinite(parsed) ? parsed : 0;
     };
     const formatCurrency = value => `${toNumber(value).toLocaleString('vi-VN')} VNĐ`;
-    const priceForCartItem = item => {
-        const currentPrice = toNumber(item.price);
-        if (currentPrice > 0) return currentPrice;
-
-        let repairedPrice = toNumber(productPrices[item.name]);
+    const originalPriceForCartItem = item => {
+        let repairedPrice = toNumber(productPricesById[item.productId] ?? productPrices[String(item.productId)] ?? productPrices[item.name]);
         if (item.size === 'Nhỏ') repairedPrice -= 5000;
         else if (item.size === 'Lớn') repairedPrice += 10000;
 
         return Math.max(repairedPrice, 0);
     };
+    const isPromoCartItem = item => promoPricing.productId && Number(item.productId) === Number(promoPricing.productId) && promoPricing.discountPercent > 0;
+    const priceForCartItem = item => {
+        const originalPrice = originalPriceForCartItem(item);
+        if (originalPrice > 0 && isPromoCartItem(item)) {
+            return Math.max(Math.round(originalPrice * (100 - promoPricing.discountPercent) / 100), 0);
+        }
+        if (originalPrice > 0) return originalPrice;
+
+        const currentPrice = toNumber(item.price);
+        if (currentPrice > 0) return currentPrice;
+
+        return 0;
+    };
     const normalizeCart = cart => cart.map(item => ({
         ...item,
         qty: Number.isFinite(Number(item.qty)) && Number(item.qty) > 0 ? Number(item.qty) : 1,
+        originalPrice: originalPriceForCartItem(item),
+        discountPercent: isPromoCartItem(item) ? promoPricing.discountPercent : 0,
         price: priceForCartItem(item)
     }));
     const getCart = () => normalizeCart(JSON.parse(localStorage.getItem('coffee_cart') || '[]'));
@@ -400,6 +530,13 @@
     const checkoutNoticeMessage = document.getElementById('checkoutNoticeMessage');
     const checkoutNoticeIconWrap = document.getElementById('checkoutNoticeIconWrap');
     const checkoutNoticeClose = document.getElementById('checkoutNoticeClose');
+    const checkoutConfirm = document.getElementById('checkoutConfirm');
+    const checkoutConfirmItems = document.getElementById('checkoutConfirmItems');
+    const checkoutCancel = document.getElementById('checkoutCancel');
+    const checkoutConfirmBtn = document.getElementById('checkoutConfirmBtn');
+    const confirmSubtotal = document.getElementById('confirmSubtotal');
+    const confirmShipping = document.getElementById('confirmShipping');
+    const confirmTotal = document.getElementById('confirmTotal');
     let current = null;
     let selectedSugar = "100%";
     let selectedSize = "Vừa";
@@ -439,9 +576,13 @@
                             </button>
                         </div>
                         <p class="text-[12px] text-secondary mt-0.5">Size: ${item.size} | Đường: ${item.sugar}</p>
-                        <p class="font-caption text-caption text-secondary">Số lượng: ${item.qty}</p>
-                        <div class="mt-1 flex items-center justify-between">
-                            <span class="font-body-md text-primary font-medium">${formatCurrency(item.price * item.qty)}</span>
+                        <div class="mt-2 flex items-center justify-between gap-3">
+                            <span class="rounded-full bg-secondary-container px-3 py-1 text-caption font-bold text-on-secondary-container">x${item.qty}</span>
+                            <span class="text-right font-body-md text-primary font-medium">
+                                ${item.discountPercent > 0
+                                    ? `<span class="block text-[11px] text-secondary line-through">${formatCurrency(item.originalPrice * item.qty)}</span><span>${formatCurrency(item.price * item.qty)}</span>`
+                                    : formatCurrency(item.price * item.qty)}
+                            </span>
                         </div>
                     </div>
                 </div>`).join('')
@@ -488,9 +629,56 @@
         checkoutNotice.classList.remove('flex');
     };
 
+    const selectedFulfillmentMethod = () => document.querySelector('input[name="fulfillmentMethod"]:checked')?.value || 'Pickup';
+    const refreshCheckoutConfirmTotals = () => {
+        const cart = getCart();
+        const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+        const deliveryFee = selectedFulfillmentMethod() === 'Delivery' ? shippingFee : 0;
+        confirmSubtotal.textContent = formatCurrency(subtotal);
+        confirmShipping.textContent = formatCurrency(deliveryFee);
+        confirmTotal.textContent = formatCurrency(subtotal + deliveryFee);
+    };
+    const openCheckoutConfirm = () => {
+        const cart = getCart();
+        checkoutConfirmItems.innerHTML = cart.map(item => `
+            <div class="flex items-start justify-between gap-3 border-b border-outline-variant/20 pb-3 last:border-b-0 last:pb-0">
+                <div>
+                    <p class="font-label-md text-primary">${item.name}</p>
+                    <p class="text-caption text-secondary">Size: ${item.size} | Đường: ${item.sugar} | x${item.qty}</p>
+                </div>
+                <div class="text-right font-label-md text-primary">
+                    ${item.discountPercent > 0
+                        ? `<span class="block text-[11px] text-secondary line-through">${formatCurrency(item.originalPrice * item.qty)}</span><span>${formatCurrency(item.price * item.qty)}</span>`
+                        : formatCurrency(item.price * item.qty)}
+                </div>
+            </div>`).join('');
+        refreshCheckoutConfirmTotals();
+        checkoutConfirm.classList.remove('hidden');
+        checkoutConfirm.classList.add('flex');
+    };
+    const closeCheckoutConfirm = () => {
+        checkoutConfirm.classList.add('hidden');
+        checkoutConfirm.classList.remove('flex');
+    };
+
     checkoutNoticeClose.addEventListener('click', hideCheckoutNotice);
     checkoutNotice.addEventListener('click', event => {
         if (event.target === checkoutNotice) hideCheckoutNotice();
+    });
+    checkoutCancel.addEventListener('click', closeCheckoutConfirm);
+    checkoutConfirm.addEventListener('click', event => {
+        if (event.target === checkoutConfirm) closeCheckoutConfirm();
+    });
+    document.querySelectorAll('input[name="fulfillmentMethod"]').forEach(input => {
+        input.addEventListener('change', () => {
+            document.querySelectorAll('.checkout-method').forEach(label => {
+                const isActive = label.querySelector('input')?.checked;
+                label.classList.toggle('border-primary', isActive);
+                label.classList.toggle('bg-secondary-container', isActive);
+                label.classList.toggle('bg-white', !isActive);
+            });
+            refreshCheckoutConfirmTotals();
+        });
     });
 
     cartItems.addEventListener('click', event => {
@@ -513,6 +701,7 @@
                 productId: Number(button.dataset.productId),
                 name: button.dataset.name, 
                 basePrice: basePrice,
+                discountPercent: Math.max(0, Math.min(toNumber(button.dataset.discountPercent), 100)),
                 price: basePrice, 
                 image: button.dataset.image 
             };
@@ -551,12 +740,19 @@
 
     const updateDetailPrice = () => {
         if (!current) return;
-        let finalPrice = current.basePrice;
-        if (selectedSize === "Nhỏ") finalPrice -= 5000;
-        else if (selectedSize === "Lớn") finalPrice += 10000;
+        let originalPrice = current.basePrice;
+        if (selectedSize === "Nhỏ") originalPrice -= 5000;
+        else if (selectedSize === "Lớn") originalPrice += 10000;
+        originalPrice = Math.max(originalPrice, 0);
+
+        const finalPrice = current.discountPercent > 0
+            ? Math.max(Math.round(originalPrice * (100 - current.discountPercent) / 100), 0)
+            : originalPrice;
         
         current.price = finalPrice;
-        document.getElementById('detailPrice').textContent = formatCurrency(finalPrice);
+        document.getElementById('detailPrice').innerHTML = current.discountPercent > 0
+            ? `<div class="flex flex-col leading-tight"><span class="text-sm text-secondary line-through">${formatCurrency(originalPrice)}</span><span>${formatCurrency(finalPrice)}</span></div>`
+            : formatCurrency(finalPrice);
     };
 
     // Click chọn Đường
@@ -605,27 +801,26 @@
     // Lọc danh mục Client-side
     const categoryBtns = document.querySelectorAll('.category-btn');
     const productCards = document.querySelectorAll('.product-card');
-    let activeCategoryId = null;
+    let activeCategoryId = "all";
+
+    const setActiveCategoryButton = activeButton => {
+        categoryBtns.forEach(button => {
+            const isActive = button === activeButton;
+            button.className = isActive
+                ? "category-btn whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft"
+                : "category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container";
+        });
+    };
 
     categoryBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const categoryId = btn.dataset.categoryId;
-            if (activeCategoryId === categoryId) {
-                // Hủy chọn, hiện lại tất cả
-                activeCategoryId = null;
-                categoryBtns.forEach(b => {
-                    b.className = "category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container";
-                });
+            activeCategoryId = categoryId || "all";
+            setActiveCategoryButton(btn);
+
+            if (activeCategoryId === "all") {
                 productCards.forEach(c => c.classList.remove('hidden'));
             } else {
-                activeCategoryId = categoryId;
-                categoryBtns.forEach(b => {
-                    if (b === btn) {
-                        b.className = "category-btn whitespace-nowrap rounded-full bg-primary px-6 py-2 font-label-md text-on-primary transition-soft";
-                    } else {
-                        b.className = "category-btn whitespace-nowrap rounded-full border border-outline bg-surface px-6 py-2 font-label-md text-primary transition-soft hover:bg-secondary-container";
-                    }
-                });
                 productCards.forEach(c => {
                     if (c.dataset.categoryId === categoryId) {
                         c.classList.remove('hidden');
@@ -637,8 +832,7 @@
         });
     });
 
-    // Xử lý sự kiện Checkout (đặt hàng) giảm Stock ở database
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+    document.getElementById('checkoutBtn').addEventListener('click', () => {
         const cart = getCart();
         if (!cart.length) {
             showCheckoutNotice({
@@ -646,6 +840,22 @@
                 message: "Bạn hãy thêm sản phẩm Coffe vào giỏ hàng trước khi mua nhé.",
                 type: "error"
             });
+            return;
+        }
+
+        if (!isAuthenticated) {
+            window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent('/Product/Index');
+            return;
+        }
+
+        openCheckoutConfirm();
+    });
+
+    // Xử lý sự kiện Checkout (đặt hàng) giảm Stock ở database
+    checkoutConfirmBtn.addEventListener('click', async () => {
+        const cart = getCart();
+        if (!cart.length) {
+            closeCheckoutConfirm();
             return;
         }
 
@@ -667,7 +877,8 @@
                         qty: item.qty,
                         sugar: item.sugar,
                         size: item.size
-                    }))
+                    })),
+                    fulfillmentMethod: selectedFulfillmentMethod()
                 })
             });
 
@@ -685,9 +896,10 @@
                     .join(", ");
                 clearCart();
                 closeCart();
+                closeCheckoutConfirm();
                 showCheckoutNotice({
-                    title: "Đã mua sản phẩm Coffe",
-                    message: `Cảm ơn bạn đã mua ${purchasedNames || "sản phẩm"} tại Coffe Latte Kawaii. Đơn hàng của bạn đã được lưu vào lịch sử mua hàng.`,
+                    title: "Đã đặt đơn hàng Coffe",
+                    message: `Cảm ơn bạn đã đặt ${purchasedNames || "sản phẩm"} tại Coffe Latte Kawaii. Đơn hàng đã được chuyển đến Admin theo dõi.`,
                     type: "success"
                 });
             } else {

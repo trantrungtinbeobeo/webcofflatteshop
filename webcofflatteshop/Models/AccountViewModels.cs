@@ -62,6 +62,7 @@ public class RegisterViewModel
 public class PurchaseHistoryViewModel
 {
     public IEnumerable<Order> Orders { get; set; } = [];
+    public bool IsAdmin { get; set; }
 }
 
 public class ProfilePageViewModel

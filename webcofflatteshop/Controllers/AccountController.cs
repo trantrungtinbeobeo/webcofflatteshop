@@ -205,15 +205,109 @@ public class AccountController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         if (user is null) return Challenge();
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
 
-        var orders = await _context.Orders
+        var query = _context.Orders
             .AsNoTracking()
             .Include(order => order.Items)
-            .Where(order => order.UserId == user.Id)
-            .OrderByDescending(order => order.CreatedAt)
-            .ToListAsync();
+            .AsQueryable();
 
-        return View(new PurchaseHistoryViewModel { Orders = orders });
+        if (!isAdmin)
+        {
+            query = query.Where(order => order.UserId == user.Id);
+        }
+
+        var orders = await query.OrderByDescending(order => order.CreatedAt).ToListAsync();
+
+        return View(new PurchaseHistoryViewModel { Orders = orders, IsAdmin = isAdmin });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> AdminOrderSummary()
+    {
+        var pendingCount = await _context.Orders.CountAsync(order => order.Status == null || order.Status != "Completed");
+        var totalCount = await _context.Orders.CountAsync();
+        var latestOrderId = await _context.Orders
+            .OrderByDescending(order => order.CreatedAt)
+            .Select(order => (int?)order.Id)
+            .FirstOrDefaultAsync();
+
+        return Json(new
+        {
+            pendingCount,
+            totalCount,
+            latestOrderId
+        });
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> OrderRealtimeSummary()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+        var query = _context.Orders
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!isAdmin)
+        {
+            query = query.Where(order => order.UserId == user.Id);
+        }
+
+        var orders = await query
+            .OrderByDescending(order => order.CreatedAt)
+            .Select(order => new
+            {
+                id = order.Id,
+                status = string.IsNullOrWhiteSpace(order.Status) ? "Pending" : order.Status,
+                totalAmount = order.TotalAmount,
+                createdAt = order.CreatedAt
+            })
+            .ToListAsync();
+        var activeOrders = orders.Where(order => order.status != "Completed").ToList();
+        var latest = orders.FirstOrDefault();
+        var latestActive = activeOrders.FirstOrDefault();
+
+        return Json(new
+        {
+            isAdmin,
+            totalCount = orders.Count,
+            activeCount = activeOrders.Count,
+            latestOrderId = latest?.id,
+            latestActiveOrderId = latestActive?.id,
+            latestActiveStatus = latestActive?.status,
+            orders = orders.Select(order => new
+            {
+                order.id,
+                order.status
+            })
+        });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateOrderStatus(int orderId, string status)
+    {
+        var allowedStatuses = new[] { "Pending", "Preparing", "Delivering", "Completed" };
+        if (!allowedStatuses.Contains(status))
+        {
+            return RedirectToAction(nameof(PurchaseHistory));
+        }
+
+        var order = await _context.Orders.FindAsync(orderId);
+        if (order is null)
+        {
+            return RedirectToAction(nameof(PurchaseHistory));
+        }
+
+        order.Status = status;
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(PurchaseHistory));
     }
 
     [Authorize]

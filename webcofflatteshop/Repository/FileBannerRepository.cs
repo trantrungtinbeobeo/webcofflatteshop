@@ -33,6 +33,26 @@ public class FileBannerRepository : IBannerRepository
             var json = File.ReadAllText(_filePath);
             var settings = JsonSerializer.Deserialize<BannerSettings>(json) ?? new BannerSettings();
             settings.PromoBanner ??= new PromoBannerSettings();
+            settings.PromoBanner.ImageUrls ??= new List<string>();
+            settings.PromoBanner.Items ??= new List<PromoBannerItem>();
+            if (!string.IsNullOrWhiteSpace(settings.PromoBanner.ImageUrl) && !settings.PromoBanner.ImageUrls.Contains(settings.PromoBanner.ImageUrl))
+            {
+                settings.PromoBanner.ImageUrls.Insert(0, settings.PromoBanner.ImageUrl);
+            }
+            foreach (var image in settings.PromoBanner.ImageUrls.Where(image => !string.IsNullOrWhiteSpace(image)).ToList())
+            {
+                if (settings.PromoBanner.Items.Any(item => item.ImageUrl == image)) continue;
+
+                settings.PromoBanner.Items.Add(new PromoBannerItem
+                {
+                    ImageUrl = image,
+                    ProductId = image == settings.PromoBanner.ImageUrl ? settings.PromoBanner.ProductId : null,
+                    DiscountPercent = image == settings.PromoBanner.ImageUrl ? settings.PromoBanner.DiscountPercent : 0,
+                    Title = settings.PromoBanner.Title,
+                    Description = settings.PromoBanner.Description,
+                    LinkUrl = settings.PromoBanner.LinkUrl
+                });
+            }
             return settings;
         }
     }

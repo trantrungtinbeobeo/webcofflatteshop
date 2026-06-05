@@ -7,7 +7,31 @@
   "UploadBanners": [],
   "PromoBanner": {
     "IsEnabled": true,
-    "ImageUrl": "/uploads/banners/promo-banner-3d333234fe43425ca1f9123803bbaf46.png",
+    "ImageUrl": "/uploads/banners/promo-banner-152cf9af80074553b64a570d5475de76.png",
+    "ImageUrls": [
+      "/uploads/banners/promo-banner-152cf9af80074553b64a570d5475de76.png",
+      "/uploads/banners/promo-banner-ac8c301140eb41b799c5e2dcc75b0f73.png"
+    ],
+    "Items": [
+      {
+        "ImageUrl": "/uploads/banners/promo-banner-152cf9af80074553b64a570d5475de76.png",
+        "ProductId": 4,
+        "DiscountPercent": 20,
+        "Title": "\u01AFu \u0111\u00E3i h\u00F4m nay",
+        "Description": "Theo d\u00F5i \u01B0u \u0111\u00E3i m\u1EDBi nh\u1EA5t t\u1EA1i Coffe Latte Kawaii.",
+        "LinkUrl": null
+      },
+      {
+        "ImageUrl": "/uploads/banners/promo-banner-ac8c301140eb41b799c5e2dcc75b0f73.png",
+        "ProductId": null,
+        "DiscountPercent": 0,
+        "Title": "\u01AFu \u0111\u00E3i h\u00F4m nay",
+        "Description": "Theo d\u00F5i \u01B0u \u0111\u00E3i m\u1EDBi nh\u1EA5t t\u1EA1i Coffe Latte Kawaii.",
+        "LinkUrl": null
+      }
+    ],
+    "ProductId": 4,
+    "DiscountPercent": 20,
     "Title": "\u01AFu \u0111\u00E3i h\u00F4m nay",
     "Description": "Theo d\u00F5i \u01B0u \u0111\u00E3i m\u1EDBi nh\u1EA5t t\u1EA1i Coffe Latte Kawaii.",
     "LinkUrl": null

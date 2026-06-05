@@ -14,6 +14,16 @@ public class Order
 
     public decimal TotalAmount { get; set; }
 
+    public decimal SubtotalAmount { get; set; }
+
+    public decimal ShippingFee { get; set; }
+
+    [StringLength(30)]
+    public string FulfillmentMethod { get; set; } = "Pickup";
+
+    [StringLength(30)]
+    public string Status { get; set; } = "Pending";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<OrderItem> Items { get; set; } = [];
