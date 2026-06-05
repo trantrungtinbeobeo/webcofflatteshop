@@ -1,0 +1,144 @@
+@model webcofflatteshop.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<style>
+    .login-glass {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(210, 180, 140, 0.2);
+        box-shadow: 0 10px 30px rgba(62, 39, 35, 0.05);
+    }
+
+    .login-petal {
+        position: absolute;
+        background: #f48fb1;
+        border-radius: 150% 0 150% 0;
+        pointer-events: none;
+        z-index: 0;
+    }
+</style>
+
+<main class="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-margin-mobile py-section-gap">
+    <div id="petal-container" class="pointer-events-none absolute inset-0 overflow-hidden"></div>
+
+    <section class="login-glass relative z-10 w-full max-w-md rounded-xl p-8 md:p-10">
+        <a asp-controller="Product" asp-action="Index" class="mb-8 flex flex-col items-center text-center">
+            <span class="mb-4 flex items-center justify-center gap-4">
+                <partial name="_SakuraLogoMark" />
+                <span class="font-headline-md text-headline-md">
+                    <span class="text-primary-container">Coffe</span>
+                    <span style="color:#81c784">Latte</span>
+                    <span style="color:#f48fb1">Kawaii</span>
+                </span>
+            </span>
+            <span class="text-caption font-semibold uppercase tracking-[0.2em] text-secondary">Vietnamese Warmth • Japanese Precision</span>
+        </a>
+
+        @if (TempData["LoginMessage"] is string loginMessage)
+        {
+            <div class="mb-5 rounded-lg border border-[#81c784] bg-[#eef8ef] px-4 py-3 text-sm text-primary">@loginMessage</div>
+        }
+
+        <form asp-action="Login" method="post" class="space-y-6">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+
+            <div>
+                <label asp-for="UserName" class="mb-2 block font-label-md text-label-md text-on-surface-variant">Tên đăng nhập</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">person</span>
+                    <input asp-for="UserName" class="w-full rounded-lg border border-outline-variant bg-white py-3 pl-12 pr-4 text-body-md text-on-surface outline-none transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/10" autocomplete="username" placeholder="Nhập tên đăng nhập" />
+                </div>
+                <span asp-validation-for="UserName" class="mt-1 block text-sm text-error"></span>
+            </div>
+
+            <div>
+                <div class="mb-2 flex items-center justify-between">
+                    <label asp-for="Password" class="block font-label-md text-label-md text-on-surface-variant">Mật khẩu</label>
+                    <a asp-action="ForgotPassword" class="text-caption font-semibold text-on-tertiary-fixed-variant transition-colors hover:text-primary">Quên mật khẩu?</a>
+                </div>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+                    <input asp-for="Password" id="passwordInput" class="w-full rounded-lg border border-outline-variant bg-white py-3 pl-12 pr-12 text-body-md text-on-surface outline-none transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/10" autocomplete="current-password" placeholder="••••••••" />
+                    <button id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-outline transition hover:text-primary" type="button" aria-label="Ẩn hiện mật khẩu">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="mt-1 block text-sm text-error"></span>
+            </div>
+
+            <label class="flex items-center text-label-md text-on-surface-variant">
+                <input asp-for="RememberMe" class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary" />
+                <span class="ml-2">Ghi nhớ đăng nhập</span>
+            </label>
+
+            <button class="w-full rounded-lg bg-primary py-4 font-label-md text-label-md text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:bg-primary-container active:scale-95" type="submit">
+                Đăng nhập
+            </button>
+        </form>
+
+        <div class="mt-8 w-full">
+            <div class="relative mb-6 flex items-center justify-center">
+                <div class="w-full border-t border-outline-variant"></div>
+                <span class="absolute bg-surface-container-lowest px-4 text-caption text-outline">Hoặc tiếp tục với</span>
+            </div>
+            <button class="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-outline-variant py-3 opacity-60" type="button" title="Đăng nhập Google sẽ được bổ sung sau">
+                <svg class="h-5 w-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
+                <span class="font-label-md text-label-md">Google</span>
+            </button>
+        </div>
+
+        <p class="mt-10 text-center text-body-md text-on-surface-variant">
+            Chưa có tài khoản?
+            <a asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl" class="ml-1 font-bold text-primary hover:underline">Đăng ký ngay</a>
+        </p>
+    </section>
+
+    <footer class="absolute bottom-6 z-10 px-margin-mobile text-center">
+        <p class="text-caption text-outline">© 2026 Coffe Latte Kawaii. Sự ấm áp từ Sài Gòn & Sự tinh tế từ Kyoto.</p>
+    </footer>
+</main>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const container = document.getElementById('petal-container');
+            const createPetal = () => {
+                if (!container) return;
+
+                const petal = document.createElement('div');
+                const size = Math.random() * 10 + 5;
+                const startOpacity = Math.random() * 0.35 + 0.1;
+                petal.className = 'login-petal';
+                petal.style.width = `${size}px`;
+                petal.style.height = `${size * 1.5}px`;
+                petal.style.left = `${Math.random() * window.innerWidth}px`;
+                petal.style.top = '-20px';
+                petal.style.opacity = startOpacity;
+                container.appendChild(petal);
+
+                petal.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: startOpacity },
+                    { transform: `translate(${Math.random() * 100 - 50}px, ${window.innerHeight + 24}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: (Math.random() * 5 + 7) * 1000,
+                    easing: 'linear'
+                }).onfinish = () => petal.remove();
+            };
+
+            window.setInterval(createPetal, 650);
+            for (let i = 0; i < 10; i += 1) {
+                window.setTimeout(createPetal, Math.random() * 1800);
+            }
+
+            const password = document.getElementById('passwordInput');
+            document.getElementById('togglePassword')?.addEventListener('click', () => {
+                if (!password) return;
+                password.type = password.type === 'password' ? 'text' : 'password';
+            });
+        })();
+    </script>
+}

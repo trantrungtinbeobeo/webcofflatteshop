@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var avatarUrl = currentUser is not null && !string.IsNullOrWhiteSpace(currentUser.ProfileBackgroundImageUrl)
+        ? currentUser.ProfileBackgroundImageUrl
+        : "/images/default-coffee.svg";
+    var displayName = currentUser is null
+        ? "Trang cá nhân"
+        : string.IsNullOrWhiteSpace(currentUser.FullName)
+            ? currentUser.UserName ?? "Trang cá nhân"
+            : currentUser.FullName;
+}
+
+<img src="@avatarUrl" alt="@displayName" class="h-[18px] w-[18px] rounded-full object-cover" />
+

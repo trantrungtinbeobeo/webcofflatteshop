@@ -19,7 +19,8 @@ public class FileBannerRepository : IBannerRepository
             var defaults = new BannerSettings
             {
                 HomeBanners = ["/images/default-coffee.svg", "/images/default-coffee.svg", "/images/default-coffee.svg"],
-                UploadBanners = ["/images/default-coffee.svg", "/images/default-coffee.svg"]
+                UploadBanners = ["/images/default-coffee.svg", "/images/default-coffee.svg"],
+                PromoBanner = new PromoBannerSettings()
             };
             Save(defaults);
         }
@@ -30,7 +31,9 @@ public class FileBannerRepository : IBannerRepository
         lock (_lock)
         {
             var json = File.ReadAllText(_filePath);
-            return JsonSerializer.Deserialize<BannerSettings>(json) ?? new BannerSettings();
+            var settings = JsonSerializer.Deserialize<BannerSettings>(json) ?? new BannerSettings();
+            settings.PromoBanner ??= new PromoBannerSettings();
+            return settings;
         }
     }
 

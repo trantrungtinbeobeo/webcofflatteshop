@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var avatarUrl = currentUser is not null && !string.IsNullOrWhiteSpace(currentUser.ProfileBackgroundImageUrl)
+        ? currentUser.ProfileBackgroundImageUrl
+        : "/images/default-coffee.svg";
+    var displayName = currentUser is null
+        ? string.Empty
+        : string.IsNullOrWhiteSpace(currentUser.FullName)
+            ? currentUser.UserName ?? "Tài khoản"
+            : currentUser.FullName;
+    var roles = currentUser is null ? Array.Empty<string>() : await UserManager.GetRolesAsync(currentUser);
+    var roleText = roles.Any() ? string.Join(", ", roles) : "Customer";
+}
+
+@if (currentUser is not null)
+{
+    <a asp-controller="Account" asp-action="Profile" class="mb-4 flex items-center gap-3 rounded-lg p-1 transition hover:bg-surface-container">
+        <img src="@avatarUrl" alt="@displayName" class="h-10 w-10 rounded-full border-2 border-primary-fixed object-cover" />
+        <span class="min-w-0">
+            <span class="block truncate font-label-md text-primary">@displayName</span>
+            <span class="block truncate text-caption text-secondary">@roleText</span>
+        </span>
+    </a>
+}
+

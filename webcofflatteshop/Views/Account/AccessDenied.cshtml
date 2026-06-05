@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Không có quyền";
+}
+
+<main class="min-h-screen bg-background px-margin-mobile py-section-gap font-body text-on-background md:px-margin-desktop">
+    <section class="mx-auto max-w-lg rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-gutter text-center shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
+        <span class="material-symbols-outlined mb-4 text-[48px] text-error">lock</span>
+        <h1 class="mb-3 font-headline-md text-headline-md text-primary">Bạn không có quyền truy cập</h1>
+        <p class="mb-6 text-body-md text-secondary">Khu vực này chỉ dành cho tài khoản Admin.</p>
+        <a asp-controller="Product" asp-action="Index" class="inline-flex rounded-lg bg-primary px-5 py-3 font-label-md text-on-primary hover:brightness-110">Quay về menu</a>
+    </section>
+</main>

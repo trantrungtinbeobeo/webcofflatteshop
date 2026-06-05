@@ -1,0 +1,48 @@
+﻿@model webcofflatteshop.Models.Category
+@{
+    ViewData["Title"] = "Cập nhật danh mục";
+}
+
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <partial name="_SakuraLogoMark" />
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary transition-colors duration-200 hover:text-primary">Menu</a>
+            <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h1>Cập nhật danh mục</h1>
+
+    <form asp-action="Update" method="post" class="card mt-3 p-4 shadow-sm">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label">Tên danh mục</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+

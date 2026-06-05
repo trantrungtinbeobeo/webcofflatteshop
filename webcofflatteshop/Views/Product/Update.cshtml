@@ -1,40 +1,132 @@
-@model webcofflatteshop.Models.Product
+﻿@model webcofflatteshop.Models.Product
 @{
     ViewData["Title"] = "Sửa sản phẩm";
+    var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
 }
 
-<h2 class="mb-4">Sửa sản phẩm</h2>
-
-<form asp-action="Update" method="post" class="card p-4 shadow-sm coffee-card">
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="ImageUrl" />
-
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <partial name="_SakuraLogoMark" />
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary transition-colors duration-200 hover:text-primary">Menu</a>
+            <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
+            <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
+            </form>
+        </div>
     </div>
+</nav>
 
-    <div class="mb-3">
-        <label asp-for="Price" class="form-label"></label>
-        <input asp-for="Price" type="number" min="1000" step="1000" class="form-control" />
-        <span asp-validation-for="Price" class="text-danger"></span>
-    </div>
+<main class="min-h-screen bg-background p-margin-mobile md:p-margin-desktop">
+    <header class="mx-auto mb-gutter flex max-w-container-max items-end justify-between">
+        <div>
+            <nav class="mb-2 flex items-center gap-2 text-caption text-secondary">
+                <span>Admin</span>
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <a asp-action="Add" class="text-secondary hover:text-primary">Sản phẩm</a>
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <span class="font-semibold text-primary">@Model.Name</span>
+            </nav>
+            <h1 class="font-headline-md text-primary">Sửa sản phẩm</h1>
+        </div>
+        <div class="hidden md:block">
+            <span class="text-caption font-medium uppercase tracking-widest text-secondary">@today</span>
+        </div>
+    </header>
 
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
+    <form asp-action="Update" method="post" class="mx-auto grid max-w-container-max grid-cols-1 gap-gutter lg:grid-cols-12">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ImageUrl" />
+        <input type="hidden" asp-for="CreatedAt" />
 
-    <div class="mb-4">
-        <label asp-for="CategoryId" class="form-label">Category</label>
-        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
-    </div>
+        <section class="space-y-gutter lg:col-span-8">
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-6 flex items-center gap-2 font-label-md text-primary">
+                    <span class="material-symbols-outlined text-[20px]">edit</span>
+                    Thông tin sản phẩm
+                </h2>
+                <div asp-validation-summary="All" class="mb-5 rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+                <div class="space-y-6">
+                    <div>
+                        <label asp-for="Name" class="mb-2 block font-label-md text-secondary">Tên sản phẩm</label>
+                        <input asp-for="Name" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" />
+                        <span asp-validation-for="Name" class="mt-1 block text-sm text-error"></span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+                        <div>
+                            <label asp-for="Price" class="mb-2 block font-label-md text-secondary">Giá bán (VND)</label>
+                            <input asp-for="Price" type="number" min="1000" step="1000" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" />
+                            <span asp-validation-for="Price" class="mt-1 block text-sm text-error"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Stock" class="mb-2 block font-label-md text-secondary">Tồn kho</label>
+                            <input asp-for="Stock" type="number" min="0" step="1" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" />
+                            <span asp-validation-for="Stock" class="mt-1 block text-sm text-error"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label asp-for="CategoryId" class="mb-2 block font-label-md text-secondary">Danh mục</label>
+                        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"></select>
+                    </div>
+                    <div>
+                        <label asp-for="Description" class="mb-2 block font-label-md text-secondary">Mô tả</label>
+                        <textarea asp-for="Description" rows="4" class="w-full resize-none rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
+                        <span asp-validation-for="Description" class="mt-1 block text-sm text-error"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <button type="submit" class="btn btn-coffee">Cập nhật</button>
-</form>
+        <aside class="space-y-gutter lg:col-span-4">
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-4 flex items-center gap-2 font-label-md text-primary">
+                    <span class="material-symbols-outlined text-[20px]">tune</span>
+                    Trạng thái
+                </h2>
+                <div class="space-y-4">
+                    <label class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
+                        <span>
+                            <span class="block font-label-md text-primary">Đang bán</span>
+                            <span class="text-caption text-secondary">Hiển thị trên menu khách hàng</span>
+                        </span>
+                        <input asp-for="IsAvailable" class="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary" />
+                    </label>
+                    <label class="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
+                        <span>
+                            <span class="block font-label-md text-primary">Món nổi bật</span>
+                            <span class="text-caption text-secondary">Đánh dấu món nổi bật</span>
+                        </span>
+                        <input asp-for="IsFeatured" class="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary" />
+                    </label>
+                </div>
+            </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+            <div class="space-y-3">
+                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label-md text-white shadow-lg">
+                    <span class="material-symbols-outlined text-[20px]">save</span>
+                    Cập nhật sản phẩm
+                </button>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="flex w-full items-center justify-center gap-2 rounded-xl border border-error py-3 font-label-md text-error hover:bg-error-container">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                    Xóa sản phẩm
+                </a>
+                <a asp-action="Add" class="block w-full rounded-xl bg-transparent py-4 text-center font-label-md text-secondary transition-all hover:bg-surface-container-high">
+                    Quay lại
+                </a>
+            </div>
+        </aside>
+    </form>
+</main>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+
