@@ -6,10 +6,10 @@
   ],
   "UploadBanners": [],
   "PromoBanner": {
-    "IsEnabled": false,
-    "ImageUrl": null,
+    "IsEnabled": true,
+    "ImageUrl": "/uploads/banners/promo-banner-3d333234fe43425ca1f9123803bbaf46.png",
     "Title": "\u01AFu \u0111\u00E3i h\u00F4m nay",
-    "Description": "C\u1EADp nh\u1EADt banner khuy\u1EBFn m\u00E3i \u0111\u1EC3 Admin theo d\u00F5i nhanh trong menu.",
+    "Description": "Theo d\u00F5i \u01B0u \u0111\u00E3i m\u1EDBi nh\u1EA5t t\u1EA1i Coffe Latte Kawaii.",
     "LinkUrl": null
   }
 }

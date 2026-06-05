@@ -4,7 +4,7 @@
     ViewData["Title"] = "Menu";
     var banners = (ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
     var promoBanner = ViewBag.PromoBanner as webcofflatteshop.Models.PromoBannerSettings ?? new webcofflatteshop.Models.PromoBannerSettings();
-    var showPromoBanner = User.IsInRole("Admin") && promoBanner.IsEnabled && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl);
+    var showPromoBanner = promoBanner.IsEnabled && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl);
     var products = Model.Where(product => product.IsAvailable).ToList();
     var categories = products
         .Where(product => product.Category is not null)
@@ -185,7 +185,7 @@
         }
     </section>
 
-    <section class="grid grid-cols-1 gap-gutter @(showPromoBanner ? "xl:grid-cols-[minmax(0,1fr)_280px]" : "")">
+    <section class="grid grid-cols-1 gap-gutter @(showPromoBanner ? "lg:grid-cols-[minmax(0,1fr)_280px]" : "")">
         <div id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
             @for (var index = 0; index < products.Count; index++)
             {
@@ -213,7 +213,7 @@
         </div>
         @if (showPromoBanner)
         {
-            <aside class="hidden xl:block">
+            <aside class="hidden lg:block">
                 <div class="sticky top-28 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
                     @if (!string.IsNullOrWhiteSpace(promoBanner.LinkUrl))
                     {

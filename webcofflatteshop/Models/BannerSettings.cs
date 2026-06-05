@@ -12,6 +12,6 @@ public class PromoBannerSettings
     public bool IsEnabled { get; set; }
     public string? ImageUrl { get; set; }
     public string Title { get; set; } = "Ưu đãi hôm nay";
-    public string Description { get; set; } = "Cập nhật banner khuyến mãi để Admin theo dõi nhanh trong menu.";
+    public string Description { get; set; } = "Theo dõi ưu đãi mới nhất tại Coffe Latte Kawaii.";
     public string? LinkUrl { get; set; }
 }

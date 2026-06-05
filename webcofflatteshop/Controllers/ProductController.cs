@@ -272,7 +272,7 @@ public class ProductController : Controller
 
         settings.PromoBanner.Title = string.IsNullOrWhiteSpace(title) ? "Ưu đãi hôm nay" : title.Trim();
         settings.PromoBanner.Description = string.IsNullOrWhiteSpace(description)
-            ? "Cập nhật banner khuyến mãi để Admin theo dõi nhanh trong menu."
+            ? "Theo dõi ưu đãi mới nhất tại Coffe Latte Kawaii."
             : description.Trim();
         settings.PromoBanner.LinkUrl = string.IsNullOrWhiteSpace(linkUrl) ? null : linkUrl.Trim();
         settings.PromoBanner.IsEnabled = isEnabled;
