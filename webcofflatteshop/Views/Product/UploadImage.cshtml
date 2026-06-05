@@ -1,4 +1,4 @@
-@model webcofflatteshop.Models.Product
+﻿@model webcofflatteshop.Models.Product
 @{
     ViewData["Title"] = "Sửa ảnh sản phẩm";
     var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
@@ -8,7 +8,7 @@
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
                 <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
             </h1>
@@ -18,6 +18,7 @@
             <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
         </div>
         <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
             <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
@@ -29,7 +30,7 @@
 <aside class="fixed left-0 top-20 z-40 hidden h-[calc(100vh-5rem)] w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
     <div class="mb-section-gap">
         <a asp-controller="Product" asp-action="Index" class="mb-10 flex items-center gap-3 rounded-lg transition hover:opacity-80">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <div>
                 <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
                     <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
@@ -54,16 +55,14 @@
                 <span class="material-symbols-outlined text-[18px]">bar_chart</span>
                 Thống kê
             </a>
+            <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <partial name="_UserAvatarIcon" />
+                Trang cá nhân
+            </a>
         </nav>
     </div>
     <div class="mt-auto border-t border-outline-variant pt-5">
-        <div class="mb-4 flex items-center gap-3">
-            <span class="brand-blossom text-[24px]" aria-hidden="true">✼</span>
-            <div>
-                <p class="font-label-md text-primary">Admin</p>
-                <p class="text-caption text-secondary">Quản trị viên</p>
-            </div>
-        </div>
+        <partial name="_SidebarUserProfile" />
         <form asp-controller="Account" asp-action="Logout" method="post">
             <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-error transition-colors hover:bg-error-container">
                 <span class="material-symbols-outlined text-[18px]">logout</span>
@@ -112,10 +111,13 @@
                 </h2>
                 <form asp-action="UploadImage" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="space-y-4">
                     <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
+                    <div class="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-low">
+                        <img id="productImagePreview" src="@imageUrl" class="h-56 w-full object-cover" alt="Xem trước ảnh sản phẩm" />
+                    </div>
                     <div>
                         <label class="mb-2 block font-label-md text-secondary">Chọn ảnh mới</label>
-                        <input type="file" name="imageFile" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp" required />
-                        <p class="mt-2 text-caption text-secondary">Hỗ trợ JPG, PNG, WEBP. Preview được giới hạn để không phóng toàn màn hình.</p>
+                        <input id="productImageInput" type="file" name="imageFile" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp" required />
+                        <p class="mt-2 text-caption text-secondary">Chọn tệp để xem trước, sau đó bấm Upload / sửa ảnh để xác nhận.</p>
                     </div>
                     <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label-md text-white shadow-lg">
                         <span class="material-symbols-outlined text-[20px]">save</span>
@@ -133,3 +135,22 @@
         </aside>
     </section>
 </main>
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.getElementById('productImageInput');
+            const preview = document.getElementById('productImagePreview');
+            input?.addEventListener('change', () => {
+                const file = input.files?.[0];
+                if (!file || !preview) return;
+
+                preview.src = URL.createObjectURL(file);
+            });
+        })();
+    </script>
+}
+
+
+
+

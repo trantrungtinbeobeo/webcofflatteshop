@@ -30,6 +30,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(user => user.Address)
                 .HasMaxLength(300)
                 .IsRequired();
+            entity.Property(user => user.ProfileBackgroundImageUrl)
+                .HasMaxLength(300);
+            entity.Property(user => user.PendingEmail)
+                .HasMaxLength(256);
+            entity.Property(user => user.EmailVerificationCode)
+                .HasMaxLength(10);
+            entity.Property(user => user.EmailVerificationCodeExpiresAt)
+                .HasColumnType("datetime2");
+            entity.Property(user => user.EmailVerificationCodeSentAt)
+                .HasColumnType("datetime2");
         });
 
         modelBuilder.Entity<Category>(entity =>

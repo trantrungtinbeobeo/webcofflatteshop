@@ -1,4 +1,15 @@
 {
-  "HomeBanners": [],
-  "UploadBanners": []
+  "HomeBanners": [
+    "/uploads/banners/banner-home-9f2a7d3ab3664498b3f0702ab8f225a6.png",
+    "/uploads/banners/banner-home-35a90ec19dbf441fa865854698c91e93.png",
+    "/uploads/banners/banner-home-001705eac1ba4d08bf27d8557095f7d6.png"
+  ],
+  "UploadBanners": [],
+  "PromoBanner": {
+    "IsEnabled": false,
+    "ImageUrl": null,
+    "Title": "\u01AFu \u0111\u00E3i h\u00F4m nay",
+    "Description": "C\u1EADp nh\u1EADt banner khuy\u1EBFn m\u00E3i \u0111\u1EC3 Admin theo d\u00F5i nhanh trong menu.",
+    "LinkUrl": null
+  }
 }

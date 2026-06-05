@@ -1,4 +1,4 @@
-@model webcofflatteshop.Models.RegisterViewModel
+﻿@model webcofflatteshop.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Đăng ký";
 }
@@ -6,7 +6,7 @@
 <main class="min-h-screen bg-background px-margin-mobile py-section-gap font-body text-on-background md:px-margin-desktop">
     <section class="mx-auto max-w-xl rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-gutter shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
         <a asp-controller="Product" asp-action="Index" class="mb-8 flex items-center gap-3">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <span class="font-['Noto_Serif'] text-[28px] font-bold leading-none">
                 <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
             </span>
@@ -56,3 +56,4 @@
 </main>
 
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+

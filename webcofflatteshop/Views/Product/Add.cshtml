@@ -9,7 +9,7 @@
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
                 <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
             </h1>
@@ -19,6 +19,7 @@
             <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
         </div>
         <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
             <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
@@ -30,7 +31,7 @@
 <aside class="fixed left-0 top-20 z-40 hidden h-[calc(100vh-5rem)] w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
     <div class="mb-section-gap">
         <a asp-controller="Product" asp-action="Index" class="mb-10 flex items-center gap-3 rounded-lg transition hover:opacity-80">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <div>
                 <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
                     <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
@@ -55,16 +56,14 @@
                 <span class="material-symbols-outlined text-[18px]">bar_chart</span>
                 Thống kê
             </a>
+            <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <partial name="_UserAvatarIcon" />
+                Trang cá nhân
+            </a>
         </nav>
     </div>
     <div class="mt-auto border-t border-outline-variant pt-5">
-        <div class="mb-4 flex items-center gap-3">
-            <span class="brand-blossom text-[24px]" aria-hidden="true">✼</span>
-            <div>
-                <p class="font-label-md text-primary">Admin</p>
-                <p class="text-caption text-secondary">Quản trị viên</p>
-            </div>
-        </div>
+        <partial name="_SidebarUserProfile" />
         <form asp-controller="Account" asp-action="Logout" method="post">
             <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-error transition-colors hover:bg-error-container">
                 <span class="material-symbols-outlined text-[18px]">logout</span>
@@ -109,7 +108,7 @@
                     <span class="material-symbols-outlined text-[20px]">info</span>
                     Thông tin cơ bản
                 </h2>
-                <form asp-action="Add" method="post" class="space-y-6" id="product-form">
+                <form asp-action="Add" method="post" enctype="multipart/form-data" class="space-y-6" id="product-form">
                     <div asp-validation-summary="All" class="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"></div>
                     <div>
                         <label asp-for="Name" class="mb-2 block font-label-md text-secondary">Tên sản phẩm</label>
@@ -170,13 +169,14 @@
                     <span class="material-symbols-outlined text-[20px]">image</span>
                     Hình ảnh sản phẩm
                 </h2>
-                <div class="relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-outline-variant/50 transition-colors hover:bg-surface-container">
+                <div class="relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-xl border-2 border-dashed border-outline-variant/50 transition-colors hover:bg-surface-container">
+                    <img id="newProductImagePreview" src="" alt="Xem trước ảnh sản phẩm" class="absolute inset-0 hidden h-full w-full object-cover" />
                     <span class="material-symbols-outlined text-[48px] text-outline">add_photo_alternate</span>
                     <div class="text-center">
                         <p class="font-label-md text-secondary">Nhấp để tải ảnh lên</p>
-                        <p class="px-4 text-caption text-outline">Định dạng JPG, PNG (Tỉ lệ 1:1, Tối thiểu 800x800px)</p>
+                        <p class="px-4 text-caption text-outline">Chọn tệp để xem trước, sau đó bấm lưu sản phẩm.</p>
                     </div>
-                    <input class="absolute inset-0 cursor-pointer opacity-0" type="file" />
+                    <input id="newProductImageInput" name="imageFile" form="product-form" class="absolute inset-0 cursor-pointer opacity-0" type="file" accept=".jpg,.jpeg,.png,.webp" />
                 </div>
             </div>
 
@@ -264,7 +264,7 @@
 
 <footer class="mt-section-gap flex flex-col items-center gap-gutter bg-surface-container px-margin-desktop py-section-gap md:ml-[280px]">
     <div class="flex flex-col items-center gap-4">
-        <span class="brand-blossom text-[56px]" aria-hidden="true">✼</span>
+        <partial name="_SakuraLogoMark" />
         <span class="font-display-lg text-4xl font-bold tracking-tight">
             <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
         </span>
@@ -274,10 +274,29 @@
         <a class="font-body-md text-secondary transition-colors hover:text-on-tertiary-container" href="#">Điều khoản dịch vụ</a>
         <a class="font-body-md text-secondary transition-colors hover:text-on-tertiary-container" href="#">Chính sách bảo mật</a>
     </div>
-    <p class="text-caption text-secondary">© 2024 Coffetinbeo. A Saigon-Kyoto Fusion.</p>
+    <p class="text-caption text-secondary">© 2026 Coffe Latte Kawaii. A Saigon-Kyoto Fusion.</p>
 </footer>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const input = document.getElementById('newProductImageInput');
+            const preview = document.getElementById('newProductImagePreview');
+            input?.addEventListener('change', () => {
+                const file = input.files?.[0];
+                if (!file || !preview) return;
+
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            });
+        })();
+    </script>
+}
+
+
+
+
 
 
 

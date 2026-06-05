@@ -37,7 +37,9 @@ public class ProductController : Controller
     public IActionResult Index()
     {
         var products = _productRepository.GetAll();
-        ViewBag.Banners = _bannerRepository.Get().HomeBanners;
+        var bannerSettings = _bannerRepository.Get();
+        ViewBag.Banners = bannerSettings.HomeBanners;
+        ViewBag.PromoBanner = bannerSettings.PromoBanner;
         return View(products);
     }
 
@@ -50,8 +52,13 @@ public class ProductController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public IActionResult Add(Product product)
+    public async Task<IActionResult> Add(Product product, IFormFile? imageFile)
     {
+        if (imageFile is not null && imageFile.Length > 0 && !IsAllowedProductImage(imageFile))
+        {
+            ModelState.AddModelError(string.Empty, "Ảnh sản phẩm chỉ hỗ trợ JPG, PNG, WEBP.");
+        }
+
         if (!ModelState.IsValid)
         {
             LoadAdminProductFormData();
@@ -59,6 +66,12 @@ public class ProductController : Controller
         }
 
         _productRepository.Add(product);
+        if (imageFile is not null && imageFile.Length > 0)
+        {
+            product.ImageUrl = await SaveProductImageAsync(imageFile, product.Id);
+            _productRepository.Update(product);
+        }
+
         TempData["ProductSuccess"] = "Đã thêm sản phẩm mới.";
         return RedirectToAction(nameof(Add));
     }
@@ -118,6 +131,7 @@ public class ProductController : Controller
         var bannerSettings = _bannerRepository.Get();
         ViewBag.UploadBanners = bannerSettings.UploadBanners;
         ViewBag.HomeBanners = bannerSettings.HomeBanners;
+        ViewBag.PromoBanner = bannerSettings.PromoBanner;
         return View(products);
     }
 
@@ -222,6 +236,81 @@ public class ProductController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    public async Task<IActionResult> UpdatePromoBanner(
+        IFormFile? promoFile,
+        string title,
+        string description,
+        string? linkUrl,
+        bool isEnabled = false)
+    {
+        var settings = _bannerRepository.Get();
+        settings.PromoBanner ??= new PromoBannerSettings();
+
+        if (promoFile is not null && promoFile.Length > 0)
+        {
+            var extension = Path.GetExtension(promoFile.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".svg" };
+            if (!allowed.Contains(extension))
+            {
+                TempData["BannerError"] = "Banner khuyến mãi chỉ hỗ trợ JPG, PNG, WEBP, SVG.";
+                return RedirectToAction(nameof(UploadImageList));
+            }
+
+            var bannerPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "banners");
+            Directory.CreateDirectory(bannerPath);
+
+            var fileName = $"promo-banner-{Guid.NewGuid():N}{extension}";
+            var fullPath = Path.Combine(bannerPath, fileName);
+
+            await using (var stream = System.IO.File.Create(fullPath))
+            {
+                await promoFile.CopyToAsync(stream);
+            }
+
+            settings.PromoBanner.ImageUrl = $"/uploads/banners/{fileName}";
+        }
+
+        settings.PromoBanner.Title = string.IsNullOrWhiteSpace(title) ? "Ưu đãi hôm nay" : title.Trim();
+        settings.PromoBanner.Description = string.IsNullOrWhiteSpace(description)
+            ? "Cập nhật banner khuyến mãi để Admin theo dõi nhanh trong menu."
+            : description.Trim();
+        settings.PromoBanner.LinkUrl = string.IsNullOrWhiteSpace(linkUrl) ? null : linkUrl.Trim();
+        settings.PromoBanner.IsEnabled = isEnabled;
+
+        _bannerRepository.Save(settings);
+        TempData["BannerSuccess"] = "Đã cập nhật banner khuyến mãi.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    public IActionResult TogglePromoBanner()
+    {
+        var settings = _bannerRepository.Get();
+        settings.PromoBanner ??= new PromoBannerSettings();
+        settings.PromoBanner.IsEnabled = !settings.PromoBanner.IsEnabled;
+        _bannerRepository.Save(settings);
+
+        TempData["BannerSuccess"] = settings.PromoBanner.IsEnabled
+            ? "Đã bật banner khuyến mãi."
+            : "Đã tắt banner khuyến mãi.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    public IActionResult DeletePromoBanner()
+    {
+        var settings = _bannerRepository.Get();
+        settings.PromoBanner = new PromoBannerSettings();
+        _bannerRepository.Save(settings);
+
+        TempData["BannerSuccess"] = "Đã xóa banner khuyến mãi.";
+        return RedirectToAction(nameof(UploadImageList));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
     public IActionResult DeleteBanner(string bannerUrl, string target = "home")
     {
         var settings = _bannerRepository.Get();
@@ -247,7 +336,7 @@ public class ProductController : Controller
         var product = _productRepository.GetById(id);
         if (product is null) return NotFound();
         product.ImageUrl = null;
-        _productRepository.Update(product);
+        _context.SaveChanges();
         TempData["SuccessMessage"] = "Đã xóa ảnh sản phẩm.";
         return RedirectToAction(nameof(UploadImage), new { id });
     }
@@ -265,18 +354,26 @@ public class ProductController : Controller
             return View(product);
         }
 
-        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        if (!allowed.Contains(extension))
+        if (!IsAllowedProductImage(imageFile))
         {
             ModelState.AddModelError(string.Empty, "Chỉ hỗ trợ JPG, PNG, WEBP.");
             return View(product);
         }
 
+        product.ImageUrl = await SaveProductImageAsync(imageFile, id);
+        _productRepository.Update(product);
+
+        TempData["SuccessMessage"] = "Tải ảnh sản phẩm thành công.";
+        return RedirectToAction(nameof(UploadImage), new { id });
+    }
+
+    private async Task<string> SaveProductImageAsync(IFormFile imageFile, int productId)
+    {
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
         var uploadsPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "products");
         Directory.CreateDirectory(uploadsPath);
 
-        var fileName = $"product-{id}-{Guid.NewGuid():N}{extension}";
+        var fileName = $"product-{productId}-{Guid.NewGuid():N}{extension}";
         var fullPath = Path.Combine(uploadsPath, fileName);
 
         await using (var stream = System.IO.File.Create(fullPath))
@@ -284,11 +381,14 @@ public class ProductController : Controller
             await imageFile.CopyToAsync(stream);
         }
 
-        product.ImageUrl = $"/uploads/products/{fileName}";
-        _productRepository.Update(product);
+        return $"/uploads/products/{fileName}";
+    }
 
-        TempData["SuccessMessage"] = "Tải ảnh sản phẩm thành công.";
-        return RedirectToAction(nameof(UploadImage), new { id });
+    private static bool IsAllowedProductImage(IFormFile imageFile)
+    {
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        return allowed.Contains(extension);
     }
 
     [Authorize]

@@ -1,8 +1,10 @@
-@model IEnumerable<webcofflatteshop.Models.Product>
+﻿@model IEnumerable<webcofflatteshop.Models.Product>
 @using System.Globalization
 @{
     ViewData["Title"] = "Menu";
     var banners = (ViewBag.Banners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
+    var promoBanner = ViewBag.PromoBanner as webcofflatteshop.Models.PromoBannerSettings ?? new webcofflatteshop.Models.PromoBannerSettings();
+    var showPromoBanner = User.IsInRole("Admin") && promoBanner.IsEnabled && !string.IsNullOrWhiteSpace(promoBanner.ImageUrl);
     var products = Model.Where(product => product.IsAvailable).ToList();
     var categories = products
         .Where(product => product.Category is not null)
@@ -21,7 +23,11 @@
         "https://lh3.googleusercontent.com/aida-public/AB6AXuDsQnyD3MI4XU1J1XLR0ru5Hchbpf9MSdmqBFR03mb2YYCugbScIuXnVfvDp_q55hoQa1qpeJfPOIDpnyxp7mB9uWGalzUCA_rIbY4gcPBj9HRt4wt0nYAmUFo7th4eVcdmUcgJaTrapesRYILeBdMXaGot0pNMRaWE0YZ8xg2NBdsTepWryRM2apVdX-a91KES4tBe_RbuN3JNEdfzwTP7AV-x8dpY5kmvKlzOdJPBiRzi8EdXEH-Ioy6LUCZcxkaAXY8yBvRaTHE",
         "https://lh3.googleusercontent.com/aida-public/AB6AXuAhafbIE7r_VkZsiBATwLEjPJslmtyfCByAAIF_DV9r2so2ctxZYzfqXw0TBVfOnm01TPKLiTe3Qz7N1qSDwh4pFDBRpfgxbfrG-mMQ6GDOv7LVw0svi29iiyP81sRFZ9ZimA053h2PLktOF4H1f8-8rAXb5XO812r3MsiJ46bzm6w0RndiMjlb_Hzy_917eZWbTzZgpupMcrje2jPSvWbAHU6JmYRS1bj1oR2m0S13O_R4_nc6neqTjsaqEsBE3KlmK-v_JPcsOPs"
     };
-    var heroImage = banners.FirstOrDefault(b => !string.IsNullOrWhiteSpace(b)) ?? "https://lh3.googleusercontent.com/aida-public/AB6AXuCYz6au7BPWgtSSBFiSZJVjAly8L00XGdg-tPC4829OE-DiHnKyKeSY6Mpr26uJoVFOx85UdexJd1d_f9NDIDLMgzO7koTOcWG6FRVJ-OVuTowfYg8k3u2Tp_uyWppOLMczAyclalIUQtggbC15NjCar30VXcyHovsL6YnJSPZIwk2FyHa5CzvUX4qe5cxy2HOC6SWqB7Oys46JRkS7e_o2dt8jPgAGTcwq3ONsQVlR-2338Ikw0xTyKzPDMKNG7dl33GDc4iNo8SE";
+    var heroBanners = banners.Where(banner => !string.IsNullOrWhiteSpace(banner)).ToList();
+    if (!heroBanners.Any())
+    {
+        heroBanners.Add("https://lh3.googleusercontent.com/aida-public/AB6AXuCYz6au7BPWgtSSBFiSZJVjAly8L00XGdg-tPC4829OE-DiHnKyKeSY6Mpr26uJoVFOx85UdexJd1d_f9NDIDLMgzO7koTOcWG6FRVJ-OVuTowfYg8k3u2Tp_uyWppOLMczAyclalIUQtggbC15NjCar30VXcyHovsL6YnJSPZIwk2FyHa5CzvUX4qe5cxy2HOC6SWqB7Oys46JRkS7e_o2dt8jPgAGTcwq3ONsQVlR-2338Ikw0xTyKzPDMKNG7dl33GDc4iNo8SE");
+    }
     string ImageOf(webcofflatteshop.Models.Product product, int index) => string.IsNullOrWhiteSpace(product.ImageUrl) ? fallbackImages[index % fallbackImages.Length] : product.ImageUrl;
     string IconOf(string name)
     {
@@ -61,7 +67,7 @@
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <div class="mx-auto flex w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
                 <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
             </h1>
@@ -76,6 +82,8 @@
         <div class="flex items-center gap-unit">
             @if (isAuthenticated)
             {
+                <partial name="_UserAvatarHeader" />
+                <a asp-controller="Account" asp-action="Profile" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Trang cá nhân</a>
                 <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
@@ -140,16 +148,34 @@
 </div>
 
 <main class="mx-auto max-w-container-max px-margin-mobile py-gutter md:px-margin-desktop">
-    <section class="group relative mb-section-gap h-[400px] overflow-hidden rounded-xl">
+    <section id="heroCarousel" class="group relative mb-section-gap h-[400px] overflow-hidden rounded-xl" data-interval="5000">
         <div class="relative h-full overflow-hidden">
-            <img class="h-full w-full object-cover" src="@heroImage" alt="Coffee hero" />
-            <div class="hero-gradient absolute inset-0 flex items-end p-gutter">
+            @for (var bannerIndex = 0; bannerIndex < heroBanners.Count; bannerIndex++)
+            {
+                <img class="hero-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(bannerIndex == 0 ? "is-active opacity-100" : "")" src="@heroBanners[bannerIndex]" alt="Banner Coffe Latte Kawaii @(bannerIndex + 1)" data-slide-index="@bannerIndex" />
+            }
+            <div class="hero-gradient pointer-events-none absolute inset-0 flex items-end p-gutter">
                 <div class="max-w-xl text-white">
                     <h1 class="mb-4 font-display-lg text-display-lg">Hương Vị Nghệ Thuật</h1>
                     <p class="font-body-lg text-body-lg opacity-90">Sự kết hợp hoàn hảo giữa tâm hồn Sài Gòn và hơi thở cố đô Kyoto.</p>
                 </div>
             </div>
         </div>
+        @if (heroBanners.Count > 1)
+        {
+            <button type="button" class="hero-arrow absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white opacity-45 backdrop-blur-md transition hover:bg-white/40 hover:opacity-90" data-carousel-prev aria-label="Banner trước">
+                <span class="material-symbols-outlined text-[22px]">chevron_left</span>
+            </button>
+            <button type="button" class="hero-arrow absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white opacity-45 backdrop-blur-md transition hover:bg-white/40 hover:opacity-90" data-carousel-next aria-label="Banner tiếp theo">
+                <span class="material-symbols-outlined text-[22px]">chevron_right</span>
+            </button>
+            <div class="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2">
+                @for (var bannerIndex = 0; bannerIndex < heroBanners.Count; bannerIndex++)
+                {
+                    <button type="button" class="hero-dot h-2.5 w-2.5 rounded-full bg-white/45 transition-all @(bannerIndex == 0 ? "w-7 bg-white/90" : "")" data-carousel-dot="@bannerIndex" aria-label="Chuyển đến banner @(bannerIndex + 1)"></button>
+                }
+            </div>
+        }
     </section>
 
     <section class="hide-scrollbar mb-gutter flex gap-4 overflow-x-auto py-2">
@@ -159,29 +185,56 @@
         }
     </section>
 
-    <section id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
-        @for (var index = 0; index < products.Count; index++)
+    <section class="grid grid-cols-1 gap-gutter @(showPromoBanner ? "xl:grid-cols-[minmax(0,1fr)_280px]" : "")">
+        <div id="menu" class="grid grid-cols-1 gap-gutter md:grid-cols-2 lg:grid-cols-3">
+            @for (var index = 0; index < products.Count; index++)
+            {
+                var product = products[index];
+                var imageUrl = ImageOf(product, index);
+                <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
+                    <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
+                        <div class="relative aspect-square cursor-pointer overflow-hidden">
+                            <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
+                            <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
+                                <span class="material-symbols-outlined text-primary">@IconOf(product.Name)</span>
+                            </div>
+                        </div>
+                        <div class="p-gutter">
+                            <h3 class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
+                            <p class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-label-md text-lg text-on-tertiary-container">@product.Price.ToString("N0") VNĐ</span>
+                                <span class="rounded-lg bg-primary px-4 py-2 font-label-md text-on-primary transition-soft hover:brightness-125">Thêm vào giỏ</span>
+                            </div>
+                        </div>
+                    </button>
+                </article>
+            }
+        </div>
+        @if (showPromoBanner)
         {
-            var product = products[index];
-            var imageUrl = ImageOf(product, index);
-            <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
-                <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
-                    <div class="relative aspect-square cursor-pointer overflow-hidden">
-                        <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
-                        <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
-                            <span class="material-symbols-outlined text-primary">@IconOf(product.Name)</span>
+            <aside class="hidden xl:block">
+                <div class="sticky top-28 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.08)]">
+                    @if (!string.IsNullOrWhiteSpace(promoBanner.LinkUrl))
+                    {
+                        <a href="@promoBanner.LinkUrl" class="block">
+                            <img src="@promoBanner.ImageUrl" alt="@promoBanner.Title" class="h-[360px] w-full object-cover" />
+                        </a>
+                    }
+                    else
+                    {
+                        <img src="@promoBanner.ImageUrl" alt="@promoBanner.Title" class="h-[360px] w-full object-cover" />
+                    }
+                    <div class="space-y-2 p-4">
+                        <div class="flex items-center gap-2 text-caption font-bold uppercase tracking-widest text-secondary">
+                            <span class="material-symbols-outlined text-[16px]">local_offer</span>
+                            Khuyến mãi
                         </div>
+                        <h2 class="font-headline-md text-headline-md text-primary">@promoBanner.Title</h2>
+                        <p class="text-caption text-secondary">@promoBanner.Description</p>
                     </div>
-                    <div class="p-gutter">
-                        <h3 class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
-                        <p class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="font-label-md text-lg text-on-tertiary-container">@product.Price.ToString("N0") VNĐ</span>
-                            <span class="rounded-lg bg-primary px-4 py-2 font-label-md text-on-primary transition-soft hover:brightness-125">Thêm vào giỏ</span>
-                        </div>
-                    </div>
-                </button>
-            </article>
+                </div>
+            </aside>
         }
     </section>
 </main>
@@ -230,7 +283,7 @@
 
 <footer id="story" class="mt-section-gap flex w-full flex-col items-center gap-gutter bg-surface-container px-margin-mobile py-section-gap md:px-margin-desktop">
     <div class="flex items-center gap-3">
-        <span class="brand-blossom" aria-hidden="true">✼</span>
+        <partial name="_SakuraLogoMark" />
         <span class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
             <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
         </span>
@@ -241,12 +294,68 @@
         <a class="transition-colors hover:text-on-tertiary-container" href="#">Shipping Info</a>
         <a class="transition-colors hover:text-on-tertiary-container" href="#">Contact Us</a>
     </div>
-    <p class="font-body-md text-body-md text-secondary opacity-70">© 2024 Komorebi Brews. A Saigon-Kyoto Fusion.</p>
+    <p class="font-body-md text-body-md text-secondary opacity-70">© 2026 Coffe Latte Kawaii. A Saigon-Kyoto Fusion.</p>
 </footer>
 
 @section Scripts {
 <script>
 (() => {
+    const heroCarousel = document.getElementById('heroCarousel');
+    if (heroCarousel) {
+        const slides = Array.from(heroCarousel.querySelectorAll('.hero-slide'));
+        const dots = Array.from(heroCarousel.querySelectorAll('.hero-dot'));
+        const prevButton = heroCarousel.querySelector('[data-carousel-prev]');
+        const nextButton = heroCarousel.querySelector('[data-carousel-next]');
+        const intervalMs = Number(heroCarousel.dataset.interval || 5000);
+        let activeSlide = 0;
+        let carouselTimer = null;
+
+        const showSlide = index => {
+            if (!slides.length) return;
+
+            activeSlide = (index + slides.length) % slides.length;
+            slides.forEach((slide, slideIndex) => {
+                const isActive = slideIndex === activeSlide;
+                slide.classList.toggle('opacity-100', isActive);
+                slide.classList.toggle('opacity-0', !isActive);
+                slide.classList.toggle('is-active', isActive);
+            });
+            dots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === activeSlide;
+                dot.classList.toggle('w-7', isActive);
+                dot.classList.toggle('bg-white/90', isActive);
+                dot.classList.toggle('bg-white/45', !isActive);
+            });
+        };
+
+        const restartCarousel = () => {
+            if (carouselTimer) window.clearInterval(carouselTimer);
+            if (slides.length <= 1) return;
+
+            carouselTimer = window.setInterval(() => {
+                showSlide(activeSlide + 1);
+            }, intervalMs);
+        };
+
+        prevButton?.addEventListener('click', () => {
+            showSlide(activeSlide - 1);
+            restartCarousel();
+        });
+        nextButton?.addEventListener('click', () => {
+            showSlide(activeSlide + 1);
+            restartCarousel();
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                showSlide(Number(dot.dataset.carouselDot));
+                restartCarousel();
+            });
+        });
+
+        showSlide(0);
+        restartCarousel();
+    }
+
     const productPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPrices));
     const isAuthenticated = @Json.Serialize(isAuthenticated);
     const toNumber = value => {
@@ -599,6 +708,18 @@
     });
 
     renderCart();
+    @if (TempData["RegisterNotice"] is string registerNotice)
+    {
+        <text>
+        showCheckoutNotice({
+            title: "Đăng ký thành công",
+            message: @Json.Serialize(registerNotice),
+            type: "success"
+        });
+        </text>
+    }
 })();
 </script>
 }
+
+

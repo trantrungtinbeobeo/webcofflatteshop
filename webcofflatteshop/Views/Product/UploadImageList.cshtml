@@ -1,9 +1,11 @@
-@model IEnumerable<webcofflatteshop.Models.Product>
+﻿@model IEnumerable<webcofflatteshop.Models.Product>
 @{
     ViewData["Title"] = "Ảnh & banner";
     var products = Model.ToList();
     var uploadBanners = (ViewBag.UploadBanners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
     var homeBanners = (ViewBag.HomeBanners as IEnumerable<string> ?? new[] { "/images/default-coffee.svg" }).ToList();
+    var promoBanner = ViewBag.PromoBanner as webcofflatteshop.Models.PromoBannerSettings ?? new webcofflatteshop.Models.PromoBannerSettings();
+    var promoImage = string.IsNullOrWhiteSpace(promoBanner.ImageUrl) ? "/images/default-coffee.svg" : promoBanner.ImageUrl;
     var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
     string ProductImage(webcofflatteshop.Models.Product product) => string.IsNullOrWhiteSpace(product.ImageUrl) ? "/images/default-coffee.svg" : product.ImageUrl;
 }
@@ -11,7 +13,7 @@
 <nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
                 <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
             </h1>
@@ -21,6 +23,7 @@
             <a asp-controller="Product" asp-action="Add" class="font-body-md border-b-2 border-primary pb-1 text-primary">Manager</a>
         </div>
         <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
             <a asp-controller="Account" asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Lịch sử</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary transition-colors hover:bg-secondary-container">Đăng xuất</button>
@@ -32,7 +35,7 @@
 <aside class="fixed left-0 top-20 z-40 hidden h-[calc(100vh-5rem)] w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
     <div class="mb-section-gap">
         <a asp-controller="Product" asp-action="Index" class="mb-10 flex items-center gap-3 rounded-lg transition hover:opacity-80">
-            <span class="brand-blossom" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <div>
                 <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
                     <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
@@ -57,16 +60,14 @@
                 <span class="material-symbols-outlined text-[18px]">bar_chart</span>
                 Thống kê
             </a>
+            <a asp-controller="Account" asp-action="Profile" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <partial name="_UserAvatarIcon" />
+                Trang cá nhân
+            </a>
         </nav>
     </div>
     <div class="mt-auto border-t border-outline-variant pt-5">
-        <div class="mb-4 flex items-center gap-3">
-            <span class="brand-blossom text-[24px]" aria-hidden="true">✼</span>
-            <div>
-                <p class="font-label-md text-primary">Admin</p>
-                <p class="text-caption text-secondary">Quản trị viên</p>
-            </div>
-        </div>
+        <partial name="_SidebarUserProfile" />
         <form asp-controller="Account" asp-action="Logout" method="post">
             <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 font-label-md text-error transition-colors hover:bg-error-container">
                 <span class="material-symbols-outlined text-[18px]">logout</span>
@@ -197,15 +198,60 @@
                 <form asp-action="UploadBannerImage" method="post" enctype="multipart/form-data" class="mb-5 space-y-3">
                     <input type="hidden" name="target" value="home" />
                     <label class="block text-caption text-secondary">Banner trang chủ</label>
-                    <input type="file" name="bannerFile" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
+                    <div class="hidden overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low" data-preview-box="home-banner">
+                        <img data-preview-img="home-banner" src="" class="h-32 w-full object-cover" alt="Xem trước banner trang chủ" />
+                    </div>
+                    <input type="file" name="bannerFile" data-file-preview="home-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
+                    <p class="text-caption text-secondary">Chọn tệp để xem trước, sau đó bấm upload.</p>
                     <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Upload trang chủ</button>
                 </form>
                 <form asp-action="UploadBannerImage" method="post" enctype="multipart/form-data" class="space-y-3">
                     <input type="hidden" name="target" value="upload" />
                     <label class="block text-caption text-secondary">Banner trang ảnh</label>
-                    <input type="file" name="bannerFile" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
+                    <div class="hidden overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low" data-preview-box="upload-banner">
+                        <img data-preview-img="upload-banner" src="" class="h-32 w-full object-cover" alt="Xem trước banner trang ảnh" />
+                    </div>
+                    <input type="file" name="bannerFile" data-file-preview="upload-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" required />
+                    <p class="text-caption text-secondary">Chọn tệp để xem trước, sau đó bấm upload.</p>
                     <button type="submit" class="w-full rounded-lg bg-secondary-container px-4 py-3 font-label-md text-on-secondary-container">Upload trang ảnh</button>
                 </form>
+            </div>
+
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h2 class="flex items-center gap-2 font-label-md text-primary">
+                        <span class="material-symbols-outlined text-[20px]">campaign</span>
+                        Banner khuyến mãi
+                    </h2>
+                    <span class="rounded-full px-3 py-1 text-caption font-bold @(promoBanner.IsEnabled ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700")">
+                        @(promoBanner.IsEnabled ? "Đang bật" : "Đang tắt")
+                    </span>
+                </div>
+                <form asp-action="UpdatePromoBanner" method="post" enctype="multipart/form-data" class="space-y-3">
+                    <div class="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low">
+                        <img data-preview-img="promo-banner" src="@promoImage" class="h-44 w-full object-cover" alt="Banner khuyến mãi" />
+                    </div>
+                    <label class="block text-caption text-secondary">Ảnh banner khuyến mãi</label>
+                    <input type="file" name="promoFile" data-file-preview="promo-banner" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-caption" accept=".jpg,.jpeg,.png,.webp,.svg" />
+                    <input name="title" value="@promoBanner.Title" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Tiêu đề khuyến mãi" />
+                    <textarea name="description" rows="3" class="w-full resize-none rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Mô tả khuyến mãi">@promoBanner.Description</textarea>
+                    <input name="linkUrl" value="@promoBanner.LinkUrl" class="w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-label-md" placeholder="Link tùy chọn" />
+                    <label class="flex items-center justify-between rounded-lg bg-surface-container-low px-3 py-3 font-label-md text-primary">
+                        <span>Hiển thị ở menu Admin</span>
+                        <input type="checkbox" name="isEnabled" value="true" class="rounded border-outline-variant text-primary focus:ring-primary" @(promoBanner.IsEnabled ? "checked" : "") />
+                    </label>
+                    <button type="submit" class="w-full rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary">Lưu banner khuyến mãi</button>
+                </form>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                    <form asp-action="TogglePromoBanner" method="post">
+                        <button type="submit" class="w-full rounded-lg border border-outline-variant px-4 py-3 font-label-md text-secondary hover:bg-surface-container">
+                            @(promoBanner.IsEnabled ? "Tắt" : "Bật")
+                        </button>
+                    </form>
+                    <form asp-action="DeletePromoBanner" method="post">
+                        <button type="submit" class="w-full rounded-lg border border-error px-4 py-3 font-label-md text-error hover:bg-error-container">Xóa</button>
+                    </form>
+                </div>
             </div>
 
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container-low p-gutter">
@@ -215,3 +261,26 @@
         </section>
     </div>
 </main>
+
+@section Scripts {
+    <script>
+        (() => {
+            document.querySelectorAll('[data-file-preview]').forEach((input) => {
+                input.addEventListener('change', () => {
+                    const key = input.dataset.filePreview;
+                    const file = input.files?.[0];
+                    const box = document.querySelector(`[data-preview-box="${key}"]`);
+                    const img = document.querySelector(`[data-preview-img="${key}"]`);
+                    if (!file || !img) return;
+
+                    img.src = URL.createObjectURL(file);
+                    box?.classList.remove('hidden');
+                });
+            });
+        })();
+    </script>
+}
+
+
+
+

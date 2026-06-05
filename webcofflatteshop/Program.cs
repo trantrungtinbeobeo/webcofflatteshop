@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using webcofflatteshop.Data;
 using webcofflatteshop.Models;
 using webcofflatteshop.Repository;
+using webcofflatteshop.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +22,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequiredLength = 6;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -41,6 +43,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, EfCategoryRepository>();
 builder.Services.AddSingleton<IBannerRepository, FileBannerRepository>();
+builder.Services.AddScoped<IVerificationEmailSender, GmailVerificationEmailSender>();
 
 var app = builder.Build();
 
@@ -92,7 +95,7 @@ static async Task SeedIdentityAsync(IServiceProvider services)
         {
             UserName = adminEmail,
             Email = adminEmail,
-            EmailConfirmed = true,
+            EmailConfirmed = false,
             FullName = "Admin",
             Address = "Coffee Latte Shop"
         };
@@ -103,10 +106,16 @@ static async Task SeedIdentityAsync(IServiceProvider services)
             throw new InvalidOperationException($"Không thể tạo tài khoản admin mặc định: {errors}");
         }
     }
-    else if (string.IsNullOrWhiteSpace(admin.FullName) || string.IsNullOrWhiteSpace(admin.Address))
+    else if (string.IsNullOrWhiteSpace(admin.FullName)
+        || string.IsNullOrWhiteSpace(admin.Address)
+        || (string.Equals(admin.Email, adminEmail, StringComparison.OrdinalIgnoreCase) && admin.EmailConfirmed))
     {
         admin.UserName = string.IsNullOrWhiteSpace(admin.UserName) ? adminEmail : admin.UserName;
         admin.Email = string.IsNullOrWhiteSpace(admin.Email) ? adminEmail : admin.Email;
+        if (string.Equals(admin.Email, adminEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            admin.EmailConfirmed = false;
+        }
         admin.FullName = string.IsNullOrWhiteSpace(admin.FullName) ? "Admin" : admin.FullName;
         admin.Address = string.IsNullOrWhiteSpace(admin.Address) ? "Coffee Latte Shop" : admin.Address;
         var updateResult = await userManager.UpdateAsync(admin);
@@ -141,6 +150,41 @@ static async Task EnsureIdentityProfileColumnsAsync(ApplicationDbContext context
         IF COL_LENGTH('AspNetUsers', 'Address') IS NULL
         BEGIN
             ALTER TABLE AspNetUsers ADD Address nvarchar(300) NOT NULL CONSTRAINT DF_AspNetUsers_Address DEFAULT N''
+        END
+        """);
+
+    await context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('AspNetUsers', 'ProfileBackgroundImageUrl') IS NULL
+        BEGIN
+            ALTER TABLE AspNetUsers ADD ProfileBackgroundImageUrl nvarchar(300) NULL
+        END
+        """);
+
+    await context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('AspNetUsers', 'PendingEmail') IS NULL
+        BEGIN
+            ALTER TABLE AspNetUsers ADD PendingEmail nvarchar(256) NULL
+        END
+        """);
+
+    await context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('AspNetUsers', 'EmailVerificationCode') IS NULL
+        BEGIN
+            ALTER TABLE AspNetUsers ADD EmailVerificationCode nvarchar(10) NULL
+        END
+        """);
+
+    await context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('AspNetUsers', 'EmailVerificationCodeExpiresAt') IS NULL
+        BEGIN
+            ALTER TABLE AspNetUsers ADD EmailVerificationCodeExpiresAt datetime2 NULL
+        END
+        """);
+
+    await context.Database.ExecuteSqlRawAsync("""
+        IF COL_LENGTH('AspNetUsers', 'EmailVerificationCodeSentAt') IS NULL
+        BEGIN
+            ALTER TABLE AspNetUsers ADD EmailVerificationCodeSentAt datetime2 NULL
         END
         """);
 }

@@ -17,7 +17,7 @@
 <header class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
     <nav class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
         <a asp-controller="Product" asp-action="Index" class="flex items-center gap-2">
-            <span class="brand-blossom text-[32px]" aria-hidden="true">✼</span>
+            <partial name="_SakuraLogoMark" />
             <span class="font-display-lg text-headline-md text-primary tracking-tight">
                 <span class="text-primary">Coffe</span>
                 <span style="color:#81c784">Latte</span>
@@ -31,6 +31,7 @@
         </div>
 
         <div class="flex items-center gap-4 md:gap-6">
+            <partial name="_UserAvatarHeader" />
             <div class="relative hidden sm:block">
                 <input id="historySearch" class="w-48 rounded-full border-outline-variant bg-surface-container-low px-5 py-2 text-body-md transition-all focus:w-64 focus:border-primary focus:ring-primary" placeholder="Tìm đơn hàng..." type="text" />
                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline">search</span>
@@ -199,7 +200,7 @@
         </div>
     </div>
     <div class="flex w-full max-w-container-max flex-col items-center justify-between gap-4 border-t border-outline-variant/20 pt-8 md:flex-row">
-        <p class="font-caption text-secondary">© 2024 Coffe Latte Kawaii. A Saigon-Kyoto Fusion.</p>
+        <p class="font-caption text-secondary">© 2026 Coffe Latte Kawaii. A Saigon-Kyoto Fusion.</p>
         <div class="flex gap-6 text-secondary">
             <span class="material-symbols-outlined">social_leaderboard</span>
             <span class="material-symbols-outlined">camera_alt</span>
@@ -275,4 +276,5 @@
     });
 })();
 </script>
+
 
