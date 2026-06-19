@@ -21,7 +21,7 @@ body.coffee-pattern-bg {
   background-size: auto, 480px 480px;
   background-position: center, top left;
   background-repeat: repeat;
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 body.coffee-pattern-bg .bg-background {
@@ -86,4 +86,125 @@ button {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Skip layout and paint work for repeated cards until they approach the viewport. */
+.render-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
+  contain: layout paint style;
+}
+
+.render-list-compact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .render-list-item,
+  .render-list-item *,
+  .render-list-compact,
+  .render-list-compact * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+.order-toast {
+  position: fixed;
+  top: 96px;
+  right: 14px;
+  z-index: 95;
+  width: min(310px, calc(100vw - 28px));
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 218, 212, 0.2);
+  border-radius: 8px;
+  background: rgba(62, 39, 35, 0.97);
+  box-shadow: 0 14px 38px rgba(39, 19, 16, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(100% + 28px));
+  transition: opacity 220ms ease, transform 300ms ease;
+}
+
+.order-toast.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.order-toast-link {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 6px;
+  padding: 6px;
+  transition: background-color 180ms ease;
+}
+
+.order-toast-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.order-toast-icon {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 218, 212, 0.14);
+  color: #ffdad4;
+  font-size: 19px;
+}
+
+.order-toast-close {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.order-toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.order-focus-highlight {
+  animation: order-focus-pulse 900ms ease-in-out 3;
+}
+
+@keyframes order-focus-pulse {
+  0%,
+  100% {
+    border-color: rgba(116, 88, 83, 0.25);
+    box-shadow: 0 4px 20px rgba(62, 39, 35, 0.03);
+  }
+
+  50% {
+    border-color: #745853;
+    box-shadow: 0 0 0 4px rgba(116, 88, 83, 0.2), 0 12px 30px rgba(62, 39, 35, 0.16);
+  }
+}
+
+@media (max-width: 640px) {
+  .order-toast {
+    top: 84px;
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
 }

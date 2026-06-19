@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using webcofflatteshop.Authentication;
 using webcofflatteshop.Data;
 using webcofflatteshop.Models;
 using webcofflatteshop.Repository;
@@ -11,6 +13,31 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found. Copy your SQL Server connection string into appsettings.json before adding migrations.");
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication()
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationDefaults.AuthenticationScheme,
+        _ => { });
+builder.Services.AddSwaggerGen(options =>
+{
+    options.DocInclusionPredicate((_, api) =>
+        api.RelativePath?.StartsWith("api/", StringComparison.OrdinalIgnoreCase) == true);
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Coffee Latte Shop API",
+        Version = "v1"
+    });
+    options.AddSecurityDefinition(ApiKeyAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+    {
+        Description = "Nhập API Key bắt đầu bằng clk_.",
+        Name = ApiKeyAuthenticationDefaults.HeaderName,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(ApiKeyAuthenticationDefaults.AuthenticationScheme, document)] = []
+    });
+});
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -56,9 +83,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

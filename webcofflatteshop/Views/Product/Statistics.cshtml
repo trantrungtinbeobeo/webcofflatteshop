@@ -72,6 +72,10 @@
                 <partial name="_UserAvatarIcon" />
                 Trang cá nhân
             </a>
+            <a asp-controller="Account" asp-action="ApiKeys" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary transition hover:bg-surface-container">
+                <span class="material-symbols-outlined text-[18px]">key</span>
+                Tạo API Key
+            </a>
         </nav>
     </div>
     <div class="mt-auto border-t border-outline-variant pt-5">
@@ -313,13 +317,18 @@
         setText('workflowPromoCount', promo);
     };
 
+    let statisticsPollInFlight = false;
     const pollStatistics = async () => {
+        if (document.hidden || statisticsPollInFlight) return;
+        statisticsPollInFlight = true;
         try {
             const response = await fetch('/Product/StatisticsSummary', { cache: 'no-store' });
             if (!response.ok) return;
             updatePie(await response.json());
         } catch {
             // Polling silently retries on the next tick.
+        } finally {
+            statisticsPollInFlight = false;
         }
     };
 

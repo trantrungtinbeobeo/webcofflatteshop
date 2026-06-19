@@ -128,3 +128,13 @@ public class EmailChangeViewModel
     [StringLength(6, MinimumLength = 6)]
     public string VerificationCode { get; set; } = string.Empty;
 }
+
+public class ApiKeysPageViewModel
+{
+    [Required, StringLength(100)]
+    public string NewKeyName { get; set; } = "Web API Client";
+
+    public string? GeneratedApiKey { get; set; }
+
+    public IEnumerable<ApiKey> ApiKeys { get; set; } = [];
+}

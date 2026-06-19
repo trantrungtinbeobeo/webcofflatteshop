@@ -157,6 +157,7 @@
                 var progressColor = StatusColor(status);
                 var filterStatus = status == "Completed" ? "completed" : "pending";
                 <article class="order-card-hover order-card rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-[0_4px_20px_rgba(62,39,35,0.03)] transition-all duration-300"
+                         id="order-@order.Id"
                          data-order-id="@order.Id"
                          data-order="@searchableText"
                          data-status="@filterStatus"
@@ -165,7 +166,7 @@
                         <div>
                             <div class="mb-1 flex flex-wrap items-center gap-3">
                                 <span class="font-headline-md text-headline-md text-primary">@OrderCode(order.Id)</span>
-                                <span class="rounded-full bg-secondary-container px-3 py-1 font-label-md text-caption text-on-secondary-container">@statusText</span>
+                                <span class="order-status-badge rounded-full bg-secondary-container px-3 py-1 font-label-md text-caption text-on-secondary-container">@statusText</span>
                             </div>
                             <p class="flex items-center gap-2 font-body-md text-secondary">
                                 <span class="material-symbols-outlined text-[18px]">calendar_today</span>
@@ -254,7 +255,7 @@
                         </div>
                         @if (Model.IsAdmin)
                         {
-                            <form asp-controller="Account" asp-action="UpdateOrderStatus" method="post" class="mt-4 flex flex-wrap gap-2">
+                            <form asp-controller="Account" asp-action="UpdateOrderStatus" method="post" class="ajax-order-status-form mt-4 flex flex-wrap gap-2">
                                 <input type="hidden" name="orderId" value="@order.Id" />
                                 <button name="status" value="Pending" class="rounded-lg border border-outline-variant px-3 py-2 text-caption font-semibold text-secondary hover:bg-surface-container" type="submit">Chờ xử lý</button>
                                 <button name="status" value="Preparing" class="rounded-lg border border-outline-variant px-3 py-2 text-caption font-semibold text-secondary hover:bg-surface-container" type="submit">Đang pha chế</button>
@@ -384,6 +385,34 @@
         });
     });
 
+    const focusRequestedOrder = () => {
+        const queryOrderId = Number(new URLSearchParams(window.location.search).get('focusOrderId') || 0);
+        const hashOrderId = Number((window.location.hash.match(/^#order-(\d+)$/) || [])[1] || 0);
+        const focusOrderId = queryOrderId || hashOrderId;
+        if (!focusOrderId) return;
+
+        const focusedCard = document.querySelector(`[data-order-id="${focusOrderId}"]`);
+        if (!focusedCard) return;
+
+        activeFilter = 'all';
+        searchInputs.forEach(input => input.value = '');
+        document.querySelectorAll('.history-filter').forEach(item => {
+            const isAll = item.dataset.filter === 'all';
+            item.classList.toggle('bg-primary', isAll);
+            item.classList.toggle('text-on-primary', isAll);
+            item.classList.toggle('bg-secondary-container', !isAll);
+            item.classList.toggle('text-on-secondary-container', !isAll);
+        });
+        applyFilters();
+        window.setTimeout(() => {
+            focusedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            focusedCard.classList.add('order-focus-highlight');
+            window.setTimeout(() => focusedCard.classList.remove('order-focus-highlight'), 3000);
+        }, 150);
+    };
+
+    focusRequestedOrder();
+
     const statusMeta = {
         Pending: { text: 'Chờ xử lý', icon: 'schedule', color: '#d9a441', step: 1 },
         Preparing: { text: 'Đang pha chế', icon: 'local_cafe', color: '#745853', step: 2 },
@@ -393,6 +422,10 @@
     const orderRealtimeIcon = document.getElementById('orderRealtimeIcon');
     const orderRealtimeBadge = document.getElementById('orderRealtimeBadge');
     const orderRealtimeText = document.getElementById('orderRealtimeText');
+    const isAdmin = @Json.Serialize(Model.IsAdmin);
+    const adminPendingBadge = document.getElementById('adminPendingBadge');
+    const adminOrderNoticeText = document.getElementById('adminOrderNoticeText');
+    let latestSeenOrderId = @Json.Serialize(latestOrder?.Id);
     const orderStatusCache = new Map(cards.map(card => [Number(card.dataset.orderId), card.querySelector('[data-progress-order-id]')?.dataset.progressStatus || 'Pending']));
     const setOrderProgress = (orderId, status) => {
         const meta = statusMeta[status] || statusMeta.Pending;
@@ -402,7 +435,7 @@
 
         progress.dataset.progressStatus = status;
         card.dataset.status = status === 'Completed' ? 'completed' : 'pending';
-        card.querySelector('.rounded-full.bg-secondary-container, .rounded-full.bg-primary')?.replaceChildren(document.createTextNode(meta.text));
+        card.querySelector('.order-status-badge')?.replaceChildren(document.createTextNode(meta.text));
 
         const label = progress.querySelector('.order-progress-label');
         const fill = progress.querySelector('.order-progress-fill');
@@ -427,12 +460,16 @@
         });
     };
 
+    let orderPollInFlight = false;
     const pollOrderRealtime = async () => {
+        if (document.hidden || orderPollInFlight) return;
+        orderPollInFlight = true;
         try {
             const response = await fetch('/Account/OrderRealtimeSummary', { cache: 'no-store' });
             if (!response.ok) return;
             const data = await response.json();
             if (orderRealtimeBadge) orderRealtimeBadge.textContent = data.activeCount ?? 0;
+            if (adminPendingBadge) adminPendingBadge.textContent = data.activeCount ?? 0;
             const activeMeta = statusMeta[data.latestActiveStatus] || statusMeta.Pending;
             if (orderRealtimeIcon) orderRealtimeIcon.textContent = activeMeta.icon;
             if (orderRealtimeText) {
@@ -446,6 +483,15 @@
                     orderRealtimeText.textContent = 'Tất cả đơn hàng của bạn đã hoàn thành.';
                 }
             }
+            if (adminOrderNoticeText) {
+                adminOrderNoticeText.textContent = `Hiện có ${data.activeCount ?? 0} đơn hàng đang cần theo dõi.`;
+                if (data.latestOrderId && (latestSeenOrderId === null || data.latestOrderId > latestSeenOrderId)) {
+                    adminOrderNoticeText.textContent = `Có đơn hàng mới #DH${String(data.latestOrderId).padStart(5, '0')} vừa được tạo.`;
+                    window.showNewOrderToast?.(data.latestOrderId);
+                    sessionStorage.setItem('coffeeLatteLatestAdminOrderId', String(data.latestOrderId));
+                }
+            }
+            if (data.latestOrderId) latestSeenOrderId = data.latestOrderId;
 
             (data.orders || []).forEach(order => {
                 const oldStatus = orderStatusCache.get(order.id);
@@ -459,39 +505,46 @@
             applyFilters();
         } catch {
             // Polling silently retries on the next tick.
+        } finally {
+            orderPollInFlight = false;
         }
     };
 
     window.setInterval(pollOrderRealtime, 5000);
     pollOrderRealtime();
 
-    const isAdmin = @Json.Serialize(Model.IsAdmin);
-    if (isAdmin) {
-        const badge = document.getElementById('adminPendingBadge');
-        const noticeText = document.getElementById('adminOrderNoticeText');
-        let latestSeenOrderId = @Json.Serialize(latestOrder?.Id);
+    document.querySelectorAll('.ajax-order-status-form').forEach(form => {
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const submitter = event.submitter;
+            if (!submitter) return;
 
-        const pollAdminOrders = async () => {
+            const buttons = Array.from(form.querySelectorAll('button'));
+            buttons.forEach(button => button.disabled = true);
             try {
-                const response = await fetch('/Account/AdminOrderSummary', { cache: 'no-store' });
-                if (!response.ok) return;
+                const formData = new FormData(form);
+                formData.set('status', submitter.value);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                if (!response.ok) throw new Error('Không thể cập nhật trạng thái đơn hàng.');
                 const data = await response.json();
-                if (badge) badge.textContent = data.pendingCount;
-                if (noticeText) {
-                    noticeText.textContent = `Hiện có ${data.pendingCount} đơn hàng đang cần theo dõi.`;
+                orderStatusCache.set(data.orderId, data.status);
+                setOrderProgress(data.orderId, data.status);
+                if (adminOrderNoticeText) {
+                    adminOrderNoticeText.textContent = `Đã cập nhật #DH${String(data.orderId).padStart(5, '0')} sang ${(statusMeta[data.status] || statusMeta.Pending).text.toLowerCase()}.`;
                 }
-                if (data.latestOrderId && latestSeenOrderId && data.latestOrderId > latestSeenOrderId && noticeText) {
-                    noticeText.textContent = `Có đơn hàng mới #DH${String(data.latestOrderId).padStart(5, '0')} vừa được tạo.`;
-                }
-                if (data.latestOrderId) latestSeenOrderId = data.latestOrderId;
+                applyFilters();
+                pollOrderRealtime();
             } catch {
-                // Polling silently retries on the next tick.
+                if (adminOrderNoticeText) adminOrderNoticeText.textContent = 'Cập nhật trạng thái thất bại. Vui lòng thử lại.';
+            } finally {
+                buttons.forEach(button => button.disabled = false);
             }
-        };
-
-        window.setInterval(pollAdminOrders, 5000);
-        pollAdminOrders();
-    }
+        });
+    });
 })();
 </script>
 

@@ -91,7 +91,84 @@
 </head>
 <body class="coffee-pattern-bg bg-background font-body text-on-background selection:bg-primary-fixed">
     @RenderBody()
+
+    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        <aside id="newOrderToast" class="order-toast" aria-live="polite" aria-hidden="true">
+            <a id="newOrderToastLink" class="order-toast-link" asp-controller="Account" asp-action="PurchaseHistory">
+                <span class="order-toast-icon material-symbols-outlined">notifications_active</span>
+                <span class="min-w-0 flex-1">
+                    <strong class="block text-[13px] font-semibold text-white">Đơn hàng mới</strong>
+                    <span class="mt-1 block text-[12px] leading-5 text-white/80">
+                        Đơn hàng <span id="newOrderToastCode" class="font-semibold text-white underline underline-offset-2">#DH00000</span> vừa được đặt.
+                    </span>
+                </span>
+            </a>
+            <button id="newOrderToastClose" class="order-toast-close material-symbols-outlined" type="button" aria-label="Đóng thông báo">close</button>
+        </aside>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        <script>
+            (() => {
+                const toast = document.getElementById('newOrderToast');
+                const toastLink = document.getElementById('newOrderToastLink');
+                const toastCode = document.getElementById('newOrderToastCode');
+                const toastClose = document.getElementById('newOrderToastClose');
+                const latestOrderStorageKey = 'coffeeLatteLatestAdminOrderId';
+                let hideTimer;
+                let globalOrderPollInFlight = false;
+
+                window.showNewOrderToast = orderId => {
+                    const numericOrderId = Number(orderId);
+                    if (!toast || !toastLink || !toastCode || !numericOrderId) return;
+
+                    toastCode.textContent = `#DH${String(numericOrderId).padStart(5, '0')}`;
+                    toastLink.href = `/Account/PurchaseHistory?focusOrderId=${numericOrderId}#order-${numericOrderId}`;
+                    toast.classList.add('is-visible');
+                    toast.setAttribute('aria-hidden', 'false');
+                    window.clearTimeout(hideTimer);
+                    hideTimer = window.setTimeout(() => window.hideNewOrderToast(), 7000);
+                };
+
+                window.hideNewOrderToast = () => {
+                    toast?.classList.remove('is-visible');
+                    toast?.setAttribute('aria-hidden', 'true');
+                };
+
+                toastClose?.addEventListener('click', window.hideNewOrderToast);
+
+                const pollNewOrders = async () => {
+                    if (document.hidden || globalOrderPollInFlight) return;
+                    globalOrderPollInFlight = true;
+                    try {
+                        const response = await fetch('/Account/AdminOrderSummary', { cache: 'no-store' });
+                        if (!response.ok) return;
+                        const data = await response.json();
+                        const latestOrderId = Number(data.latestOrderId || 0);
+                        const storedOrderId = sessionStorage.getItem(latestOrderStorageKey);
+                        const previousOrderId = Number(storedOrderId || 0);
+
+                        if (latestOrderId && storedOrderId !== null && latestOrderId > previousOrderId) {
+                            window.showNewOrderToast(latestOrderId);
+                        }
+                        sessionStorage.setItem(latestOrderStorageKey, String(latestOrderId));
+                    } catch {
+                        // Polling silently retries on the next tick.
+                    } finally {
+                        globalOrderPollInFlight = false;
+                    }
+                };
+
+                if (!window.location.pathname.toLowerCase().includes('/account/purchasehistory')) {
+                    pollNewOrders();
+                    window.setInterval(pollNewOrders, 5000);
+                }
+            })();
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

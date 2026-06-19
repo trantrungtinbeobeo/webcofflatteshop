@@ -18,6 +18,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -150,6 +152,30 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(item => item.ProductId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ApiKey>(entity =>
+        {
+            entity.ToTable("ApiKeys");
+            entity.HasKey(apiKey => apiKey.Id);
+            entity.Property(apiKey => apiKey.UserId)
+                .HasMaxLength(450)
+                .IsRequired();
+            entity.Property(apiKey => apiKey.Name)
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(apiKey => apiKey.KeyHash)
+                .HasMaxLength(64)
+                .IsRequired();
+            entity.Property(apiKey => apiKey.KeyPrefix)
+                .HasMaxLength(12)
+                .IsRequired();
+            entity.HasIndex(apiKey => apiKey.KeyHash)
+                .IsUnique();
+            entity.HasOne(apiKey => apiKey.User)
+                .WithMany()
+                .HasForeignKey(apiKey => apiKey.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         SeedMenu(modelBuilder);

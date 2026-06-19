@@ -136,15 +136,15 @@ public class ProductController : Controller
     }
 
     [Authorize(Roles = "Admin")]
-    public IActionResult Statistics()
+    public async Task<IActionResult> Statistics()
     {
         var products = _productRepository.GetAll().ToList();
         var bannerSettings = _bannerRepository.Get();
-        var orderWorkflow = GetOrderWorkflowSummary(bannerSettings.PromoBanner);
+        var orderWorkflow = await GetOrderWorkflowSummaryAsync(bannerSettings.PromoBanner);
         var completedOrders = _context.Orders
             .AsNoTracking()
             .Where(order => order.Status == "Completed");
-        var customerPurchases = completedOrders
+        var customerPurchases = await completedOrders
             .GroupBy(order => order.UserId)
             .Select(group => new
             {
@@ -152,9 +152,8 @@ public class ProductController : Controller
                 OrderCount = group.Count(),
                 TotalSpent = group.Sum(order => order.TotalAmount)
             })
-            .ToList()
             .Join(
-                _context.Users.AsNoTracking().ToList(),
+                _context.Users.AsNoTracking(),
                 purchase => purchase.UserId,
                 user => user.Id,
                 (purchase, user) => new CustomerPurchaseSummary
@@ -168,7 +167,7 @@ public class ProductController : Controller
                     TotalSpent = purchase.TotalSpent
                 })
             .OrderByDescending(item => item.TotalSpent)
-            .ToList();
+            .ToListAsync();
         var model = new AdminStatisticsViewModel
         {
             TotalProducts = products.Count,
@@ -199,10 +198,10 @@ public class ProductController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpGet]
-    public IActionResult StatisticsSummary()
+    public async Task<IActionResult> StatisticsSummary()
     {
         var bannerSettings = _bannerRepository.Get();
-        var orderWorkflow = GetOrderWorkflowSummary(bannerSettings.PromoBanner);
+        var orderWorkflow = await GetOrderWorkflowSummaryAsync(bannerSettings.PromoBanner);
         return Json(new
         {
             pendingOrders = orderWorkflow.PendingOrders,
@@ -614,26 +613,38 @@ public class ProductController : Controller
         };
     }
 
-    private OrderWorkflowSummary GetOrderWorkflowSummary(PromoBannerSettings promoBanner)
+    private async Task<OrderWorkflowSummary> GetOrderWorkflowSummaryAsync(PromoBannerSettings promoBanner)
     {
-        var orders = _context.Orders
-            .AsNoTracking()
-            .Include(order => order.Items)
-            .ToList();
         var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
         var promoProductId = promoBanner.ProductId;
+        var statusCounts = await _context.Orders
+            .AsNoTracking()
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Pending = group.Count(order => order.Status == null || order.Status == "" || order.Status == "Pending"),
+                Preparing = group.Count(order => order.Status == "Preparing"),
+                Delivering = group.Count(order => order.Status == "Delivering"),
+                Completed = group.Count(order => order.Status == "Completed")
+            })
+            .FirstOrDefaultAsync();
+        var promoOrdersToday = promoProductId is null
+            ? 0
+            : await _context.Orders
+                .AsNoTracking()
+                .CountAsync(order =>
+                    order.CreatedAt >= today &&
+                    order.CreatedAt < tomorrow &&
+                    order.Items.Any(item => item.ProductId == promoProductId));
 
         return new OrderWorkflowSummary
         {
-            PendingOrders = orders.Count(order => string.IsNullOrWhiteSpace(order.Status) || order.Status == "Pending"),
-            PreparingOrders = orders.Count(order => order.Status == "Preparing"),
-            DeliveringOrders = orders.Count(order => order.Status == "Delivering"),
-            CompletedOrders = orders.Count(order => order.Status == "Completed"),
-            PromoOrdersToday = promoProductId is null
-                ? 0
-                : orders.Count(order =>
-                    order.CreatedAt.Date == today &&
-                    order.Items.Any(item => item.ProductId == promoProductId))
+            PendingOrders = statusCounts?.Pending ?? 0,
+            PreparingOrders = statusCounts?.Preparing ?? 0,
+            DeliveringOrders = statusCounts?.Delivering ?? 0,
+            CompletedOrders = statusCounts?.Completed ?? 0,
+            PromoOrdersToday = promoOrdersToday
         };
     }
 

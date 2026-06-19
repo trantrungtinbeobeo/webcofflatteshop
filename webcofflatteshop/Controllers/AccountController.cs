@@ -258,8 +258,11 @@ public class AccountController : Controller
             query = query.Where(order => order.UserId == user.Id);
         }
 
+        var totalCount = await query.CountAsync();
+        var activeCount = await query.CountAsync(order => order.Status == null || order.Status != "Completed");
         var orders = await query
             .OrderByDescending(order => order.CreatedAt)
+            .Take(100)
             .Select(order => new
             {
                 id = order.Id,
@@ -275,8 +278,8 @@ public class AccountController : Controller
         return Json(new
         {
             isAdmin,
-            totalCount = orders.Count,
-            activeCount = activeOrders.Count,
+            totalCount,
+            activeCount,
             latestOrderId = latest?.id,
             latestActiveOrderId = latestActive?.id,
             latestActiveStatus = latestActive?.status,
@@ -307,7 +310,85 @@ public class AccountController : Controller
 
         order.Status = status;
         await _context.SaveChangesAsync();
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new
+            {
+                success = true,
+                orderId = order.Id,
+                status = order.Status
+            });
+        }
+
         return RedirectToAction(nameof(PurchaseHistory));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> ApiKeys()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+
+        return View(new ApiKeysPageViewModel
+        {
+            GeneratedApiKey = TempData["GeneratedApiKey"] as string,
+            ApiKeys = await _context.ApiKeys
+                .AsNoTracking()
+                .Where(apiKey => apiKey.UserId == user.Id)
+                .OrderByDescending(apiKey => apiKey.CreatedAt)
+                .ToListAsync()
+        });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateApiKey(ApiKeysPageViewModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+
+        var keyName = string.IsNullOrWhiteSpace(model.NewKeyName)
+            ? "Web API Client"
+            : model.NewKeyName.Trim();
+        var rawKey = $"clk_{Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant()}";
+        var keyHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(rawKey)));
+
+        _context.ApiKeys.Add(new ApiKey
+        {
+            UserId = user.Id,
+            Name = keyName,
+            KeyHash = keyHash,
+            KeyPrefix = rawKey[..12],
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+
+        TempData["GeneratedApiKey"] = rawKey;
+        TempData["ApiKeySuccess"] = "Đã tạo API key. Hãy lưu key ngay vì hệ thống sẽ không hiển thị lại.";
+        return RedirectToAction(nameof(ApiKeys));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RevokeApiKey(int id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+
+        var apiKey = await _context.ApiKeys.FirstOrDefaultAsync(key => key.Id == id && key.UserId == user.Id);
+        if (apiKey is not null)
+        {
+            apiKey.IsActive = false;
+            apiKey.RevokedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(ApiKeys));
     }
 
     [Authorize]
