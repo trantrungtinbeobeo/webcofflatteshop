@@ -324,6 +324,43 @@ public class AccountController : Controller
         return RedirectToAction(nameof(PurchaseHistory));
     }
 
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteOrder(int orderId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        var order = await _context.Orders.FirstOrDefaultAsync(order => order.Id == orderId);
+        if (order is null)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return NotFound(new { success = false, message = "Không tìm thấy đơn hàng." });
+            }
+
+            return RedirectToAction(nameof(PurchaseHistory));
+        }
+
+        if (!isAdmin && order.UserId != user.Id)
+        {
+            return Forbid();
+        }
+
+        _context.Orders.Remove(order);
+        await _context.SaveChangesAsync();
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new { success = true, orderId = order.Id });
+        }
+
+        TempData["OrderSuccess"] = "Đã xóa đơn hàng.";
+        return RedirectToAction(nameof(PurchaseHistory));
+    }
+
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> ApiKeys()

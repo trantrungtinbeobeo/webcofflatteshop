@@ -232,11 +232,11 @@
                             : isOutOfStock
                                 ? "bg-orange-100 text-orange-700"
                                 : "bg-green-100 text-green-700";
-                        <tr class="transition-colors hover:bg-surface-container-lowest">
+                        <tr class="render-list-compact transition-colors hover:bg-surface-container-lowest">
                             <td class="px-gutter py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 overflow-hidden rounded-lg bg-secondary-container">
-                                        <img class="h-full w-full object-cover" src="@ProductImage(product)" alt="@product.Name" />
+                                        <img class="h-full w-full object-cover" src="@ProductImage(product)" alt="@product.Name" loading="lazy" decoding="async" fetchpriority="low" />
                                     </div>
                                     <div>
                                         <p class="font-label-md text-primary">@product.Name</p>

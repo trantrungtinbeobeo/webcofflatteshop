@@ -1,0 +1,156 @@
+@model webcofflatteshop.Models.ApiKeysPageViewModel
+@{
+    ViewData["Title"] = "Tạo API Key";
+    var today = DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"));
+}
+
+<nav class="sticky top-0 z-50 bg-surface shadow-[0_10px_30px_rgba(62,39,35,0.05)]">
+    <div class="mx-auto flex h-20 w-full max-w-container-max items-center justify-between px-margin-mobile py-unit md:px-margin-desktop">
+        <a asp-controller="Product" asp-action="Index" class="flex items-center gap-3">
+            <partial name="_SakuraLogoMark" />
+            <h1 class="font-['Noto_Serif'] text-[32px] font-bold leading-none">
+                <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+            </h1>
+        </a>
+        <div class="hidden items-center gap-gutter md:flex">
+            <a asp-controller="Product" asp-action="Index" class="font-body-md text-secondary hover:text-primary">Menu</a>
+            <a asp-controller="Product" asp-action="Add" class="border-b-2 border-primary pb-1 font-body-md text-primary">Manager</a>
+        </div>
+        <div class="flex items-center gap-unit">
+            <partial name="_UserAvatarHeader" />
+            <a asp-action="PurchaseHistory" class="rounded-lg px-3 py-2 font-label-md text-primary hover:bg-secondary-container">Lịch sử đơn hàng</a>
+            <form asp-action="Logout" method="post">
+                <button type="submit" class="rounded-lg px-3 py-2 font-label-md text-primary hover:bg-secondary-container">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<aside class="fixed left-0 top-20 z-40 hidden h-[calc(100vh-5rem)] w-[280px] flex-col border-r border-outline-variant bg-surface-container-lowest p-gutter custom-shadow md:flex">
+    <div>
+        <a asp-controller="Product" asp-action="Index" class="mb-10 flex items-center gap-3">
+            <partial name="_SakuraLogoMark" />
+            <div>
+                <p class="font-['Noto_Serif'] text-[22px] font-bold leading-none">
+                    <span style="color:#3e2723">Coffe</span><span style="color:#81c784">-latte</span><span style="color:#f48fb1">Kawaii</span>
+                </p>
+                <p class="text-caption text-secondary">Admin Dashboard</p>
+            </div>
+        </a>
+        <nav class="space-y-3">
+            <a asp-controller="Product" asp-action="Add" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">inventory_2</span>Thêm sản phẩm</a>
+            <a asp-controller="Category" asp-action="Index" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">storefront</span>Danh mục</a>
+            <a asp-controller="Product" asp-action="UploadImageList" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>Ảnh &amp; banner</a>
+            <a asp-controller="Product" asp-action="Statistics" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">bar_chart</span>Thống kê</a>
+            <a asp-action="Profile" class="flex items-center gap-3 rounded-lg px-4 py-3 font-label-md text-secondary hover:bg-surface-container"><partial name="_UserAvatarIcon" />Trang cá nhân</a>
+            <a asp-action="ApiKeys" class="flex items-center gap-3 rounded-lg bg-primary px-4 py-3 font-label-md text-on-primary"><span class="material-symbols-outlined text-[18px]">key</span>Tạo API Key</a>
+        </nav>
+    </div>
+    <div class="mt-auto border-t border-outline-variant pt-5">
+        <partial name="_SidebarUserProfile" />
+    </div>
+</aside>
+
+<main class="min-h-screen bg-background p-margin-mobile md:ml-[280px] md:p-margin-desktop">
+    <header class="mx-auto mb-gutter flex max-w-container-max items-end justify-between">
+        <div>
+            <nav class="mb-2 flex items-center gap-2 text-caption text-secondary"><span>Admin</span><span class="material-symbols-outlined text-[12px]">chevron_right</span><span class="font-semibold text-primary">API Key</span></nav>
+            <h1 class="font-headline-md text-primary">Quản lý API Key</h1>
+            <p class="mt-2 text-body-md text-secondary">Cấp quyền cho website client đọc danh sách sản phẩm và báo cáo.</p>
+        </div>
+        <span class="hidden text-caption font-medium uppercase tracking-widest text-secondary md:block">@today</span>
+    </header>
+
+    <div class="mx-auto grid max-w-container-max grid-cols-1 gap-gutter lg:grid-cols-12">
+        <section class="lg:col-span-5">
+            <form asp-action="CreateApiKey" method="post" class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-gutter custom-shadow">
+                <h2 class="mb-5 flex items-center gap-2 font-headline-md text-primary"><span class="material-symbols-outlined">key</span>Tạo API Key mới</h2>
+                <label asp-for="NewKeyName" class="mb-2 block font-label-md text-secondary">Tên API Key</label>
+                <input asp-for="NewKeyName" class="w-full rounded-lg border border-outline-variant bg-white px-4 py-3 text-body-md" placeholder="Ví dụ: Website demo thuyết trình" />
+                <button type="submit" class="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-label-md text-on-primary"><span class="material-symbols-outlined text-[18px]">add</span>Tạo API Key</button>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.GeneratedApiKey))
+            {
+                <div class="mt-gutter rounded-xl border border-[#81c784] bg-[#eef8ef] p-gutter custom-shadow">
+                    <p class="font-label-md text-primary">API Key vừa tạo</p>
+                    <p class="mt-2 text-caption text-secondary">Key chỉ được hiển thị một lần. Hãy lưu lại để dùng trên website client.</p>
+                    <div class="mt-4 flex gap-2">
+                        <input id="generatedApiKey" readonly value="@Model.GeneratedApiKey" class="min-w-0 flex-1 rounded-lg border border-outline-variant bg-white px-3 py-2 font-mono text-caption text-primary" />
+                        <button id="copyApiKey" type="button" class="rounded-lg bg-primary px-4 py-2 text-on-primary transition-all" aria-label="Sao chép API Key">
+                            <span id="copyApiKeyIcon" class="material-symbols-outlined transition-all">content_copy</span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section class="lg:col-span-7">
+            <div class="overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-lowest custom-shadow">
+                <div class="border-b border-outline-variant/20 p-gutter">
+                    <h2 class="font-headline-md text-primary">API Key đã tạo</h2>
+                </div>
+                @if (!Model.ApiKeys.Any())
+                {
+                    <p class="p-gutter text-body-md text-secondary">Chưa có API key nào.</p>
+                }
+                else
+                {
+                    <div class="divide-y divide-outline-variant/20">
+                        @foreach (var apiKey in Model.ApiKeys)
+                        {
+                            <div class="render-list-compact flex flex-col justify-between gap-4 p-gutter sm:flex-row sm:items-center">
+                                <div>
+                                    <p class="font-label-md text-primary">@apiKey.Name</p>
+                                    <p class="mt-1 font-mono text-caption text-secondary">@apiKey.KeyPrefix••••••••••••</p>
+                                    <p class="mt-1 text-caption text-secondary">Tạo lúc @apiKey.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                                @if (apiKey.IsActive)
+                                {
+                                    <form asp-action="RevokeApiKey" method="post">
+                                        <input type="hidden" name="id" value="@apiKey.Id" />
+                                        <button type="submit" class="rounded-lg border border-error px-4 py-2 font-label-md text-error hover:bg-error-container">Thu hồi</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="rounded-full bg-surface-container px-3 py-1 text-caption font-semibold text-secondary">Đã thu hồi</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        document.getElementById('copyApiKey')?.addEventListener('click', async () => {
+            const input = document.getElementById('generatedApiKey');
+            const button = document.getElementById('copyApiKey');
+            const icon = document.getElementById('copyApiKeyIcon');
+            if (!input || !button || !icon) return;
+
+            try {
+                await navigator.clipboard.writeText(input.value);
+                icon.textContent = 'check';
+                button.classList.remove('bg-primary');
+                button.classList.add('bg-[#2e7d32]', 'translate-y-0.5');
+                button.setAttribute('aria-label', 'Đã sao chép API Key');
+
+                window.setTimeout(() => {
+                    icon.textContent = 'content_copy';
+                    button.classList.add('bg-primary');
+                    button.classList.remove('bg-[#2e7d32]', 'translate-y-0.5');
+                    button.setAttribute('aria-label', 'Sao chép API Key');
+                }, 2200);
+            } catch {
+                input.select();
+                document.execCommand('copy');
+                icon.textContent = 'check';
+            }
+        });
+    </script>
+}

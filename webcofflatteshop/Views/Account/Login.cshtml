@@ -63,7 +63,7 @@
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
                     <input asp-for="Password" id="passwordInput" class="w-full rounded-lg border border-outline-variant bg-white py-3 pl-12 pr-12 text-body-md text-on-surface outline-none transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/10" autocomplete="current-password" placeholder="••••••••" />
                     <button id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-outline transition hover:text-primary" type="button" aria-label="Ẩn hiện mật khẩu">
-                        <span class="material-symbols-outlined">visibility</span>
+                        <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
                 <span asp-validation-for="Password" class="mt-1 block text-sm text-error"></span>
@@ -135,9 +135,11 @@
             }
 
             const password = document.getElementById('passwordInput');
+            const passwordIcon = document.getElementById('togglePasswordIcon');
             document.getElementById('togglePassword')?.addEventListener('click', () => {
                 if (!password) return;
                 password.type = password.type === 'password' ? 'text' : 'password';
+                if (passwordIcon) passwordIcon.textContent = password.type === 'password' ? 'visibility' : 'visibility_off';
             });
         })();
     </script>

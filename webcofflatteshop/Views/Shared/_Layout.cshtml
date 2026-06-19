@@ -92,69 +92,189 @@
 <body class="coffee-pattern-bg bg-background font-body text-on-background selection:bg-primary-fixed">
     @RenderBody()
 
-    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
-    {
-        <aside id="newOrderToast" class="order-toast" aria-live="polite" aria-hidden="true">
-            <a id="newOrderToastLink" class="order-toast-link" asp-controller="Account" asp-action="PurchaseHistory">
+    <aside id="newOrderToast" class="order-toast" aria-live="polite" aria-hidden="true">
+            <div class="order-toast-content">
                 <span class="order-toast-icon material-symbols-outlined">notifications_active</span>
                 <span class="min-w-0 flex-1">
-                    <strong class="block text-[13px] font-semibold text-white">Đơn hàng mới</strong>
+                    <strong id="newOrderToastTitle" class="block text-[13px] font-semibold text-white">Đơn hàng mới</strong>
                     <span class="mt-1 block text-[12px] leading-5 text-white/80">
-                        Đơn hàng <span id="newOrderToastCode" class="font-semibold text-white underline underline-offset-2">#DH00000</span> vừa được đặt.
+                        <span id="newOrderToastPrefix">Đơn hàng</span>
+                        <a id="newOrderToastLink" class="order-toast-order-link" asp-controller="Account" asp-action="PurchaseHistory">
+                            <span id="newOrderToastCode">#DH00000</span>
+                        </a>
+                        <span id="newOrderToastSuffix">vừa được đặt.</span>
+                    </span>
+                    <span id="newOrderToastActions" class="order-toast-actions hidden">
+                        <button id="newOrderToastConfirm" type="button" class="order-toast-action-primary">Xóa</button>
+                        <button id="newOrderToastCancel" type="button" class="order-toast-action-secondary">Không xóa</button>
                     </span>
                 </span>
-            </a>
+            </div>
             <button id="newOrderToastClose" class="order-toast-close material-symbols-outlined" type="button" aria-label="Đóng thông báo">close</button>
         </aside>
-    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
-    {
-        <script>
-            (() => {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        (() => {
                 const toast = document.getElementById('newOrderToast');
                 const toastLink = document.getElementById('newOrderToastLink');
+                const toastTitle = document.getElementById('newOrderToastTitle');
+                const toastPrefix = document.getElementById('newOrderToastPrefix');
                 const toastCode = document.getElementById('newOrderToastCode');
+                const toastSuffix = document.getElementById('newOrderToastSuffix');
                 const toastClose = document.getElementById('newOrderToastClose');
+                const toastActions = document.getElementById('newOrderToastActions');
+                const toastConfirm = document.getElementById('newOrderToastConfirm');
+                const toastCancel = document.getElementById('newOrderToastCancel');
+                const isAuthenticated = @Json.Serialize(User.Identity?.IsAuthenticated == true);
+                const isAdmin = @Json.Serialize(User.IsInRole("Admin"));
                 const latestOrderStorageKey = 'coffeeLatteLatestAdminOrderId';
+                const customerStatusStorageKey = 'coffeeLatteCustomerOrderStatuses';
+                const statusNotices = {
+                    Pending: { title: 'Đơn hàng đang chờ xử lý', suffix: 'đang chờ cửa hàng xác nhận.' },
+                    Preparing: { title: 'Đơn hàng đang được xử lý', suffix: 'đang được pha chế.' },
+                    Delivering: { title: 'Đơn hàng đang giao', suffix: 'đang trên đường giao đến bạn.' },
+                    Completed: { title: 'Đơn hàng đã hoàn thành', suffix: 'đã được hoàn thành. Cảm ơn bạn!' }
+                };
                 let hideTimer;
                 let globalOrderPollInFlight = false;
+                let pendingToastResolve;
 
-                window.showNewOrderToast = orderId => {
+                window.showOrderToast = (orderId, title = 'Đơn hàng mới', suffix = 'vừa được đặt.', options = {}) => {
                     const numericOrderId = Number(orderId);
-                    if (!toast || !toastLink || !toastCode || !numericOrderId) return;
+                    if (!toast || !toastLink || !toastTitle || !toastPrefix || !toastCode || !toastSuffix) return;
 
-                    toastCode.textContent = `#DH${String(numericOrderId).padStart(5, '0')}`;
-                    toastLink.href = `/Account/PurchaseHistory?focusOrderId=${numericOrderId}#order-${numericOrderId}`;
+                    toastTitle.textContent = title;
+                    toastPrefix.textContent = options.prefix ?? (numericOrderId ? 'Đơn hàng' : '');
+                    toastCode.textContent = numericOrderId ? `#DH${String(numericOrderId).padStart(5, '0')}` : '';
+                    toastSuffix.textContent = suffix;
+                    toastLink.href = numericOrderId ? `/Account/PurchaseHistory?focusOrderId=${numericOrderId}#order-${numericOrderId}` : '#';
+                    toastLink.classList.toggle('hidden', !numericOrderId);
+                    toastActions?.classList.toggle('hidden', !options.actions);
                     toast.classList.add('is-visible');
                     toast.setAttribute('aria-hidden', 'false');
                     window.clearTimeout(hideTimer);
-                    hideTimer = window.setTimeout(() => window.hideNewOrderToast(), 7000);
+                    if (!options.actions) {
+                        hideTimer = window.setTimeout(() => window.hideNewOrderToast(), 7000);
+                    }
+                };
+                window.showNewOrderToast = orderId => window.showOrderToast(orderId);
+                window.showOrderStatusToast = (orderId, status) => {
+                    const notice = statusNotices[status] || statusNotices.Pending;
+                    window.showOrderToast(orderId, notice.title, notice.suffix);
                 };
 
                 window.hideNewOrderToast = () => {
                     toast?.classList.remove('is-visible');
                     toast?.setAttribute('aria-hidden', 'true');
+                    toastActions?.classList.add('hidden');
                 };
 
-                toastClose?.addEventListener('click', window.hideNewOrderToast);
+                toastClose?.addEventListener('click', () => {
+                    pendingToastResolve?.(false);
+                    pendingToastResolve = null;
+                    window.hideNewOrderToast();
+                });
+                toastLink?.addEventListener('click', event => {
+                    if (!toastCode?.textContent) event.preventDefault();
+                });
+                toastConfirm?.addEventListener('click', () => {
+                    pendingToastResolve?.(true);
+                    pendingToastResolve = null;
+                    window.hideNewOrderToast();
+                });
+                toastCancel?.addEventListener('click', () => {
+                    pendingToastResolve?.(false);
+                    pendingToastResolve = null;
+                    window.hideNewOrderToast();
+                });
+                window.confirmOrderToast = orderId => new Promise(resolve => {
+                    pendingToastResolve = resolve;
+                    window.showOrderToast(orderId, 'Xóa lịch sử đơn hàng?', 'sẽ bị xóa khỏi lịch sử.', { actions: true });
+                });
+                window.showAppToast = (title, message) => {
+                    window.showOrderToast(0, title, message, { prefix: '' });
+                };
 
-                const pollNewOrders = async () => {
+                const productRealtimeMessages = {
+                    ProductCreated: product => ({
+                        title: 'Sản phẩm mới',
+                        message: `${product?.name || 'Một sản phẩm'} vừa được thêm từ API.`
+                    }),
+                    ProductUpdated: product => ({
+                        title: 'Sản phẩm vừa cập nhật',
+                        message: `${product?.name || 'Một sản phẩm'} đã đổi thông tin, giá hoặc tồn kho.`
+                    }),
+                    ProductDeleted: product => ({
+                        title: 'Sản phẩm đã xóa',
+                        message: `${product?.name || 'Một sản phẩm'} vừa được xóa từ API.`
+                    })
+                };
+
+                const dispatchProductRealtime = (eventName, product) => {
+                    const notice = productRealtimeMessages[eventName]?.(product);
+                    if (notice) {
+                        window.showAppToast?.(notice.title, notice.message);
+                    }
+                    window.dispatchEvent(new CustomEvent(`latte:${eventName}`, { detail: product }));
+                };
+
+                const connectProductRealtime = async () => {
+                    if (!window.signalR) {
+                        console.warn('SignalR client script was not loaded. Product realtime is disabled.');
+                        return;
+                    }
+
+                    const connection = new signalR.HubConnectionBuilder()
+                        .withUrl('/hubs/products')
+                        .withAutomaticReconnect()
+                        .build();
+
+                    ['ProductCreated', 'ProductUpdated', 'ProductDeleted'].forEach(eventName => {
+                        connection.on(eventName, product => dispatchProductRealtime(eventName, product));
+                    });
+
+                    try {
+                        await connection.start();
+                    } catch {
+                        window.setTimeout(connectProductRealtime, 5000);
+                    }
+                };
+
+                connectProductRealtime();
+
+                if (!isAuthenticated) return;
+
+                const pollOrders = async () => {
                     if (document.hidden || globalOrderPollInFlight) return;
                     globalOrderPollInFlight = true;
                     try {
-                        const response = await fetch('/Account/AdminOrderSummary', { cache: 'no-store' });
+                        const response = await fetch(isAdmin ? '/Account/AdminOrderSummary' : '/Account/OrderRealtimeSummary', { cache: 'no-store' });
                         if (!response.ok) return;
                         const data = await response.json();
-                        const latestOrderId = Number(data.latestOrderId || 0);
-                        const storedOrderId = sessionStorage.getItem(latestOrderStorageKey);
-                        const previousOrderId = Number(storedOrderId || 0);
+                        if (isAdmin) {
+                            const latestOrderId = Number(data.latestOrderId || 0);
+                            const storedOrderId = sessionStorage.getItem(latestOrderStorageKey);
+                            const previousOrderId = Number(storedOrderId || 0);
 
-                        if (latestOrderId && storedOrderId !== null && latestOrderId > previousOrderId) {
-                            window.showNewOrderToast(latestOrderId);
+                            if (latestOrderId && storedOrderId !== null && latestOrderId > previousOrderId) {
+                                window.showNewOrderToast(latestOrderId);
+                            }
+                            sessionStorage.setItem(latestOrderStorageKey, String(latestOrderId));
+                            return;
                         }
-                        sessionStorage.setItem(latestOrderStorageKey, String(latestOrderId));
+
+                        const storedStatuses = JSON.parse(sessionStorage.getItem(customerStatusStorageKey) || '{}');
+                        const orders = data.orders || [];
+                        const changedOrder = orders.find(order =>
+                            Object.prototype.hasOwnProperty.call(storedStatuses, order.id) &&
+                            storedStatuses[order.id] !== order.status);
+                        if (changedOrder) {
+                            window.showOrderStatusToast(changedOrder.id, changedOrder.status);
+                        }
+                        orders.forEach(order => storedStatuses[order.id] = order.status);
+                        sessionStorage.setItem(customerStatusStorageKey, JSON.stringify(storedStatuses));
                     } catch {
                         // Polling silently retries on the next tick.
                     } finally {
@@ -163,12 +283,11 @@
                 };
 
                 if (!window.location.pathname.toLowerCase().includes('/account/purchasehistory')) {
-                    pollNewOrders();
-                    window.setInterval(pollNewOrders, 5000);
+                    pollOrders();
+                    window.setInterval(pollOrders, 5000);
                 }
-            })();
-        </script>
-    }
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

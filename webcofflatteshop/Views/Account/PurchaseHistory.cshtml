@@ -104,15 +104,15 @@
     <section class="mb-8 grid grid-cols-1 gap-gutter md:grid-cols-3">
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
             <p class="text-caption text-secondary">Tổng đơn hàng</p>
-            <p class="mt-2 font-headline-md text-headline-md text-primary">@orders.Count</p>
+            <p id="historyTotalOrders" class="mt-2 font-headline-md text-headline-md text-primary">@orders.Count</p>
         </div>
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
             <p class="text-caption text-secondary">Sản phẩm trong đơn</p>
-            <p class="mt-2 font-headline-md text-headline-md text-primary">@totalItems</p>
+            <p id="historyTotalItems" class="mt-2 font-headline-md text-headline-md text-primary">@totalItems</p>
         </div>
         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-5 shadow-[0_4px_20px_rgba(62,39,35,0.03)]">
             <p class="text-caption text-secondary">@(Model.IsAdmin ? "Tổng doanh thu" : "Tổng chi tiêu")</p>
-            <p class="mt-2 font-headline-md text-headline-md text-primary">@Money(totalSpent)</p>
+            <p id="historyTotalSpent" class="mt-2 font-headline-md text-headline-md text-primary">@Money(totalSpent)</p>
         </div>
     </section>
 
@@ -156,11 +156,13 @@
                 var progressPercent = StatusPercent(status);
                 var progressColor = StatusColor(status);
                 var filterStatus = status == "Completed" ? "completed" : "pending";
-                <article class="order-card-hover order-card rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-[0_4px_20px_rgba(62,39,35,0.03)] transition-all duration-300"
+                <article class="order-card-hover order-card render-list-item rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-[0_4px_20px_rgba(62,39,35,0.03)] transition-all duration-300"
                          id="order-@order.Id"
                          data-order-id="@order.Id"
                          data-order="@searchableText"
                          data-status="@filterStatus"
+                         data-item-count="@order.Items.Sum(item => item.Quantity)"
+                         data-spent-amount="@((Model.IsAdmin && status != "Completed" ? 0m : order.TotalAmount).ToString(CultureInfo.InvariantCulture))"
                          data-date="@localCreatedAt.ToString("yyyy-MM-dd")">
                     <div class="mb-6 flex flex-col items-start justify-between gap-4 border-b border-surface-container-high pb-6 md:flex-row md:items-center">
                         <div>
@@ -225,10 +227,19 @@
                                 </div>
                             }
                         </div>
-                        <button class="order-detail-toggle flex whitespace-nowrap rounded-lg bg-primary-container px-6 py-3 font-label-md text-on-primary-container transition-all hover:bg-primary hover:text-white" type="button">
-                            Xem chi tiết
-                            <span class="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
-                        </button>
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <button class="order-detail-toggle flex whitespace-nowrap rounded-lg bg-primary-container px-6 py-3 font-label-md text-on-primary-container transition-all hover:bg-primary hover:text-white" type="button">
+                                Xem chi tiết
+                                <span class="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+                            </button>
+                            <form asp-controller="Account" asp-action="DeleteOrder" method="post" class="ajax-delete-order-form">
+                                <input type="hidden" name="orderId" value="@order.Id" />
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-error/40 px-4 py-3 font-label-md text-error transition hover:bg-error-container" aria-label="Xóa @OrderCode(order.Id)">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     <div class="order-detail mt-6 hidden rounded-lg bg-surface-container-low p-4">
@@ -321,9 +332,13 @@
 
 <script>
 (() => {
-    const cards = Array.from(document.querySelectorAll('.order-card'));
+    let cards = Array.from(document.querySelectorAll('.order-card'));
     const searchInputs = [document.getElementById('historySearch'), document.getElementById('historySearchMobile')].filter(Boolean);
     const emptyFilter = document.getElementById('historyEmptyFilter');
+    const historyTotalOrders = document.getElementById('historyTotalOrders');
+    const historyTotalItems = document.getElementById('historyTotalItems');
+    const historyTotalSpent = document.getElementById('historyTotalSpent');
+    const moneyFormatter = new Intl.NumberFormat('vi-VN');
     let activeFilter = 'all';
 
     const today = new Date().toISOString().slice(0, 10);
@@ -498,10 +513,14 @@
                 if (oldStatus && oldStatus !== order.status && orderRealtimeText && !data.isAdmin) {
                     const meta = statusMeta[order.status] || statusMeta.Pending;
                     orderRealtimeText.textContent = `Đơn #DH${String(order.id).padStart(5, '0')} vừa chuyển sang ${meta.text.toLowerCase()}.`;
+                    window.showOrderStatusToast?.(order.id, order.status);
                 }
                 orderStatusCache.set(order.id, order.status);
                 setOrderProgress(order.id, order.status);
             });
+            if (!data.isAdmin) {
+                sessionStorage.setItem('coffeeLatteCustomerOrderStatuses', JSON.stringify(Object.fromEntries(orderStatusCache)));
+            }
             applyFilters();
         } catch {
             // Polling silently retries on the next tick.
@@ -542,6 +561,61 @@
                 if (adminOrderNoticeText) adminOrderNoticeText.textContent = 'Cập nhật trạng thái thất bại. Vui lòng thử lại.';
             } finally {
                 buttons.forEach(button => button.disabled = false);
+            }
+        });
+    });
+
+    document.querySelectorAll('.ajax-delete-order-form').forEach(form => {
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const card = form.closest('.order-card');
+            const orderId = Number(card?.dataset.orderId || 0);
+            if (!card || !orderId) return;
+
+            const shouldDelete = window.confirmOrderToast
+                ? await window.confirmOrderToast(orderId)
+                : window.confirm(`Bạn có chắc muốn xóa đơn #DH${String(orderId).padStart(5, '0')}?`);
+            if (!shouldDelete) {
+                window.showOrderToast?.(orderId, 'Đã giữ lại lịch sử đơn hàng', 'không bị xóa.');
+                return;
+            }
+
+            const deleteButton = form.querySelector('button[type="submit"]');
+            if (deleteButton) deleteButton.disabled = true;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(form)
+                });
+                if (!response.ok) throw new Error('Không thể xóa đơn hàng.');
+
+                const itemCount = Number(card.dataset.itemCount || 0);
+                const spentAmount = Number(card.dataset.spentAmount || 0);
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(24px)';
+                window.setTimeout(() => {
+                    card.remove();
+                    cards = cards.filter(item => item !== card);
+                    orderStatusCache.delete(orderId);
+                    if (historyTotalOrders) historyTotalOrders.textContent = String(cards.length);
+                    if (historyTotalItems) historyTotalItems.textContent = String(Math.max(0, Number(historyTotalItems.textContent || 0) - itemCount));
+                    if (historyTotalSpent) {
+                        const currentSpent = Number(historyTotalSpent.textContent.replace(/[^\d]/g, '') || 0);
+                        historyTotalSpent.textContent = `${moneyFormatter.format(Math.max(0, currentSpent - spentAmount))} VNĐ`;
+                    }
+                    if (cards.length === 0 && emptyFilter) {
+                        emptyFilter.textContent = 'Không còn đơn hàng nào trong lịch sử.';
+                    }
+                    applyFilters();
+                    pollOrderRealtime();
+                    window.showAppToast?.('Đã xóa lịch sử đơn hàng', `Đơn #DH${String(orderId).padStart(5, '0')} đã được xóa thành công.`);
+                }, 260);
+            } catch {
+                if (adminOrderNoticeText) adminOrderNoticeText.textContent = 'Xóa đơn hàng thất bại. Vui lòng thử lại.';
+                window.showAppToast?.('Xóa đơn hàng thất bại', 'Vui lòng thử lại sau ít phút.');
+            } finally {
+                if (deleteButton) deleteButton.disabled = false;
             }
         });
     });

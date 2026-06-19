@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using webcofflatteshop.Authentication;
 using webcofflatteshop.Data;
+using webcofflatteshop.Hubs;
 using webcofflatteshop.Models;
 using webcofflatteshop.Repository;
 using webcofflatteshop.Services;
@@ -13,6 +14,17 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found. Copy your SQL Server connection string into appsettings.json before adding migrations.");
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CoffeeLatteApiClientCors", policy =>
+    {
+        policy.WithOrigins("http://localhost:5196", "https://localhost:7289")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
         ApiKeyAuthenticationDefaults.AuthenticationScheme,
@@ -57,7 +69,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.Events.OnRedirectToLogin = context =>
     {
-        if (context.Request.Path.StartsWithSegments("/Product/Checkout"))
+        if (context.Request.Path.StartsWithSegments("/Product/Checkout")
+            || context.Request.Path.StartsWithSegments("/Cart/Checkout"))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return Task.CompletedTask;
@@ -83,12 +96,14 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCors("CoffeeLatteApiClientCors");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ProductRealtimeHub>("/hubs/products");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

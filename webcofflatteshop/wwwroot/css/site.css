@@ -54,6 +54,11 @@ button {
   font-family: inherit;
 }
 
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -136,7 +141,7 @@ button {
   transform: translateX(0);
 }
 
-.order-toast-link {
+.order-toast-content {
   display: flex;
   min-width: 0;
   flex: 1;
@@ -144,10 +149,55 @@ button {
   gap: 10px;
   border-radius: 6px;
   padding: 6px;
-  transition: background-color 180ms ease;
+  color: #fff;
+  font-weight: 600;
+  user-select: none;
 }
 
-.order-toast-link:hover {
+.order-toast-content strong {
+  color: #fff;
+  font-weight: 800;
+}
+
+.order-toast-order-link {
+  color: #fff;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  user-select: text;
+}
+
+.order-toast-order-link:hover {
+  color: #ffdad4;
+}
+
+.order-toast-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.order-toast-actions.hidden {
+  display: none;
+}
+
+.order-toast-action-primary,
+.order-toast-action-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.order-toast-action-primary {
+  background: #fff;
+  color: #3e2723;
+}
+
+.order-toast-action-secondary {
   background: rgba(255, 255, 255, 0.08);
 }
 

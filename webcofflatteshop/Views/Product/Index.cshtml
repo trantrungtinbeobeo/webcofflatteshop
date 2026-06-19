@@ -21,6 +21,7 @@
         .ToList();
     var productPrices = products.ToDictionary(product => product.Name, product => product.Price);
     var productPricesById = products.ToDictionary(product => product.Id, product => product.Price);
+    var productStocksById = products.ToDictionary(product => product.Id, product => product.Stock);
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var fallbackImages = new[]
     {
@@ -196,7 +197,7 @@
         <div class="relative h-full overflow-hidden">
             @for (var bannerIndex = 0; bannerIndex < heroBanners.Count; bannerIndex++)
             {
-                <img class="hero-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(bannerIndex == 0 ? "is-active opacity-100" : "")" src="@heroBanners[bannerIndex]" alt="Banner Coffe Latte Kawaii @(bannerIndex + 1)" data-slide-index="@bannerIndex" />
+                <img class="hero-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(bannerIndex == 0 ? "is-active opacity-100" : "")" src="@heroBanners[bannerIndex]" alt="Banner Coffe Latte Kawaii @(bannerIndex + 1)" data-slide-index="@bannerIndex" loading="@(bannerIndex == 0 ? "eager" : "lazy")" decoding="async" fetchpriority="@(bannerIndex == 0 ? "high" : "low")" />
             }
             <div class="hero-gradient pointer-events-none absolute inset-0 flex items-end p-gutter">
                 <div class="max-w-xl text-white">
@@ -238,10 +239,10 @@
                 var imageUrl = ImageOf(product, index);
                 var hasPromo = HasPromo(product);
                 var promoPrice = hasPromo ? PromoPrice(product.Price) : product.Price;
-                <article class="product-card group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-category-id="@product.CategoryId">
-                    <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-discount-percent="@(hasPromo ? promoBanner.DiscountPercent : 0)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
+                <article class="product-card render-list-item group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-product-id="@product.Id" data-category-id="@product.CategoryId">
+                    <button type="button" class="js-open-detail block w-full text-left" data-product-id="@product.Id" data-name="@product.Name" data-description="@product.Description" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)" data-stock="@product.Stock" data-discount-percent="@(hasPromo ? promoBanner.DiscountPercent : 0)" data-display-price="@product.Price.ToString("N0") VNĐ" data-image="@imageUrl">
                         <div class="relative aspect-square cursor-pointer overflow-hidden">
-                            <img class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" />
+                            <img data-product-image class="h-full w-full object-cover transition-soft group-hover:scale-105" src="@imageUrl" alt="@product.Name" loading="lazy" decoding="async" fetchpriority="low" />
                             <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
                                 <span class="material-symbols-outlined text-primary">@IconOf(product.Name)</span>
                             </div>
@@ -251,10 +252,10 @@
                             }
                         </div>
                         <div class="p-gutter">
-                            <h3 class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
-                            <p class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
+                            <h3 data-product-name class="mb-1 font-headline-md text-headline-md text-primary">@product.Name</h3>
+                            <p data-product-description class="mb-4 line-clamp-2 font-body-md text-secondary">@product.Description</p>
                             <div class="flex items-center justify-between gap-3">
-                                <span class="font-label-md text-on-tertiary-container">
+                                <span data-product-price class="font-label-md text-on-tertiary-container">
                                     @if (hasPromo)
                                     {
                                         <span class="block text-[12px] leading-4 text-secondary line-through">@product.Price.ToString("N0") VNĐ</span>
@@ -284,7 +285,7 @@
                             <div class="relative h-[520px] overflow-hidden">
                                 @for (var promoIndex = 0; promoIndex < promoImages.Count; promoIndex++)
                                 {
-                                    <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" />
+                                    <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" loading="lazy" decoding="async" fetchpriority="low" />
                                 }
                             </div>
                         </a>
@@ -294,7 +295,7 @@
                         <div class="relative h-[520px] overflow-hidden">
                             @for (var promoIndex = 0; promoIndex < promoImages.Count; promoIndex++)
                             {
-                                <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" />
+                                <img src="@promoImages[promoIndex]" alt="@promoBanner.Title" class="promo-slide absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 @(promoIndex == 0 ? "opacity-100" : "")" loading="lazy" decoding="async" fetchpriority="low" />
                             }
                         </div>
                     }
@@ -470,12 +471,19 @@
 
     const productPrices = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPrices));
     const productPricesById = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productPricesById));
+    const productStocksById = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productStocksById));
     const promoPricing = {
         productId: @Json.Serialize(promoBanner.IsEnabled && promoBanner.DiscountPercent > 0 ? promoBanner.ProductId : null),
         discountPercent: @Json.Serialize(Math.Clamp(promoBanner.DiscountPercent, 0, 100))
     };
     const shippingFee = 15000;
     const isAuthenticated = @Json.Serialize(isAuthenticated);
+    const escapeHtml = value => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
     const toNumber = value => {
         if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
 
@@ -512,6 +520,11 @@
     const normalizeCart = cart => cart.map(item => ({
         ...item,
         qty: Number.isFinite(Number(item.qty)) && Number(item.qty) > 0 ? Number(item.qty) : 1,
+        stock: Number.isFinite(Number(item.stock))
+            ? Number(item.stock)
+            : Number.isFinite(Number(productStocksById[item.productId]))
+                ? Number(productStocksById[item.productId])
+                : null,
         originalPrice: originalPriceForCartItem(item),
         discountPercent: isPromoCartItem(item) ? promoPricing.discountPercent : 0,
         price: priceForCartItem(item)
@@ -564,9 +577,9 @@
         cartSubtotal.textContent = formatCurrency(cart.reduce((sum, item) => sum + item.price * item.qty, 0));
         cartItems.innerHTML = cart.length
             ? cart.map((item, index) => `
-                <div class="flex gap-4 border-b border-outline-variant/10 pb-3">
+                <div class="render-list-compact flex gap-4 border-b border-outline-variant/10 pb-3">
                     <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-                        <img class="h-full w-full object-cover" src="${item.image}" alt="${item.name}">
+                        <img class="h-full w-full object-cover" src="${item.image}" alt="${item.name}" loading="lazy" decoding="async">
                     </div>
                     <div class="flex-grow">
                         <div class="flex items-start justify-between gap-3">
@@ -577,7 +590,15 @@
                         </div>
                         <p class="text-[12px] text-secondary mt-0.5">Size: ${item.size} | Đường: ${item.sugar}</p>
                         <div class="mt-2 flex items-center justify-between gap-3">
-                            <span class="rounded-full bg-secondary-container px-3 py-1 text-caption font-bold text-on-secondary-container">x${item.qty}</span>
+                            <div class="flex items-center rounded-full border border-outline-variant bg-surface-container-lowest">
+                                <button type="button" class="js-cart-qty rounded-l-full px-2 py-1 text-secondary transition-colors hover:bg-secondary-container hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" data-cart-index="${index}" data-cart-delta="-1" ${item.qty <= 1 ? 'disabled' : ''} aria-label="Giảm số lượng ${item.name}">
+                                    <span class="material-symbols-outlined text-[16px]">remove</span>
+                                </button>
+                                <span class="min-w-8 px-2 text-center text-caption font-bold text-primary">${item.qty}</span>
+                                <button type="button" class="js-cart-qty rounded-r-full px-2 py-1 text-secondary transition-colors hover:bg-secondary-container hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" data-cart-index="${index}" data-cart-delta="1" ${item.stock !== null && item.qty >= item.stock ? 'disabled' : ''} aria-label="Tăng số lượng ${item.name}">
+                                    <span class="material-symbols-outlined text-[16px]">add</span>
+                                </button>
+                            </div>
                             <span class="text-right font-body-md text-primary font-medium">
                                 ${item.discountPercent > 0
                                     ? `<span class="block text-[11px] text-secondary line-through">${formatCurrency(item.originalPrice * item.qty)}</span><span>${formatCurrency(item.price * item.qty)}</span>`
@@ -594,20 +615,54 @@
         cart.splice(index, 1);
         setCart(cart);
         renderCart();
+        syncCheckoutConfirm();
+    };
+
+    const updateCartQuantity = (index, delta) => {
+        const cart = getCart();
+        const item = cart[index];
+        if (!item) return;
+
+        const nextQty = Math.max(1, Number(item.qty || 1) + delta);
+        if (item.stock !== null && nextQty > item.stock) {
+            window.showAppToast?.('Tồn kho không đủ', `${item.name} hiện chỉ còn ${item.stock} sản phẩm.`);
+            return;
+        }
+
+        item.qty = nextQty;
+        setCart(cart);
+        renderCart();
+        syncCheckoutConfirm();
     };
 
     const clearCart = () => {
         localStorage.removeItem('coffee_cart');
         renderCart();
+        syncCheckoutConfirm();
     };
 
     const addToCart = item => {
+        if (item.stock !== null && Number(item.stock) <= 0) {
+            window.showAppToast?.('Tạm hết hàng', `${item.name} hiện chưa còn sản phẩm để thêm vào giỏ.`);
+            return;
+        }
+
         const cart = getCart();
         const index = cart.findIndex(entry => entry.name === item.name && entry.sugar === item.sugar && entry.size === item.size);
-        if (index >= 0) cart[index].qty += 1;
+        if (index >= 0) {
+            const nextQty = cart[index].qty + 1;
+            if (cart[index].stock !== null && nextQty > cart[index].stock) {
+                window.showAppToast?.('Tồn kho không đủ', `${cart[index].name} hiện chỉ còn ${cart[index].stock} sản phẩm.`);
+                openCart();
+                return;
+            }
+
+            cart[index].qty = nextQty;
+        }
         else cart.push({ ...item, qty: 1 });
         setCart(cart);
         renderCart();
+        syncCheckoutConfirm();
         openCart();
     };
 
@@ -660,6 +715,15 @@
         checkoutConfirm.classList.add('hidden');
         checkoutConfirm.classList.remove('flex');
     };
+    const syncCheckoutConfirm = () => {
+        if (checkoutConfirm.classList.contains('hidden')) return;
+        if (!getCart().length) {
+            closeCheckoutConfirm();
+            return;
+        }
+
+        openCheckoutConfirm();
+    };
 
     checkoutNoticeClose.addEventListener('click', hideCheckoutNotice);
     checkoutNotice.addEventListener('click', event => {
@@ -683,6 +747,12 @@
 
     cartItems.addEventListener('click', event => {
         const removeButton = event.target.closest('.js-remove-cart-item');
+        const qtyButton = event.target.closest('.js-cart-qty');
+        if (qtyButton) {
+            updateCartQuantity(Number(qtyButton.dataset.cartIndex), Number(qtyButton.dataset.cartDelta));
+            return;
+        }
+
         if (!removeButton) return;
 
         removeCartItem(Number(removeButton.dataset.cartIndex));
@@ -693,14 +763,16 @@
         clearCart();
     });
 
-    // Chi tiết sản phẩm & Lựa chọn thuộc tính
-    document.querySelectorAll('.js-open-detail').forEach(button => {
+    const bindProductDetailButton = button => {
+        if (!button || button.dataset.detailBound === 'true') return;
+        button.dataset.detailBound = 'true';
         button.addEventListener('click', () => {
             const basePrice = toNumber(button.dataset.price);
             current = { 
                 productId: Number(button.dataset.productId),
                 name: button.dataset.name, 
                 basePrice: basePrice,
+                stock: Number.isFinite(Number(button.dataset.stock)) ? Number(button.dataset.stock) : null,
                 discountPercent: Math.max(0, Math.min(toNumber(button.dataset.discountPercent), 100)),
                 price: basePrice, 
                 image: button.dataset.image 
@@ -736,7 +808,10 @@
             document.getElementById('detailModal').classList.remove('hidden');
             document.getElementById('detailModal').classList.add('flex');
         });
-    });
+    };
+
+    // Chi tiết sản phẩm & Lựa chọn thuộc tính
+    document.querySelectorAll('.js-open-detail').forEach(bindProductDetailButton);
 
     const updateDetailPrice = () => {
         if (!current) return;
@@ -791,6 +866,7 @@
                 productId: current.productId,
                 price: current.price,
                 image: current.image,
+                stock: current.stock,
                 sugar: selectedSugar,
                 size: selectedSize
             });
@@ -800,7 +876,7 @@
 
     // Lọc danh mục Client-side
     const categoryBtns = document.querySelectorAll('.category-btn');
-    const productCards = document.querySelectorAll('.product-card');
+    const productCards = () => document.querySelectorAll('.product-card');
     let activeCategoryId = "all";
 
     const setActiveCategoryButton = activeButton => {
@@ -818,18 +894,130 @@
             activeCategoryId = categoryId || "all";
             setActiveCategoryButton(btn);
 
-            if (activeCategoryId === "all") {
-                productCards.forEach(c => c.classList.remove('hidden'));
-            } else {
-                productCards.forEach(c => {
-                    if (c.dataset.categoryId === categoryId) {
-                        c.classList.remove('hidden');
-                    } else {
-                        c.classList.add('hidden');
-                    }
+            window.requestAnimationFrame(() => {
+                productCards().forEach(card => {
+                    const shouldShow = activeCategoryId === "all" || card.dataset.categoryId === categoryId;
+                    card.classList.toggle('hidden', !shouldShow);
                 });
-            }
+            });
         });
+    });
+
+    const productImageFallback = '/images/default-coffee.svg';
+    const productCardHtml = product => {
+        const price = toNumber(product.price);
+        const image = product.imageUrl || productImageFallback;
+        const name = escapeHtml(product.name || 'Sản phẩm mới');
+        const description = escapeHtml(product.description || '');
+        const safeImage = escapeHtml(image);
+        return `
+            <article class="product-card render-list-item group overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_10px_30px_rgba(62,39,35,0.05)] transition-soft hover:-translate-y-1 hover:shadow-xl" data-product-id="${product.id}" data-category-id="${product.categoryId || ''}">
+                <button type="button" class="js-open-detail block w-full text-left" data-product-id="${product.id}" data-name="${name}" data-description="${description}" data-price="${price}" data-stock="${Number.isFinite(Number(product.stock)) ? Number(product.stock) : ''}" data-discount-percent="0" data-display-price="${formatCurrency(price)}" data-image="${safeImage}">
+                    <div class="relative aspect-square cursor-pointer overflow-hidden">
+                        <img data-product-image class="h-full w-full object-cover transition-soft group-hover:scale-105" src="${safeImage}" alt="${name}" loading="lazy" decoding="async" fetchpriority="low" />
+                        <div class="absolute right-4 top-4 rounded-full bg-white/80 p-2 backdrop-blur-md">
+                            <span class="material-symbols-outlined text-primary">coffee</span>
+                        </div>
+                    </div>
+                    <div class="p-gutter">
+                        <h3 data-product-name class="mb-1 font-headline-md text-headline-md text-primary">${name}</h3>
+                        <p data-product-description class="mb-4 line-clamp-2 font-body-md text-secondary">${description}</p>
+                        <div class="flex items-center justify-between gap-3">
+                            <span data-product-price class="font-label-md text-on-tertiary-container">
+                                <span class="text-lg">${formatCurrency(price)}</span>
+                            </span>
+                            <span class="rounded-lg bg-primary px-4 py-2 font-label-md text-on-primary transition-soft hover:brightness-125">Thêm vào giỏ</span>
+                        </div>
+                    </div>
+                </button>
+            </article>`;
+    };
+
+    const updateProductCard = product => {
+        if (!product?.id) return;
+
+        productPricesById[product.id] = toNumber(product.price);
+        if (Number.isFinite(Number(product.stock))) productStocksById[product.id] = Number(product.stock);
+        if (product.name) productPrices[product.name] = toNumber(product.price);
+
+        const menu = document.getElementById('menu');
+        let card = document.querySelector(`.product-card[data-product-id="${product.id}"]`);
+        if (!card && product.isAvailable !== false && menu) {
+            menu.insertAdjacentHTML('afterbegin', productCardHtml(product));
+            card = document.querySelector(`.product-card[data-product-id="${product.id}"]`);
+            bindProductDetailButton(card?.querySelector('.js-open-detail'));
+        }
+        if (!card) return;
+
+        const image = product.imageUrl || productImageFallback;
+        const price = toNumber(product.price);
+        card.dataset.categoryId = product.categoryId || '';
+        card.classList.toggle('hidden', product.isAvailable === false || (activeCategoryId !== 'all' && String(card.dataset.categoryId) !== String(activeCategoryId)));
+
+        const button = card.querySelector('.js-open-detail');
+        if (button) {
+            button.dataset.name = product.name || '';
+            button.dataset.description = product.description || '';
+            button.dataset.price = String(price);
+            button.dataset.stock = Number.isFinite(Number(product.stock)) ? String(Number(product.stock)) : '';
+            button.dataset.displayPrice = formatCurrency(price);
+            button.dataset.image = image;
+        }
+        const imageElement = card.querySelector('[data-product-image]');
+        if (imageElement) {
+            imageElement.src = image;
+            imageElement.alt = product.name || 'Sản phẩm';
+        }
+        const nameElement = card.querySelector('[data-product-name]');
+        if (nameElement) nameElement.textContent = product.name || 'Sản phẩm';
+        const descriptionElement = card.querySelector('[data-product-description]');
+        if (descriptionElement) descriptionElement.textContent = product.description || '';
+        const priceElement = card.querySelector('[data-product-price]');
+        if (priceElement) priceElement.innerHTML = `<span class="text-lg">${formatCurrency(price)}</span>`;
+
+        if (current?.productId === Number(product.id)) {
+            current.name = product.name || current.name;
+            current.basePrice = price;
+            current.stock = Number.isFinite(Number(product.stock)) ? Number(product.stock) : current.stock;
+            current.image = image;
+            document.getElementById('detailTitle').textContent = current.name;
+            document.getElementById('detailDesc').textContent = product.description || '';
+            document.getElementById('detailImg').src = image;
+            updateDetailPrice();
+        }
+        const cart = getCart()
+            .map(item => {
+                if (Number(item.productId) !== Number(product.id)) return item;
+
+                const stock = Number.isFinite(Number(product.stock)) ? Number(product.stock) : item.stock;
+                return {
+                    ...item,
+                    name: product.name || item.name,
+                    image,
+                    stock,
+                    qty: stock !== null && stock <= 0 ? 0 : stock !== null ? Math.min(item.qty, stock) : item.qty
+                };
+            })
+            .filter(item => item.qty > 0);
+        setCart(cart);
+        renderCart();
+        syncCheckoutConfirm();
+    };
+
+    window.addEventListener('latte:ProductCreated', event => updateProductCard(event.detail));
+    window.addEventListener('latte:ProductUpdated', event => updateProductCard(event.detail));
+    window.addEventListener('latte:ProductDeleted', event => {
+        const product = event.detail;
+        if (!product?.id) return;
+        document.querySelector(`.product-card[data-product-id="${product.id}"]`)?.remove();
+        const cart = getCart().filter(item => Number(item.productId) !== Number(product.id));
+        setCart(cart);
+        renderCart();
+        syncCheckoutConfirm();
+        if (current?.productId === Number(product.id)) {
+            window.closeDetail();
+            current = null;
+        }
     });
 
     document.getElementById('checkoutBtn').addEventListener('click', () => {
@@ -865,7 +1053,7 @@
                 return;
             }
 
-            const response = await fetch('/Product/Checkout', {
+            const response = await fetch('/Cart/Checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -902,6 +1090,11 @@
                     message: `Cảm ơn bạn đã đặt ${purchasedNames || "sản phẩm"} tại Coffe Latte Kawaii. Đơn hàng đã được chuyển đến Admin theo dõi.`,
                     type: "success"
                 });
+                window.showOrderToast?.(
+                    result.orderId,
+                    "Đặt hàng thành công",
+                    "đã được gửi đến cửa hàng. Cảm ơn bạn!"
+                );
             } else {
                 showCheckoutNotice({
                     title: "Đặt hàng chưa thành công",
